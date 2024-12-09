@@ -33,7 +33,7 @@
 				</div>
 				<button type="submit">Register</button>
 				</form>
-				<p>Have an account? <a href="/">Login here</a></p>
+				<p>Have an account? <a href="/login">Login here</a></p>
 				<p>Visit <a href="https://svelte.dev/docs/kit" target="_blank">svelte.dev/docs/kit</a> to read the documentation</p>
 		</div>
 </main>
