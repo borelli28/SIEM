@@ -1,18 +1,18 @@
-<svelte:head>
-  <link rel="stylesheet" href="/css/login.css">
-  <title>Login</title>
-</svelte:head>
-
 <script>
   let username = '';
   let password = '';
 
   function handleSubmit() {
-    // Here you would typically handle the login logic
-    console.log('Login attempted', { username, password });
+    // Here you would typically handle the registration logic
+    console.log('Registration attempted', { username, password, confirmPassword });
     // You can add your authentication logic here
   }
 </script>
+
+<svelte:head>
+	<link rel="stylesheet" href="/css/login.css">
+	<title>Login</title>
+</svelte:head>
 
 <main>
 	<div id="container">
@@ -30,5 +30,5 @@
 		</form>
 		<p>New to our platform? <a href="/register">Register here</a></p>
 		<p>Visit <a href="https://svelte.dev/docs/kit" target="_blank">svelte.dev/docs/kit</a> to read the documentation</p>
- 	</div>
+	</div>
 </main>
