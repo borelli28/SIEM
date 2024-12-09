@@ -1,5 +1,6 @@
 <svelte:head>
   <link rel="stylesheet" href="/css/login.css">
+  <title>Login</title>
 </svelte:head>
 
 <script>
