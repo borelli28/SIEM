@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::{self, BufReader, BufRead};
-use crate::message_queue::MessageQueue;
+use crate::global::GLOBAL_MESSAGE_QUEUE;
 
 // A Batch is <= 1000 log entries long
 #[derive(Clone)]
@@ -28,7 +28,7 @@ impl Batch {
     }
 }
 
-pub fn create_batch(file_path: &str, message_queue: &MessageQueue) -> Result<(), io::Error> {
+pub async fn create_batch(file_path: &str) -> Result<(), io::Error> {
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
     let mut current_batch = Batch::new();
@@ -38,7 +38,8 @@ pub fn create_batch(file_path: &str, message_queue: &MessageQueue) -> Result<(),
         current_batch.add_line(line);
 
         if current_batch.is_full() {
-            message_queue.enqueue(current_batch.clone()).map_err(|e| {
+            let queue = GLOBAL_MESSAGE_QUEUE.lock().await;
+            queue.enqueue(current_batch.clone()).await.map_err(|e| {
                 eprintln!("Error enqueuing batch: {}", e);
                 io::Error::new(io::ErrorKind::Other, e)
             })?;
