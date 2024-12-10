@@ -1,11 +1,11 @@
 use serde::{Deserialize, Serialize};
-use std::sync::{Mutex, atomic::{AtomicU64, Ordering}};
+use std::sync::{Mutex, atomic::{AtomicU16, Ordering}};
 use std::collections::HashMap;
 use crate::global::GLOBAL_MESSAGE_QUEUE;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogEntry {
-    id: u64,
+    line_number: u16,
     version: String,
     device_vendor: String,
     device_product: String,
@@ -18,23 +18,23 @@ pub struct LogEntry {
 
 pub struct LogCollector {
     logs: Mutex<Vec<LogEntry>>,
-    next_id: AtomicU64,
+    next_id: AtomicU16,
 }
 
 impl LogCollector {
     pub fn new() -> Self {
         Self {
             logs: Mutex::new(Vec::new()),
-            next_id: AtomicU64::new(1),
+            next_id: AtomicU16::new(1),
         }
     }
 
-    pub fn add_log(&self, mut log: LogEntry) -> u64 {
-        let id = self.next_id.fetch_add(1, Ordering::SeqCst);
-        log.id = id;
+    pub fn add_log(&self, mut log: LogEntry) -> u16 {
+        let line_number = self.next_id.fetch_add(1, Ordering::SeqCst);
+        log.line_number = line_number;
         let mut logs = self.logs.lock().unwrap();
         logs.push(log);
-        id
+        line_number
     }
 
     pub fn get_logs(&self) -> Vec<LogEntry> {
@@ -42,7 +42,7 @@ impl LogCollector {
         logs.clone()
     }
 
-    pub fn get_last_processed_id(&self) -> u64 {
+    pub fn get_last_processed_id(&self) -> u16 {
         self.next_id.load(Ordering::SeqCst) - 1
     }
 }
@@ -85,7 +85,7 @@ pub fn parse_cef_log(cef_str: &str) -> Result<LogEntry, ParseLogError> {
     }
 
     Ok(LogEntry {
-        id: 0,
+        line_number: 0,
         version: parts[0].replace("CEF:", ""),
         device_vendor: parts[1].to_string(),
         device_product: parts[2].to_string(),
