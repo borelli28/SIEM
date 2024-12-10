@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, atomic::{AtomicU64, Ordering}};
 use std::collections::HashMap;
+use crate::global::GLOBAL_MESSAGE_QUEUE;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogEntry {
@@ -49,12 +50,14 @@ impl LogCollector {
 #[derive(Debug)]
 pub enum ParseLogError {
     InvalidCEFFormat,
+    BatchDequeueError
 }
 
 impl std::fmt::Display for ParseLogError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             ParseLogError::InvalidCEFFormat => write!(f, "Invalid CEF format"),
+            ParseLogError::BatchDequeueError => write!(f, "Error while retriveing batch"),
         }
     }
 }
@@ -94,8 +97,20 @@ pub fn parse_cef_log(cef_str: &str) -> Result<LogEntry, ParseLogError> {
     })
 }
 
-// Handles log submission and return acknowledgment
-pub fn submit_log(collector: &LogCollector, cef_str: &str) -> Result<u64, ParseLogError> {
-    let log_entry = parse_cef_log(cef_str)?;
-    Ok(collector.add_log(log_entry))
+pub async fn process_logs(collector: &LogCollector) -> Result<(), ParseLogError> {
+    let queue = GLOBAL_MESSAGE_QUEUE.lock().await;
+    let batch = queue.dequeue().await.map_err(|e| {
+        eprintln!("Error dequeuing batch: {}", e);
+        ParseLogError::BatchDequeueError
+    })?;
+
+    for cef_log in batch.lines {
+        let log_entry = parse_cef_log(&cef_log)?;
+        collector.add_log(log_entry);
+    }
+    //
+    // TODO: Once the batch was processed call the storage module
+    // to store those logs in DB
+    //
+    Ok(())
 }
