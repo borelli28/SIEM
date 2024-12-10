@@ -1,10 +1,10 @@
 use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
-use chrono::{DateTime, Utc};
+use std::sync::{Mutex, atomic::{AtomicU64, Ordering}};
 use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogEntry {
+    id: u64,
     version: String,
     device_vendor: String,
     device_product: String,
@@ -17,23 +17,32 @@ pub struct LogEntry {
 
 pub struct LogCollector {
     logs: Mutex<Vec<LogEntry>>,
+    next_id: AtomicU64,
 }
 
 impl LogCollector {
     pub fn new() -> Self {
         Self {
             logs: Mutex::new(Vec::new()),
+            next_id: AtomicU64::new(1),
         }
     }
 
-    pub fn add_log(&self, log: LogEntry) {
+    pub fn add_log(&self, mut log: LogEntry) -> u64 {
+        let id = self.next_id.fetch_add(1, Ordering::SeqCst);
+        log.id = id;
         let mut logs = self.logs.lock().unwrap();
         logs.push(log);
+        id
     }
 
     pub fn get_logs(&self) -> Vec<LogEntry> {
         let logs = self.logs.lock().unwrap();
         logs.clone()
+    }
+
+    pub fn get_last_processed_id(&self) -> u64 {
+        self.next_id.load(Ordering::SeqCst) - 1
     }
 }
 
@@ -73,6 +82,7 @@ pub fn parse_cef_log(cef_str: &str) -> Result<LogEntry, ParseLogError> {
     }
 
     Ok(LogEntry {
+        id: 0,
         version: parts[0].replace("CEF:", ""),
         device_vendor: parts[1].to_string(),
         device_product: parts[2].to_string(),
@@ -82,4 +92,10 @@ pub fn parse_cef_log(cef_str: &str) -> Result<LogEntry, ParseLogError> {
         severity: parts[6].to_string(),
         extensions,
     })
+}
+
+// Handles log submission and return acknowledgment
+pub fn submit_log(collector: &LogCollector, cef_str: &str) -> Result<u64, ParseLogError> {
+    let log_entry = parse_cef_log(cef_str)?;
+    Ok(collector.add_log(log_entry))
 }
