@@ -51,7 +51,8 @@ impl LogCollector {
 #[derive(Debug)]
 pub enum ParseLogError {
     InvalidCEFFormat,
-    BatchDequeueError
+    BatchDequeueError,
+    DatabaseError(String)
 }
 
 impl std::fmt::Display for ParseLogError {
@@ -59,6 +60,7 @@ impl std::fmt::Display for ParseLogError {
         match self {
             ParseLogError::InvalidCEFFormat => write!(f, "Invalid CEF format"),
             ParseLogError::BatchDequeueError => write!(f, "Error while retriveing batch"),
+            ParseLogError::DatabaseError(_) => write!(f, "Error while inserting in database"),
         }
     }
 }
@@ -110,6 +112,7 @@ pub async fn process_logs(collector: &LogCollector, storage: &Storage) -> Result
         collector.add_log(log_entry.clone());
         if let Err(e) = storage.insert_log(&log_entry) {
             eprintln!("Error inserting log into database: {}", e);
+            return Err(ParseLogError::DatabaseError(format!("Error inserting log into database. Line number: {}", log_entry.line_number)));
         }
     }
     Ok(())
