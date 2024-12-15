@@ -110,7 +110,7 @@ pub async fn process_logs(collector: &LogCollector, storage: &Storage) -> Result
     for cef_log in batch.lines {
         let log_entry = parse_cef_log(&cef_log)?;
         collector.add_log(log_entry.clone());
-        if let Err(e) = storage.insert_log(&log_entry) {
+        if let Err(e) = storage.insert_log(&log_entry).await {
             eprintln!("Error inserting log into database: {}", e);
             return Err(ParseLogError::DatabaseError(format!("Error inserting log into database. Line number: {}", log_entry.line_number)));
         }
