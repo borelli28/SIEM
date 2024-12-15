@@ -6,7 +6,7 @@ use crate::storage::Storage;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogEntry {
-    pub line_number: u16,
+    line_number: u16,
     pub version: String,
     pub device_vendor: String,
     pub device_product: String,
@@ -107,7 +107,10 @@ pub async fn process_logs(collector: &LogCollector, storage: &Storage) -> Result
 
     for cef_log in batch.lines {
         let log_entry = parse_cef_log(&cef_log)?;
-        collector.add_log(log_entry);
+        collector.add_log(log_entry.clone());
+        if let Err(e) = storage.insert_log(&log_entry) {
+            eprintln!("Error inserting log into database: {}", e);
+        }
     }
     Ok(())
 }
