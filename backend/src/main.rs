@@ -10,6 +10,8 @@ use crate::batch_maker::{create_batch};
 use crate::storage::Storage;
 use serde_json::json;
 
+const DB_PATH: &str = "../logs/logs.db";
+
 async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
@@ -44,7 +46,7 @@ async fn import_log(collector: web::Data<LogCollector>, storage: web::Data<Stora
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let collector = web::Data::new(LogCollector::new());
-    let storage = web::Data::new(Storage::new("logs.db").await.expect("Failed to create storage"));
+    let storage = web::Data::new(Storage::new(DB_PATH).await.expect("Failed to create storage"));
 
     HttpServer::new(move || {
         App::new()
