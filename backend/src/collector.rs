@@ -2,18 +2,19 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, atomic::{AtomicU16, Ordering}};
 use std::collections::HashMap;
 use crate::global::GLOBAL_MESSAGE_QUEUE;
+use crate::storage::Storage;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogEntry {
-    line_number: u16,
-    version: String,
-    device_vendor: String,
-    device_product: String,
-    device_version: String,
-    signature_id: String,
-    name: String,
-    severity: String,
-    extensions: HashMap<String, String>,
+    pub line_number: u16,
+    pub version: String,
+    pub device_vendor: String,
+    pub device_product: String,
+    pub device_version: String,
+    pub signature_id: String,
+    pub name: String,
+    pub severity: String,
+    pub extensions: HashMap<String, String>,
 }
 
 pub struct LogCollector {
@@ -97,7 +98,7 @@ pub fn parse_cef_log(cef_str: &str) -> Result<LogEntry, ParseLogError> {
     })
 }
 
-pub async fn process_logs(collector: &LogCollector) -> Result<(), ParseLogError> {
+pub async fn process_logs(collector: &LogCollector, storage: &Storage) -> Result<(), ParseLogError> {
     let queue = GLOBAL_MESSAGE_QUEUE.lock().await;
     let batch = queue.dequeue().await.map_err(|e| {
         eprintln!("Error dequeuing batch: {}", e);
@@ -108,9 +109,5 @@ pub async fn process_logs(collector: &LogCollector) -> Result<(), ParseLogError>
         let log_entry = parse_cef_log(&cef_log)?;
         collector.add_log(log_entry);
     }
-    //
-    // TODO: Once the batch was processed call the storage module
-    // to store those logs in DB
-    //
     Ok(())
 }
