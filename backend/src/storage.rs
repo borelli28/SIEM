@@ -1,23 +1,26 @@
-use rusqlite::{params, Connection, Result};
+use sqlx::sqlite::SqlitePool;
+use sqlx::{Pool, Result};
 use crate::collector::LogEntry;
-use std::sync::Mutex;
+use std::sync::Arc;
 
 pub struct Storage {
-    conn: Mutex<Connection>
+    pool: Arc<Pool<sqlx::Sqlite>>
 }
 
 impl Storage {
-    pub fn new(db_path: &str) -> Result<Self> {
-        let conn = Connection::open(db_path)?;
-        let storage = Storage { conn: conn.into() };
-        storage.init_db()?;
+    pub async fn new(db_path: &str) -> Result<Self> {
+        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path)).await?;
+        let storage = Storage {
+            pool: Arc::new(pool),
+        };
+        storage.init_db().await?;
         Ok(storage)
     }
 
-    fn init_db(&self) -> Result<()> {
-        self.conn.lock().unwrap().execute(
+    async fn init_db(&self) -> Result<()> {
+        sqlx::query(
             "CREATE TABLE IF NOT EXISTS logs (
-                id INTEGER PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 version TEXT,
                 device_vendor TEXT,
                 device_product TEXT,
@@ -26,28 +29,27 @@ impl Storage {
                 name TEXT,
                 severity TEXT,
                 extensions TEXT
-            )",
-            [],
-        )?;
+            )"
+        )
+        .execute(self.pool.as_ref()).await?;
         Ok(())
     }
 
-    pub fn insert_log(&self, log: &LogEntry) -> Result<()> {
+    pub async fn insert_log(&self, log: &LogEntry) -> Result<()> {
         let extensions_json = serde_json::to_string(&log.extensions).unwrap_or_default();
-        self.conn.lock().unwrap().execute(
+        sqlx::query(
             "INSERT INTO logs (version, device_vendor, device_product, device_version, signature_id, name, severity, extensions)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
-            params![
-                log.version,
-                log.device_vendor,
-                log.device_product,
-                log.device_version,
-                log.signature_id,
-                log.name,
-                log.severity,
-                extensions_json,
-            ],
-        )?;
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+        )
+        .bind(&log.version)
+        .bind(&log.device_vendor)
+        .bind(&log.device_product)
+        .bind(&log.device_version)
+        .bind(&log.signature_id)
+        .bind(&log.name)
+        .bind(&log.severity)
+        .bind(extensions_json)
+        .execute(self.pool.as_ref()).await?;
         Ok(())
     }
 }
