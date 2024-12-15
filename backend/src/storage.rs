@@ -17,7 +17,6 @@ impl Storage {
         self.conn.execute(
             "CREATE TABLE IF NOT EXISTS logs (
                 id INTEGER PRIMARY KEY,
-                line_number INTEGER,
                 version TEXT,
                 device_vendor TEXT,
                 device_product TEXT,
@@ -35,10 +34,9 @@ impl Storage {
     pub fn insert_log(&self, log: &LogEntry) -> Result<()> {
         let extensions_json = serde_json::to_string(&log.extensions).unwrap_or_default();
         self.conn.execute(
-            "INSERT INTO logs (line_number, version, device_vendor, device_product, device_version, signature_id, name, severity, extensions)
+            "INSERT INTO logs (version, device_vendor, device_product, device_version, signature_id, name, severity, extensions)
              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)",
             params![
-                log.line_number,
                 log.version,
                 log.device_vendor,
                 log.device_product,
