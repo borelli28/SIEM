@@ -4,35 +4,14 @@ use crate::collector::LogEntry;
 use std::sync::Arc;
 
 pub struct Storage {
-    pool: Arc<Pool<sqlx::Sqlite>>
+    pool: Arc<Pool<sqlx::Sqlite>>,
 }
 
 impl Storage {
-    pub async fn new(db_path: &str) -> Result<Self> {
-        let pool = SqlitePool::connect(&format!("sqlite://{}", db_path)).await?;
-        let storage = Storage {
+    pub fn new(pool: SqlitePool) -> Self {
+        Storage {
             pool: Arc::new(pool),
-        };
-        storage.init_db().await?;
-        Ok(storage)
-    }
-
-    async fn init_db(&self) -> Result<()> {
-        sqlx::query(
-            "CREATE TABLE IF NOT EXISTS logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                version TEXT,
-                device_vendor TEXT,
-                device_product TEXT,
-                device_version TEXT,
-                signature_id TEXT,
-                name TEXT,
-                severity TEXT,
-                extensions TEXT
-            )"
-        )
-        .execute(self.pool.as_ref()).await?;
-        Ok(())
+        }
     }
 
     pub async fn insert_log(&self, log: &LogEntry) -> Result<()> {
@@ -49,7 +28,8 @@ impl Storage {
         .bind(&log.name)
         .bind(&log.severity)
         .bind(extensions_json)
-        .execute(self.pool.as_ref()).await?;
+        .execute(self.pool.as_ref())
+        .await?;
         Ok(())
     }
 }
