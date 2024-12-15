@@ -44,7 +44,7 @@ async fn import_log(collector: web::Data<LogCollector>, storage: web::Data<Stora
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let collector = web::Data::new(LogCollector::new());
-    let storage = web::Data::new(Storage::new("logs.db").expect("Failed to create storage"));
+    let storage = web::Data::new(Storage::new("logs.db").await.expect("Failed to create storage"));
 
     HttpServer::new(move || {
         App::new()
