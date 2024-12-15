@@ -1,25 +1,41 @@
 mod global;
+mod storage;
 mod collector;
 mod batch_maker;
 mod message_queue;
 
 use actix_web::{web, App, HttpServer, HttpResponse, Responder};
-use crate::collector::{LogCollector, process_logs};
+use crate::collector::{LogCollector, ParseLogError, process_logs};
 use crate::batch_maker::{create_batch};
+use crate::storage::Storage;
 use serde_json::json;
 
 async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
 
-async fn import_log(collector: web::Data<LogCollector>, log: web::Json<String>) -> impl Responder {
+async fn import_log(collector: web::Data<LogCollector>, storage: web::Data<Storage>, log: web::Json<String>) -> impl Responder {
     match create_batch(&log.into_inner()).await {
         Ok(_) => {
-            if let Err(e) = process_logs(&collector).await {
-                eprintln!("Error processing logs: {}", e);
-                return HttpResponse::InternalServerError().json(json!({ "status": "error", "message": "Failed to process logs" }));
+            match process_logs(&collector, &storage).await {
+                Ok(_) => HttpResponse::Ok().json(json!({ "status": "ok" })),
+                Err(e) => {
+                    eprintln!("Error processing logs: {}", e);
+                    match e {
+                        ParseLogError::DatabaseError(msg) => {
+                            HttpResponse::InternalServerError().json(json!({
+                                "status": "error",
+                                "message": "Database error",
+                                "details": msg
+                            }))
+                        },
+                        _ => HttpResponse::InternalServerError().json(json!({
+                            "status": "error",
+                            "message": "Failed to process logs"
+                        }))
+                    }
+                }
             }
-            HttpResponse::Ok().json(json!({ "status": "ok" }))
         },
         Err(_) => HttpResponse::BadRequest().json(json!({ "status": "error", "message": "Invalid log format" })),
     }
@@ -28,10 +44,12 @@ async fn import_log(collector: web::Data<LogCollector>, log: web::Json<String>) 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let collector = web::Data::new(LogCollector::new());
+    let storage = web::Data::new(Storage::new("logs.db").expect("Failed to create storage"));
 
     HttpServer::new(move || {
         App::new()
             .app_data(collector.clone())
+            .app_data(storage.clone())
             .service(
                 web::scope("/backend")
                     .route("/", web::get().to(index))
