@@ -26,7 +26,6 @@ impl MessageQueue {
         queue.pop_front().ok_or("Queue is empty".to_string())
     }
 
-    // Check if the queue is empty
     pub async fn is_empty(&self) -> bool {
         let queue = self.queue.lock().await;
         queue.is_empty()
