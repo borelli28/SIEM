@@ -6,6 +6,7 @@ edition = "2021"
 [dependencies]
 actix-web = "4.9.0"
 argon2 = "0.5.3"
+evalexpr = "12.0.1"
 lazy_static = "1.5.0"
 rand_core = "0.6.4"
 serde = { version = "1.0.215", features = ["derive"] }
