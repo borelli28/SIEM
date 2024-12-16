@@ -46,8 +46,8 @@ async fn init_db(pool: &SqlitePool) -> Result<()> {
             condition TEXT NOT NULL,
             severity TEXT NOT NULL,
             enabled BOOLEAN NOT NULL,
-            created_at TIMESTAMP NOT NULL,
-            updated_at TIMESTAMP NOT NULL,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
             FOREIGN KEY (account_id) REFERENCES accounts(id)
         )"
     )
