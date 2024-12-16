@@ -43,8 +43,9 @@ impl AlertRule {
 
 pub async fn create_rule(pool: &SqlitePool, rule: &AlertRule) -> Result<Uuid> {
     let id = sqlx::query!(
-        "INSERT INTO alert_rules (id, name, description, condition, severity, enabled, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO alert_rules (id, account_id, name, description, condition, severity, enabled, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         rule.id,
+        rule.account_id,
         rule.name,
         rule.description,
         rule.condition,
@@ -57,7 +58,7 @@ pub async fn create_rule(pool: &SqlitePool, rule: &AlertRule) -> Result<Uuid> {
     .await?
     .last_insert_rowid();
 
-    Ok(Uuid::from_u64(id as u64))
+    Ok(rule.id)
 }
 
 pub async fn get_rule(pool: &SqlitePool, id: Uuid) -> Result<Option<AlertRule>> {
