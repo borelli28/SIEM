@@ -9,6 +9,12 @@ use argon2::{
     Argon2
 };
 
+fn hash_password(password: &str) -> Result<String, argon2::password_hash::Error> {
+    let salt = SaltString::generate(&mut OsRng);
+    let argon2 = Argon2::default();
+    argon2.hash_password(password.as_bytes(), &salt).map(|hash| hash.to_string())
+}
+
 #[derive(Debug)]
 pub struct Account {
     pub id: String,
@@ -18,9 +24,7 @@ pub struct Account {
 
 impl Account {
     pub fn new(name: &str, password: &str) -> Result<Self, argon2::password_hash::Error> {
-        let salt = SaltString::generate(&mut OsRng);
-        let argon2 = Argon2::default();
-        let password_hash = argon2.hash_password(password.as_bytes(), &salt)?.to_string();
+        let password_hash = hash_password(password)?;
 
         Ok(Account {
             id: Uuid::new_v4().to_string(),
@@ -82,11 +86,8 @@ pub async fn update_account(pool: &SqlitePool, id: &str, name: Option<&str>, pas
     }
 
     if let Some(new_password) = password {
-        let salt = SaltString::generate(&mut OsRng);
-        let argon2 = Argon2::default();
-        let password_hash = argon2.hash_password(new_password.as_bytes(), &salt)
-            .map_err(|e| sqlx::Error::Protocol(e.to_string()))?
-            .to_string();
+        let password_hash = hash_password(new_password)
+            .map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
         query_builder = query_builder.bind(password_hash);
     }
 
