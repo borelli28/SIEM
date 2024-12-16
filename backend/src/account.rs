@@ -102,3 +102,22 @@ pub async fn delete_account(pool: &SqlitePool, id: &str) -> Result<bool> {
 
     Ok(result.rows_affected() > 0)
 }
+
+pub async fn verify_login(pool: &SqlitePool, name: &str, password: &str) -> Result<Option<Account>> {
+    let account = query_as::<sqlx::Sqlite, Account>(
+        "SELECT id, name, password_hash FROM accounts WHERE name = ?"
+    )
+    .bind(name)
+    .fetch_optional(pool)
+    .await?;
+
+    if let Some(account) = account {
+        if account.verify_password(password) {
+            Ok(Some(account))
+        } else {
+            Ok(None)
+        }
+    } else {
+        Ok(None)
+    }
+}
