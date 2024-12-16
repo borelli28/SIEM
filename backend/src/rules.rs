@@ -1,5 +1,7 @@
+use evalexpr::{context_map, eval_boolean_with_context, ContextWithMutableVariables, HashMapContext};
 use sqlx::{SqlitePool, Result, FromRow};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
@@ -106,4 +108,43 @@ pub async fn list_rules(pool: &SqlitePool) -> Result<Vec<AlertRule>> {
     )
     .fetch_all(pool)
     .await
+}
+
+pub async fn evaluate_log_against_rules(pool: &SqlitePool, log: &Log, account_id: &str) -> Result<Vec<Alert>> {
+    let rules = list_rules(pool, account_id).await?;
+    let mut triggered_alerts = Vec::new();
+
+    for rule in rules {
+        if rule.enabled && evaluate_condition(&rule.condition, log) {
+            let alert = generate_alert(log, &rule).await?;
+            triggered_alerts.push(alert);
+        }
+    }
+
+    Ok(triggered_alerts)
+}
+
+// Evaluate a condition string against a log entry
+fn evaluate_condition(condition: &str, log: &LogEntry) -> bool {
+    let mut context = HashMapContext::new();
+
+    // Context = Key/Value pairs like Dictionaries
+    context.set_value("severity".to_string(), log.severity.clone().into()).unwrap();
+    context.set_value("name".to_string(), log.name.clone().into()).unwrap();
+    context.set_value("device_vendor".to_string(), log.device_vendor.clone().into()).unwrap();
+    context.set_value("device_product".to_string(), log.device_product.clone().into()).unwrap();
+
+    // Insert extensions
+    for (key, value) in &log.extensions {
+        context.set_value(key.to_string(), value.clone().into()).unwrap();
+    }
+
+    // Evaluate the condition as a boolean expression using the context
+    match eval_boolean_with_context(condition, &context) {
+        Ok(result) => result,
+        Err(e) => {
+            eprintln!("Failed to evaluate condition: {}. Error: {:?}", condition, e);
+            false  // Treat errors as a non-match
+        }
+    }
 }
