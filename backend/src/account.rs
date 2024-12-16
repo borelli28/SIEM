@@ -1,32 +1,48 @@
-use sqlx::sqlite::SqlitePool;
 use sqlx::{Result, query, query_as};
+use sqlx::sqlite::SqlitePool;
 use uuid::Uuid;
+use argon2::{
+    password_hash::{
+        rand_core::OsRng,
+        PasswordHash, PasswordHasher, PasswordVerifier, SaltString
+    },
+    Argon2
+};
 
 #[derive(Debug)]
 pub struct Account {
     pub id: String,
     pub name: String,
-    pub password: String,
+    pub password_hash: String,
 }
 
 impl Account {
-    pub fn new(name: &str, password: &str) -> Self {
-        Account {
+    pub fn new(name: &str, password: &str) -> Result<Self, argon2::password_hash::Error> {
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+        let password_hash = argon2.hash_password(password.as_bytes(), &salt)?.to_string();
+
+        Ok(Account {
             id: Uuid::new_v4().to_string(),
             name: name.to_string(),
-            password: password.to_string(),
-        }
+            password_hash,
+        })
+    }
+
+    pub fn verify_password(&self, password: &str) -> bool {
+        let parsed_hash = PasswordHash::new(&self.password_hash).unwrap();
+        Argon2::default().verify_password(password.as_bytes(), &parsed_hash).is_ok()
     }
 }
 
 pub async fn create_account(pool: &SqlitePool, name: &str, password: &str) -> Result<Account> {
-    let account = Account::new(name, password);
+    let account = Account::new(name, password).map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
     query(
-        "INSERT INTO accounts (id, name, password) VALUES (?, ?, ?)"
+        "INSERT INTO accounts (id, name, password_hash) VALUES (?, ?, ?)"
     )
     .bind(&account.id)
     .bind(&account.name)
-    .bind(&account.password)
+    .bind(&account.password_hash)
     .execute(pool)
     .await?;
     Ok(account)
@@ -34,7 +50,7 @@ pub async fn create_account(pool: &SqlitePool, name: &str, password: &str) -> Re
 
 pub async fn get_account(pool: &SqlitePool, id: &str) -> Result<Option<Account>> {
     let account = query_as::<sqlx::Sqlite, Account>(
-        "SELECT id, name, password FROM accounts WHERE id = ?"
+        "SELECT id, name, password_hash FROM accounts WHERE id = ?"
     )
     .bind(id)
     .fetch_optional(pool)
@@ -52,8 +68,8 @@ pub async fn update_account(pool: &SqlitePool, id: &str, name: Option<&str>, pas
         first = false;
     }
 
-    if let Some(new_password) = password {
-        query.push_str(if first { " password = ?" } else { ", password = ?" });
+    if password.is_some() {
+        query.push_str(if first { " password_hash = ?" } else { ", password_hash = ?" });
         first = false;
     }
 
@@ -66,7 +82,12 @@ pub async fn update_account(pool: &SqlitePool, id: &str, name: Option<&str>, pas
     }
 
     if let Some(new_password) = password {
-        query_builder = query_builder.bind(new_password);
+        let salt = SaltString::generate(&mut OsRng);
+        let argon2 = Argon2::default();
+        let password_hash = argon2.hash_password(new_password.as_bytes(), &salt)
+            .map_err(|e| sqlx::Error::Protocol(e.to_string()))?
+            .to_string();
+        query_builder = query_builder.bind(password_hash);
     }
 
     let rows_affected = query_builder.execute(pool).await?.rows_affected();
