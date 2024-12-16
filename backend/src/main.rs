@@ -1,3 +1,4 @@
+mod rules;
 mod global;
 mod storage;
 mod database;
