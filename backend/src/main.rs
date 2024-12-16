@@ -1,10 +1,10 @@
-mod rules;
 mod global;
-mod storage;
 mod database;
+mod storage;
 mod collector;
 mod batch_maker;
 mod message_queue;
+mod rules;
 
 use actix_web::{web, App, HttpServer, HttpResponse, Responder};
 use crate::collector::{LogCollector, ParseLogError, process_logs};
@@ -48,8 +48,8 @@ async fn import_log(collector: web::Data<LogCollector>, storage: web::Data<Stora
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let collector = web::Data::new(LogCollector::new());
     let pool = initialize_db(DB_PATH).await.expect("Failed to initialize database");
+    let collector = web::Data::new(LogCollector::new());
     let storage = web::Data::new(Storage::new(pool));
 
     HttpServer::new(move || {
