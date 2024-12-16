@@ -37,5 +37,22 @@ async fn init_db(pool: &SqlitePool) -> Result<()> {
     .execute(pool)
     .await?;
 
+    sqlx::query(
+        "CREATE TABLE IF NOT EXISTS alert_rules (
+            id TEXT PRIMARY KEY,
+            account_id TEXT NOT NULL,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL,
+            condition TEXT NOT NULL,
+            severity TEXT NOT NULL,
+            enabled BOOLEAN NOT NULL,
+            created_at TIMESTAMP NOT NULL,
+            updated_at TIMESTAMP NOT NULL,
+            FOREIGN KEY (account_id) REFERENCES accounts(id)
+        )"
+    )
+    .execute(pool)
+    .await?;
+
     Ok(())
 }
