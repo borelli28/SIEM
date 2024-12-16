@@ -1,8 +1,9 @@
-use evalexpr::{context_map, eval_boolean_with_context, ContextWithMutableVariables, HashMapContext};
+use crate::collector::LogEntry;
+use evalexpr::{eval_boolean_with_context, ContextWithMutableVariables, HashMapContext};
 use sqlx::{SqlitePool, Result, FromRow};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 use uuid::Uuid;
+use chrono;
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct AlertRule {
@@ -13,8 +14,8 @@ pub struct AlertRule {
     pub condition: String,
     pub severity: AlertSeverity,
     pub enabled: bool,
-    pub created_at: chrono::DateTime<chrono::Utc>,
-    pub updated_at: chrono::DateTime<chrono::Utc>,
+    pub created_at: String,
+    pub updated_at: String,
 }
 
 #[derive(Debug, Serialize, Deserialize, sqlx::Type)]
@@ -28,7 +29,7 @@ pub enum AlertSeverity {
 
 impl AlertRule {
     pub fn new(account_id: String, name: String, description: String, condition: String, severity: AlertSeverity) -> Self {
-        let now = chrono::Utc::now();
+        let now = chrono::Utc::now().to_string();
         AlertRule {
             id: Uuid::new_v4(),
             account_id,
@@ -37,7 +38,7 @@ impl AlertRule {
             condition,
             severity,
             enabled: true,
-            created_at: now,
+            created_at: now.clone(),
             updated_at: now,
         }
     }
@@ -81,7 +82,7 @@ pub async fn update_rule(pool: &SqlitePool, rule: &AlertRule) -> Result<bool> {
         rule.condition,
         rule.severity as AlertSeverity,
         rule.enabled,
-        chrono::Utc::now(),
+        chrono::Utc::now().to_string(),
         rule.id
     )
     .execute(pool)
@@ -110,8 +111,8 @@ pub async fn list_rules(pool: &SqlitePool) -> Result<Vec<AlertRule>> {
     .await
 }
 
-pub async fn evaluate_log_against_rules(pool: &SqlitePool, log: &Log, account_id: &str) -> Result<Vec<Alert>> {
-    let rules = list_rules(pool, account_id).await?;
+pub async fn evaluate_log_against_rules<Alert>(pool: &SqlitePool, log: &LogEntry, account_id: &str) -> Result<Vec<Alert>> {
+    let rules = list_rules(pool).await?;
     let mut triggered_alerts = Vec::new();
 
     for rule in rules {
