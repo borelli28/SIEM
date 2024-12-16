@@ -5,6 +5,7 @@ use uuid::Uuid;
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct AlertRule {
     pub id: Uuid,
+    pub account_id: String,
     pub name: String,
     pub description: String,
     pub condition: String,
@@ -24,10 +25,11 @@ pub enum AlertSeverity {
 }
 
 impl AlertRule {
-    pub fn new(name: String, description: String, condition: String, severity: AlertSeverity) -> Self {
+    pub fn new(account_id: String, name: String, description: String, condition: String, severity: AlertSeverity) -> Self {
         let now = chrono::Utc::now();
         AlertRule {
             id: Uuid::new_v4(),
+            account_id,
             name,
             description,
             condition,
