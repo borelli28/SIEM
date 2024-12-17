@@ -9,8 +9,6 @@ mod rules;
 use actix_web::{web, App, HttpServer, HttpResponse, Responder};
 use crate::collector::{LogCollector, ParseLogError, process_logs};
 use crate::batch_maker::{create_batch};
-use crate::database::initialize_db;
-use crate::storage::Storage;
 use serde_json::json;
 
 const DB_PATH: &str = "logs/logs.db";
@@ -19,10 +17,10 @@ async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
 
-async fn import_log(collector: web::Data<LogCollector>, storage: web::Data<Storage>, log: web::Json<String>) -> impl Responder {
+async fn import_log(collector: web::Data<LogCollector>, log: web::Json<String>) -> impl Responder {
     match create_batch(&log.into_inner()).await {
         Ok(_) => {
-            match process_logs(&collector, &storage).await {
+            match process_logs(&collector).await {
                 Ok(_) => HttpResponse::Ok().json(json!({ "status": "ok" })),
                 Err(e) => {
                     eprintln!("Error processing logs: {}", e);
@@ -48,14 +46,11 @@ async fn import_log(collector: web::Data<LogCollector>, storage: web::Data<Stora
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    let pool = initialize_db(DB_PATH).await.expect("Failed to initialize database");
     let collector = web::Data::new(LogCollector::new());
-    let storage = web::Data::new(Storage::new(pool));
 
     HttpServer::new(move || {
         App::new()
             .app_data(collector.clone())
-            .app_data(storage.clone())
             .service(
                 web::scope("/backend")
                     .route("/", web::get().to(index))
