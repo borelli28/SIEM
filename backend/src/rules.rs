@@ -18,7 +18,7 @@ pub struct AlertRule {
     pub updated_at: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, sqlx::Type)]
+#[derive(Debug, Serialize, Deserialize, sqlx::Type, Clone)]
 #[sqlx(type_name = "alert_severity", rename_all = "lowercase")]
 pub enum AlertSeverity {
     Low,
@@ -45,21 +45,22 @@ impl AlertRule {
 }
 
 pub async fn create_rule(pool: &SqlitePool, rule: &AlertRule) -> Result<Uuid> {
-    let id = sqlx::query!(
+    let id_str = rule.id.to_string();
+    let severity = rule.severity.clone() as AlertSeverity;
+    sqlx::query!(
         "INSERT INTO alert_rules (id, account_id, name, description, condition, severity, enabled, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        rule.id,
+        id_str,
         rule.account_id,
         rule.name,
         rule.description,
         rule.condition,
-        rule.severity as AlertSeverity,
+        severity,
         rule.enabled,
         rule.created_at,
         rule.updated_at
     )
     .execute(pool)
-    .await?
-    .last_insert_rowid();
+    .await?;
 
     Ok(rule.id)
 }
@@ -68,22 +69,25 @@ pub async fn get_rule(pool: &SqlitePool, id: Uuid) -> Result<Option<AlertRule>> 
     sqlx::query_as!(
         AlertRule,
         "SELECT * FROM alert_rules WHERE id = ?",
-        id
+        id.to_string()
     )
     .fetch_optional(pool)
     .await
 }
 
 pub async fn update_rule(pool: &SqlitePool, rule: &AlertRule) -> Result<bool> {
+    let severity = rule.severity.clone() as AlertSeverity;
+    let timestamp = chrono::Utc::now().to_string();
+    let rule_id = rule.id.to_string();
     let result = sqlx::query!(
         "UPDATE alert_rules SET name = ?, description = ?, condition = ?, severity = ?, enabled = ?, updated_at = ? WHERE id = ?",
         rule.name,
         rule.description,
         rule.condition,
-        rule.severity as AlertSeverity,
+        severity,
         rule.enabled,
-        chrono::Utc::now().to_string(),
-        rule.id
+        timestamp,
+        rule_id
     )
     .execute(pool)
     .await?;
@@ -92,6 +96,7 @@ pub async fn update_rule(pool: &SqlitePool, rule: &AlertRule) -> Result<bool> {
 }
 
 pub async fn delete_rule(pool: &SqlitePool, id: Uuid) -> Result<bool> {
+    let id = id.to_string();
     let result = sqlx::query!(
         "DELETE FROM alert_rules WHERE id = ?",
         id
