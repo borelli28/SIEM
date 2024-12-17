@@ -23,6 +23,17 @@ diesel::table! {
 }
 
 diesel::table! {
+    alerts (id) {
+        id -> Text,
+        rule_id -> Text,
+        account_id -> Text,
+        severity -> Text,
+        message -> Text,
+        created_at -> Timestamp,
+    }
+}
+
+diesel::table! {
     logs (id) {
         id -> Nullable<Integer>,
         account_id -> Text,
@@ -38,10 +49,12 @@ diesel::table! {
 }
 
 diesel::joinable!(alert_rules -> accounts (account_id));
+diesel::joinable!(alerts -> alert_rules (rule_id));
 diesel::joinable!(logs -> accounts (account_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     accounts,
     alert_rules,
+    alerts,
     logs,
 );
