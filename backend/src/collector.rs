@@ -117,6 +117,7 @@ pub async fn process_logs(collector: &LogCollector, account_id: String) -> Resul
         let log_entry = parse_cef_log(&cef_log, account_id.clone())?;
         collector.add_log(log_entry.clone());
 
+        // Insert log in the database
         if let Err(e) = storage::insert_log(&log_entry).await {
             eprintln!("Error inserting log into database: {}", e);
             return Err(ParseLogError::DatabaseError(format!(
@@ -125,7 +126,7 @@ pub async fn process_logs(collector: &LogCollector, account_id: String) -> Resul
             )));
         }
 
-        // After inserting all logs, evaluate them against the alert rules
+        // After inserting log, check it against alert rules
         match evaluate_log_against_rules(&log_entry, &account_id).await {
             Ok(alerts) => alerts,
             Err(err) => {
