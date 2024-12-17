@@ -30,12 +30,12 @@ impl Alert {
     }
 }
 
-pub fn create_alert(conn: &mut SqliteConnection, alert: &AlertRule) -> Result<String, diesel::result::Error> {
+pub fn create_alert(conn: &mut SqliteConnection, alert: &Alert) -> Result<String, diesel::result::Error> {
     diesel::insert_into(alerts::table)
         .values(alert)
         .execute(conn)?;
 
-    Ok(alert.id)
+    Ok(alert.id.clone())
 }
 
 pub fn get_alert(conn: &mut SqliteConnection, id: String) -> Result<Option<Alert>, diesel::result::Error> {
