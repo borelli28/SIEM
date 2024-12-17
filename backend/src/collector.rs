@@ -2,11 +2,11 @@ use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, atomic::{AtomicU16, Ordering}};
 use std::collections::HashMap;
 use crate::global::GLOBAL_MESSAGE_QUEUE;
-use crate::storage::Storage;
+use crate::storage;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogEntry {
-    line_number: u16,
+    pub line_number: u16,
     pub version: String,
     pub device_vendor: String,
     pub device_product: String,
@@ -100,7 +100,7 @@ pub fn parse_cef_log(cef_str: &str) -> Result<LogEntry, ParseLogError> {
     })
 }
 
-pub async fn process_logs(collector: &LogCollector, storage: &Storage) -> Result<(), ParseLogError> {
+pub async fn process_logs(collector: &LogCollector) -> Result<(), ParseLogError> {
     let queue = GLOBAL_MESSAGE_QUEUE.lock().await;
     let batch = queue.dequeue().await.map_err(|e| {
         eprintln!("Error dequeuing batch: {}", e);
@@ -110,7 +110,7 @@ pub async fn process_logs(collector: &LogCollector, storage: &Storage) -> Result
     for cef_log in batch.lines {
         let log_entry = parse_cef_log(&cef_log)?;
         collector.add_log(log_entry.clone());
-        if let Err(e) = storage.insert_log(&log_entry).await {
+        if let Err(e) = storage::insert_log(&log_entry).await {
             eprintln!("Error inserting log into database: {}", e);
             return Err(ParseLogError::DatabaseError(format!("Error inserting log into database. Line number: {}", log_entry.line_number)));
         }
