@@ -7,7 +7,7 @@ use chrono;
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 pub struct AlertRule {
-    pub id: Uuid,
+    pub id: String,
     pub account_id: String,
     pub name: String,
     pub description: String,
@@ -31,7 +31,7 @@ impl AlertRule {
     pub fn new(account_id: String, name: String, description: String, condition: String, severity: AlertSeverity) -> Self {
         let now = chrono::Utc::now().to_string();
         AlertRule {
-            id: Uuid::new_v4(),
+            id: Uuid::new_v4().to_string(),
             account_id,
             name,
             description,
@@ -44,7 +44,7 @@ impl AlertRule {
     }
 }
 
-pub async fn create_rule(pool: &SqlitePool, rule: &AlertRule) -> Result<Uuid> {
+pub async fn create_rule(pool: &SqlitePool, rule: &AlertRule) -> Result<String> {
     let id_str = rule.id.to_string();
     let severity = rule.severity.clone() as AlertSeverity;
     sqlx::query!(
@@ -62,7 +62,7 @@ pub async fn create_rule(pool: &SqlitePool, rule: &AlertRule) -> Result<Uuid> {
     .execute(pool)
     .await?;
 
-    Ok(rule.id)
+    Ok(id_str)
 }
 
 pub async fn get_rule(pool: &SqlitePool, id: Uuid) -> Result<Option<AlertRule>> {
