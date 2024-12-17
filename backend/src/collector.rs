@@ -126,18 +126,13 @@ pub async fn process_logs(collector: &LogCollector, account_id: String) -> Resul
         }
 
         // After inserting all logs, evaluate them against the alert rules
-        let triggered_alerts = match evaluate_log_against_rules(&log_entry, &account_id).await {
+        match evaluate_log_against_rules(&log_entry, &account_id).await {
             Ok(alerts) => alerts,
             Err(err) => {
                 eprintln!("Error evaluating alerts: {:?}", err);
                 return Err(ParseLogError::AlertEvaluationError(err.to_string()));
             }
         };
-
-        // Handle triggered alerts as needed
-        for alert in triggered_alerts {
-            println!("Alert triggered: {:?}", alert);
-        }
     }
 
     Ok(())
