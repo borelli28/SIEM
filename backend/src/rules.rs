@@ -20,7 +20,7 @@ table! {
     }
 }
 
-#[derive(Queryable, Insertable, Clone, AsChangeset)]
+#[derive(Debug, Queryable, Insertable, Clone, AsChangeset)]
 #[diesel(table_name = alert_rules)]
 pub struct AlertRule {
     pub id: String,
@@ -85,7 +85,7 @@ pub fn list_rules() -> Result<Vec<AlertRule>, Box<dyn Error>> {
     Ok(results)
 }
 
-pub fn evaluate_log_against_rules(log: &LogEntry, account_id: &str) -> Result<Vec<AlertRule>, Box<dyn Error>> {
+pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> Result<Vec<AlertRule>, Box<dyn Error>> {
     let rules = list_rules()?;
     let mut triggered_alerts = Vec::new();
 
