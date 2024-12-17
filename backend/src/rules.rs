@@ -1,4 +1,3 @@
-use diesel::AsExpression;
 use evalexpr::{eval_boolean_with_context, ContextWithMutableVariables, HashMapContext};
 use crate::collector::LogEntry;
 use crate::database::establish_connection;
@@ -6,11 +5,6 @@ use diesel::prelude::*;
 use uuid::Uuid;
 use chrono::Utc;
 use std::error::Error;
-
-use diesel::deserialize::{self, FromSql};
-use diesel::serialize::{self, ToSql};
-use diesel::sqlite::Sqlite;
-use diesel::FromSqlRow;
 
 table! {
     alert_rules (id) {
@@ -34,14 +28,14 @@ pub struct AlertRule {
     pub name: String,
     pub description: String,
     pub condition: String,
-    pub severity: AlertSeverity,
+    pub severity: String,
     pub enabled: bool,
     pub created_at: String,
     pub updated_at: String,
 }
 
 impl AlertRule {
-    pub fn new(account_id: String, name: String, description: String, condition: String, severity: AlertSeverity) -> Self {
+    pub fn new(account_id: String, name: String, description: String, condition: String, severity: String) -> Self {
         let now = Utc::now().to_rfc3339();
         AlertRule {
             id: Uuid::new_v4().to_string(),
@@ -53,41 +47,6 @@ impl AlertRule {
             enabled: true,
             created_at: now.clone(),
             updated_at: now,
-        }
-    }
-}
-
-#[derive(Debug, Clone, AsExpression, FromSqlRow)]
-#[diesel(sql_type = diesel::sql_types::Text)]
-pub enum AlertSeverity {
-    Low,
-    Medium,
-    High,
-    Critical,
-}
-
-impl ToSql<diesel::sql_types::Text, Sqlite> for AlertSeverity {
-    fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Sqlite>) -> serialize::Result {
-        let s = match *self {
-            AlertSeverity::Low => "Low",
-            AlertSeverity::Medium => "Medium",
-            AlertSeverity::High => "High",
-            AlertSeverity::Critical => "Critical",
-        };
-        out.write_all(s.as_bytes())?;
-        Ok(serialize::IsNull::No)
-    }
-}
-
-impl FromSql<diesel::sql_types::Text, Sqlite> for AlertSeverity {
-    fn from_sql(bytes: Option<&<Sqlite as diesel::backend::Backend>::RawValue>) -> deserialize::Result<Self> {
-        let s = String::from_utf8(bytes.unwrap().to_vec())?;
-        match s.as_str() {
-            "Low" => Ok(AlertSeverity::Low),
-            "Medium" => Ok(AlertSeverity::Medium),
-            "High" => Ok(AlertSeverity::High),
-            "Critical" => Ok(AlertSeverity::Critical),
-            _ => Err("Unrecognized severity".into()),
         }
     }
 }
