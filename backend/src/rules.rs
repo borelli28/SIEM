@@ -1,10 +1,10 @@
-use evalexpr::{eval_boolean_with_context, ContextWithMutableVariables, HashMapContext};
-use crate::collector::LogEntry;
+use evalexpr::{eval_boolean_with_context, ContextWithMutableVariables, HashMapContext, DefaultNumericTypes};
 use crate::database::establish_connection;
+use crate::collector::LogEntry;
 use diesel::prelude::*;
-use uuid::Uuid;
-use chrono::Utc;
 use std::error::Error;
+use chrono::Utc;
+use uuid::Uuid;
 
 table! {
     alert_rules (id) {
@@ -100,7 +100,7 @@ pub fn evaluate_log_against_rules(log: &LogEntry, account_id: &str) -> Result<Ve
 
 // Evaluate a condition string against a log entry
 fn evaluate_condition(condition: &str, log: &LogEntry) -> bool {
-    let mut context = HashMapContext::new();
+    let mut context: HashMapContext<DefaultNumericTypes> = HashMapContext::new();
 
     // Context = Key/Value pairs like Dictionaries
     context.set_value("severity".to_string(), log.severity.clone().into()).unwrap();
