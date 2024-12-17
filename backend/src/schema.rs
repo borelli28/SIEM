@@ -29,7 +29,7 @@ diesel::table! {
         account_id -> Text,
         severity -> Text,
         message -> Text,
-        created_at -> Timestamp,
+        created_at -> Text,
     }
 }
 
