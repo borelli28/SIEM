@@ -1,5 +1,5 @@
 CREATE TABLE alerts (
-    id TEXT PRIMARY KEY,
+    id TEXT PRIMARY KEY NOT NULL,
     rule_id TEXT NOT NULL,
     account_id TEXT NOT NULL,
     severity TEXT NOT NULL,
