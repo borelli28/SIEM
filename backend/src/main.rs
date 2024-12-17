@@ -6,6 +6,7 @@ mod batch_maker;
 mod message_queue;
 mod rules;
 mod alert;
+mod schema;
 
 use actix_web::{web, App, HttpServer, HttpResponse, Responder};
 use crate::collector::{LogCollector, ParseLogError, process_logs};
