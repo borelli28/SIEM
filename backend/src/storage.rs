@@ -31,7 +31,7 @@ struct NewLog {
     extensions: String,
 }
 
-pub fn insert_log(log: &LogEntry) -> Result<(), Box<dyn Error>> {
+pub async fn insert_log(log: &LogEntry) -> Result<(), Box<dyn Error>> {
     let mut conn = establish_connection();
     let extensions_json = serde_json::to_string(&log.extensions)?;
 
