@@ -90,7 +90,8 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
     let mut triggered_alerts = Vec::new();
 
     for rule in rules {
-        if rule.enabled && rule.account_id == account_id && evaluate_condition(&rule.condition, log) {
+        // Added "&" to rule.account_id so we can compare equals types(&String)
+        if rule.enabled && &rule.account_id == account_id && evaluate_condition(&rule.condition, log) {
             triggered_alerts.push(rule);
         }
     }
