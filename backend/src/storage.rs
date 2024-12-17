@@ -6,6 +6,7 @@ use serde_json;
 
 table! {
     logs (id) {
+        account_id -> Text,
         id -> Integer,
         version -> Nullable<Text>,
         device_vendor -> Nullable<Text>,
@@ -21,6 +22,7 @@ table! {
 #[derive(Insertable)]
 #[diesel(table_name = logs)]
 struct NewLog {
+    account_id: String,
     version: Option<String>,
     device_vendor: Option<String>,
     device_product: Option<String>,
@@ -36,6 +38,7 @@ pub async fn insert_log(log: &LogEntry) -> Result<(), Box<dyn Error>> {
     let extensions_json = serde_json::to_string(&log.extensions)?;
 
     let new_log = NewLog {
+        account_id: log.account_id.clone(),
         version: Some(log.version.clone()),
         device_vendor: Some(log.device_vendor.clone()),
         device_product: Some(log.device_product.clone()),
