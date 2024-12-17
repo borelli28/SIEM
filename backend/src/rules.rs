@@ -1,24 +1,12 @@
 use evalexpr::{eval_boolean_with_context, ContextWithMutableVariables, HashMapContext, DefaultNumericTypes};
 use crate::database::establish_connection;
 use crate::collector::LogEntry;
+use crate::alert::{create_alert, Alert};
 use diesel::prelude::*;
 use std::error::Error;
 use chrono::Utc;
 use uuid::Uuid;
-
-table! {
-    alert_rules (id) {
-        id -> Text,
-        account_id -> Text,
-        name -> Text,
-        description -> Text,
-        condition -> Text,
-        severity -> Text,
-        enabled -> Bool,
-        created_at -> Text,
-        updated_at -> Text,
-    }
-}
+use crate::schema::alert_rules;
 
 #[derive(Debug, Queryable, Insertable, Clone, AsChangeset)]
 #[diesel(table_name = alert_rules)]
@@ -85,14 +73,17 @@ pub fn list_rules() -> Result<Vec<AlertRule>, Box<dyn Error>> {
     Ok(results)
 }
 
-pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> Result<Vec<AlertRule>, Box<dyn Error>> {
+pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> Result<Vec<Alert>, Box<dyn Error>> {
+    let mut conn = establish_connection();
     let rules = list_rules()?;
     let mut triggered_alerts = Vec::new();
 
     for rule in rules {
         // Added "&" to rule.account_id so we can compare equals types(&String)
         if rule.enabled && &rule.account_id == account_id && evaluate_condition(&rule.condition, log) {
-            triggered_alerts.push(rule);
+            let alert = Alert::new(&rule);
+            create_alert(&mut conn, &alert).expect("Failed to create alert");
+            triggered_alerts.push(alert);
         }
     }
 
