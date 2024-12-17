@@ -11,8 +11,6 @@ use crate::collector::{LogCollector, ParseLogError, process_logs};
 use crate::batch_maker::{create_batch};
 use serde_json::json;
 
-const DB_PATH: &str = "logs/logs.db";
-
 async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
