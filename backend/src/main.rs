@@ -15,10 +15,10 @@ async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
 
-async fn import_log(collector: web::Data<LogCollector>, log: web::Json<String>) -> impl Responder {
+async fn import_log(collector: web::Data<LogCollector>, log: web::Json<String>, account_id: String) -> impl Responder {
     match create_batch(&log.into_inner()).await {
         Ok(_) => {
-            match process_logs(&collector).await {
+            match process_logs(&collector, account_id).await {
                 Ok(_) => HttpResponse::Ok().json(json!({ "status": "ok" })),
                 Err(e) => {
                     eprintln!("Error processing logs: {}", e);
