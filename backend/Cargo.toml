@@ -8,6 +8,7 @@ actix-web = "4.9.0"
 argon2 = "0.5.3"
 chrono = "0.4.39"
 diesel = { version = "2.2.6", features = ["sqlite", "chrono", "uuid"] }
+dotenvy = "0.15.7"
 evalexpr = "12.0.1"
 lazy_static = "1.5.0"
 log = "0.4.22"
