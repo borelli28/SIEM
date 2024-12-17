@@ -1,3 +1,4 @@
+use crate::rules::evaluate_log_against_rules;
 use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, atomic::{AtomicU16, Ordering}};
 use std::collections::HashMap;
@@ -6,6 +7,7 @@ use crate::storage;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogEntry {
+    pub account_id: String,
     pub line_number: u16,
     pub version: String,
     pub device_vendor: String,
@@ -52,7 +54,9 @@ impl LogCollector {
 pub enum ParseLogError {
     InvalidCEFFormat,
     BatchDequeueError,
-    DatabaseError(String)
+    DatabaseError(String),
+    AlertEvaluationError(String)
+
 }
 
 impl std::fmt::Display for ParseLogError {
@@ -61,13 +65,14 @@ impl std::fmt::Display for ParseLogError {
             ParseLogError::InvalidCEFFormat => write!(f, "Invalid CEF format"),
             ParseLogError::BatchDequeueError => write!(f, "Error while retriveing batch"),
             ParseLogError::DatabaseError(_) => write!(f, "Error while inserting in database"),
+            ParseLogError::AlertEvaluationError(_) => write!(f, "Error while matching log with alert rules"),
         }
     }
 }
 
 impl std::error::Error for ParseLogError {}
 
-pub fn parse_cef_log(cef_str: &str) -> Result<LogEntry, ParseLogError> {
+pub fn parse_cef_log(cef_str: &str, account_id: String) -> Result<LogEntry, ParseLogError> {
     let parts: Vec<&str> = cef_str.split('|').collect();
     // Validate CEF format
     if parts.len() != 8 || !parts[0].starts_with("CEF:") {
@@ -88,6 +93,7 @@ pub fn parse_cef_log(cef_str: &str) -> Result<LogEntry, ParseLogError> {
     }
 
     Ok(LogEntry {
+        account_id: account_id,
         line_number: 0,
         version: parts[0].replace("CEF:", ""),
         device_vendor: parts[1].to_string(),
@@ -100,7 +106,7 @@ pub fn parse_cef_log(cef_str: &str) -> Result<LogEntry, ParseLogError> {
     })
 }
 
-pub async fn process_logs(collector: &LogCollector) -> Result<(), ParseLogError> {
+pub async fn process_logs(collector: &LogCollector, account_id: String) -> Result<(), ParseLogError> {
     let queue = GLOBAL_MESSAGE_QUEUE.lock().await;
     let batch = queue.dequeue().await.map_err(|e| {
         eprintln!("Error dequeuing batch: {}", e);
@@ -108,12 +114,31 @@ pub async fn process_logs(collector: &LogCollector) -> Result<(), ParseLogError>
     })?;
 
     for cef_log in batch.lines {
-        let log_entry = parse_cef_log(&cef_log)?;
+        let log_entry = parse_cef_log(&cef_log, account_id.clone())?;
         collector.add_log(log_entry.clone());
+
         if let Err(e) = storage::insert_log(&log_entry).await {
             eprintln!("Error inserting log into database: {}", e);
-            return Err(ParseLogError::DatabaseError(format!("Error inserting log into database. Line number: {}", log_entry.line_number)));
+            return Err(ParseLogError::DatabaseError(format!(
+                "Error inserting log into database. Line number: {}",
+                log_entry.line_number
+            )));
+        }
+
+        // After inserting all logs, evaluate them against the alert rules
+        let triggered_alerts = match evaluate_log_against_rules(&log_entry, &account_id).await {
+            Ok(alerts) => alerts,
+            Err(err) => {
+                eprintln!("Error evaluating alerts: {:?}", err);
+                return Err(ParseLogError::AlertEvaluationError(err.to_string()));
+            }
+        };
+
+        // Handle triggered alerts as needed
+        for alert in triggered_alerts {
+            println!("Alert triggered: {:?}", alert);
         }
     }
+
     Ok(())
 }
