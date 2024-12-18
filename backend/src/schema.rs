@@ -37,6 +37,7 @@ diesel::table! {
 diesel::table! {
     logs (id) {
         id -> Nullable<Integer>,
+        host -> Nullable<Text>,
         account_id -> Text,
         version -> Nullable<Text>,
         device_vendor -> Nullable<Text>,

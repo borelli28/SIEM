@@ -1,5 +1,6 @@
 CREATE TABLE logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
+    host TEXT,
     account_id TEXT NOT NULL,
     version TEXT,
     device_vendor TEXT,
