@@ -23,3 +23,7 @@ package
 
 ### SQLite3 ###
 *.db
+
+### Other ###
+.env
+diesel.toml

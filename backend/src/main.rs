@@ -1,64 +1,43 @@
 mod global;
-mod storage;
 mod database;
+mod storage;
 mod collector;
 mod batch_maker;
 mod message_queue;
+mod rules;
+mod alert;
+mod schema;
+mod handlers;
 
-use actix_web::{web, App, HttpServer, HttpResponse, Responder};
-use crate::collector::{LogCollector, ParseLogError, process_logs};
-use crate::batch_maker::{create_batch};
-use crate::database::initialize_db;
-use crate::storage::Storage;
-use serde_json::json;
-
-const DB_PATH: &str = "logs/logs.db";
-
-async fn index() -> impl Responder {
-    HttpResponse::Ok().body("Hello world!")
-}
-
-async fn import_log(collector: web::Data<LogCollector>, storage: web::Data<Storage>, log: web::Json<String>) -> impl Responder {
-    match create_batch(&log.into_inner()).await {
-        Ok(_) => {
-            match process_logs(&collector, &storage).await {
-                Ok(_) => HttpResponse::Ok().json(json!({ "status": "ok" })),
-                Err(e) => {
-                    eprintln!("Error processing logs: {}", e);
-                    match e {
-                        ParseLogError::DatabaseError(msg) => {
-                            HttpResponse::InternalServerError().json(json!({
-                                "status": "error",
-                                "message": "Database error",
-                                "details": msg
-                            }))
-                        },
-                        _ => HttpResponse::InternalServerError().json(json!({
-                            "status": "error",
-                            "message": "Failed to process logs"
-                        }))
-                    }
-                }
-            }
-        },
-        Err(_) => HttpResponse::BadRequest().json(json!({ "status": "error", "message": "Invalid log format" })),
-    }
-}
+use actix_web::{web, App, HttpServer};
+use crate::collector::LogCollector;
+use crate::handlers::{
+    index,
+    import_log_handler,
+    get_alert_handler,
+    get_all_alerts_handler,
+    delete_alert_handler,
+    acknowledge_alert_handler
+};
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let collector = web::Data::new(LogCollector::new());
-    let pool = initialize_db(DB_PATH).await.expect("Failed to initialize database");
-    let storage = web::Data::new(Storage::new(pool));
 
     HttpServer::new(move || {
         App::new()
             .app_data(collector.clone())
-            .app_data(storage.clone())
             .service(
                 web::scope("/backend")
                     .route("/", web::get().to(index))
-                    .route("/import_log", web::post().to(import_log))
+                    .route("/import_log", web::post().to(import_log_handler))
+                    .service(
+                        web::scope("/alert")
+                            .route("/get/{alert_id}", web::get().to(get_alert_handler))
+                            .route("/get_all/{account_id}", web::get().to(get_all_alerts_handler))
+                            .route("/delete/{alert_id}", web::delete().to(delete_alert_handler))
+                            .route("/acknowledge/{alert_id}", web::put().to(acknowledge_alert_handler))
+                    )
             )
     })
     .bind(("127.0.0.1", 4200))?

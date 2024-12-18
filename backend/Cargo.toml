@@ -6,10 +6,14 @@ edition = "2021"
 [dependencies]
 actix-web = "4.9.0"
 argon2 = "0.5.3"
+chrono = "0.4.39"
+diesel = { version = "2.2.6", features = ["sqlite", "chrono", "uuid"] }
+dotenvy = "0.15.7"
+evalexpr = "12.0.1"
 lazy_static = "1.5.0"
+log = "0.4.22"
 rand_core = "0.6.4"
 serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.133"
-sqlx = { version = "0.8.2", features = ["sqlite", "runtime-tokio"] }
 tokio = { version = "1.42.0", features = ["full"] }
-uuid = "1.11.0"
+uuid = { version = "1.11.0", features = ["v4", "fast-rng"] }
