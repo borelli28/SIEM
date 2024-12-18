@@ -74,7 +74,6 @@ pub fn list_rules() -> Result<Vec<AlertRule>, Box<dyn Error>> {
 }
 
 pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> Result<Vec<Alert>, Box<dyn Error>> {
-    let mut conn = establish_connection();
     let rules = list_rules()?;
     let mut triggered_alerts = Vec::new();
 
@@ -82,7 +81,7 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
         // Added "&" to rule.account_id so we can compare equals types(&String)
         if rule.enabled && &rule.account_id == account_id && evaluate_condition(&rule.condition, log) {
             let alert = Alert::new(&rule);
-            create_alert(&mut conn, &alert).expect("Failed to create alert");
+            create_alert(&alert).expect("Failed to create alert");
             triggered_alerts.push(alert);
         }
     }
