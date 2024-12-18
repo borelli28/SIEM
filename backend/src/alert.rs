@@ -48,7 +48,7 @@ pub fn create_alert(alert: &Alert) -> Result<String, diesel::result::Error> {
     Ok(alert.id.clone())
 }
 
-pub fn get_alert(alert_id: String) -> Result<Option<Alert>, diesel::result::Error> {
+pub fn get_alert(alert_id: &String) -> Result<Option<Alert>, diesel::result::Error> {
     let mut conn: SqliteConnection = db_conn();
     alerts::table.find(alert_id).first(&mut conn).optional()
 }
@@ -61,13 +61,13 @@ pub fn list_alerts(acct_id: &String) -> Result<Vec<Alert>, diesel::result::Error
         .load::<Alert>(&mut conn)
 }
 
-pub fn delete_alert(alert_id: String) -> Result<bool, diesel::result::Error> {
+pub fn delete_alert(alert_id: &String) -> Result<bool, diesel::result::Error> {
     let mut conn: SqliteConnection = db_conn();
     let result = diesel::delete(alerts::table.find(alert_id)).execute(&mut conn)?;
     Ok(result > 0)
 }
 
-pub fn acknowledge_alert(alert_id: String) -> Result<bool, diesel::result::Error> {
+pub fn acknowledge_alert(alert_id: &String) -> Result<bool, diesel::result::Error> {
     let mut conn: SqliteConnection = db_conn();
     let updated_rows = diesel::update(alerts.find(alert_id))
         .set(acknowledged.eq(true))
