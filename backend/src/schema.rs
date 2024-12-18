@@ -43,6 +43,14 @@ diesel::table! {
 }
 
 diesel::table! {
+    log_hosts (id) {
+        id -> Nullable<Integer>,
+        log_id -> Integer,
+        host_id -> Text,
+    }
+}
+
+diesel::table! {
     logs (id) {
         id -> Nullable<Integer>,
         account_id -> Text,
@@ -59,6 +67,7 @@ diesel::table! {
 
 diesel::joinable!(alert_rules -> accounts (account_id));
 diesel::joinable!(alerts -> alert_rules (rule_id));
+diesel::joinable!(log_hosts -> logs (log_id));
 diesel::joinable!(logs -> accounts (account_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
@@ -66,5 +75,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     alert_rules,
     alerts,
     host,
+    log_hosts,
     logs,
 );
