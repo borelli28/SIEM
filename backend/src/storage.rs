@@ -1,23 +1,9 @@
 use crate::database::establish_connection;
 use crate::collector::LogEntry;
+use crate::schema::logs;
 use diesel::prelude::*;
 use std::error::Error;
 use serde_json;
-
-table! {
-    logs (id) {
-        account_id -> Text,
-        id -> Integer,
-        version -> Nullable<Text>,
-        device_vendor -> Nullable<Text>,
-        device_product -> Nullable<Text>,
-        device_version -> Nullable<Text>,
-        signature_id -> Nullable<Text>,
-        name -> Nullable<Text>,
-        severity -> Nullable<Text>,
-        extensions -> Text,
-    }
-}
 
 #[derive(Insertable)]
 #[diesel(table_name = logs)]
