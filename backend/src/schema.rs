@@ -35,9 +35,16 @@ diesel::table! {
 }
 
 diesel::table! {
+    host (id) {
+        id -> Text,
+        ip_address -> Nullable<Text>,
+        hostname -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
     logs (id) {
         id -> Nullable<Integer>,
-        host -> Nullable<Text>,
         account_id -> Text,
         version -> Nullable<Text>,
         device_vendor -> Nullable<Text>,
@@ -58,5 +65,6 @@ diesel::allow_tables_to_appear_in_same_query!(
     accounts,
     alert_rules,
     alerts,
+    host,
     logs,
 );
