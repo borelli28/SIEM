@@ -9,6 +9,7 @@ use serde_json;
 #[diesel(table_name = logs)]
 struct NewLog {
     account_id: String,
+    host_id: String,
     version: Option<String>,
     device_vendor: Option<String>,
     device_product: Option<String>,
@@ -25,6 +26,7 @@ pub async fn insert_log(log: &LogEntry) -> Result<(), Box<dyn Error>> {
 
     let new_log = NewLog {
         account_id: log.account_id.clone(),
+        host_id: log.account_id.clone(),
         version: Some(log.version.clone()),
         device_vendor: Some(log.device_vendor.clone()),
         device_product: Some(log.device_product.clone()),
