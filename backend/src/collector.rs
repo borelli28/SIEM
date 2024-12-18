@@ -7,6 +7,7 @@ use crate::storage;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogEntry {
+    pub host_ip: String,
     pub account_id: String,
     pub line_number: u16,
     pub version: String,
@@ -72,7 +73,7 @@ impl std::fmt::Display for ParseLogError {
 
 impl std::error::Error for ParseLogError {}
 
-pub fn parse_cef_log(cef_str: &str, account_id: String) -> Result<LogEntry, ParseLogError> {
+pub fn parse_cef_log(cef_str: &str, account_id: &String, host_ip: &String) -> Result<LogEntry, ParseLogError> {
     let parts: Vec<&str> = cef_str.split('|').collect();
     // Validate CEF format
     if parts.len() != 8 || !parts[0].starts_with("CEF:") {
@@ -93,7 +94,8 @@ pub fn parse_cef_log(cef_str: &str, account_id: String) -> Result<LogEntry, Pars
     }
 
     Ok(LogEntry {
-        account_id: account_id,
+        host_ip: host_ip.to_string(),
+        account_id: account_id.to_string(),
         line_number: 0,
         version: parts[0].replace("CEF:", ""),
         device_vendor: parts[1].to_string(),
@@ -106,7 +108,7 @@ pub fn parse_cef_log(cef_str: &str, account_id: String) -> Result<LogEntry, Pars
     })
 }
 
-pub async fn process_logs(collector: &LogCollector, account_id: String) -> Result<(), ParseLogError> {
+pub async fn process_logs(collector: &LogCollector, account_id: String, host_ip: String) -> Result<(), ParseLogError> {
     let queue = GLOBAL_MESSAGE_QUEUE.lock().await;
     let batch = queue.dequeue().await.map_err(|e| {
         eprintln!("Error dequeuing batch: {}", e);
@@ -114,7 +116,7 @@ pub async fn process_logs(collector: &LogCollector, account_id: String) -> Resul
     })?;
 
     for cef_log in batch.lines {
-        let log_entry = parse_cef_log(&cef_log, account_id.clone())?;
+        let log_entry = parse_cef_log(&cef_log, &account_id, &host_ip)?;
         collector.add_log(log_entry.clone());
 
         // Insert log in the database
