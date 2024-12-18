@@ -11,14 +11,14 @@ mod schema;
 use actix_web::{web, App, HttpServer, HttpResponse, Responder};
 use crate::collector::{LogCollector, ParseLogError, process_logs};
 use crate::batch_maker::{create_batch};
-use crate::alert::{list_alerts};
+use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert};
 use serde_json::json;
 
 async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
 
-async fn import_log(collector: web::Data<LogCollector>, log: web::Json<String>, account_id: String) -> impl Responder {
+async fn import_log_handler(collector: web::Data<LogCollector>, log: web::Json<String>, account_id: String) -> impl Responder {
     match create_batch(&log.into_inner()).await {
         Ok(_) => {
             match process_logs(&collector, account_id).await {
@@ -45,9 +45,39 @@ async fn import_log(collector: web::Data<LogCollector>, log: web::Json<String>, 
     }
 }
 
-async fn get_all_alerts(account_id: web::Path<String>) -> impl Responder {
+async fn get_alert_handler(alert_id: web::Path<String>) -> impl Responder {
+    match get_alert(&alert_id.to_string()) {
+        Ok(alert) => HttpResponse::Ok().json(alert),
+        Err(err) => HttpResponse::InternalServerError().json(json!({
+            "status": "error",
+            "message": err.to_string()
+        }))
+    }
+}
+
+async fn get_all_alerts_handler(account_id: web::Path<String>) -> impl Responder {
     match list_alerts(&account_id) {
         Ok(alerts) => HttpResponse::Ok().json(alerts),
+        Err(err) => HttpResponse::InternalServerError().json(json!({
+            "status": "error",
+            "message": err.to_string()
+        }))
+    }
+}
+
+async fn delete_alert_handler(alert_id: web::Path<String>) -> impl Responder {
+    match delete_alert(&alert_id.to_string()) {
+        Ok(ok) => HttpResponse::Ok().json(ok),
+        Err(err) => HttpResponse::InternalServerError().json(json!({
+            "status": "error",
+            "message": err.to_string()
+        }))
+    }
+}
+
+async fn acknowledge_alert_handler(alert_id: web::Path<String>) -> impl Responder {
+    match acknowledge_alert(&alert_id.to_string()) {
+        Ok(ok) => HttpResponse::Ok().json(ok),
         Err(err) => HttpResponse::InternalServerError().json(json!({
             "status": "error",
             "message": err.to_string()
@@ -65,10 +95,13 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/backend")
                     .route("/", web::get().to(index))
-                    .route("/import_log", web::post().to(import_log))
+                    .route("/import_log", web::post().to(import_log_handler))
                     .service(
                         web::scope("/alert")
-                            .route("/get_all/{account_id}", web::get().to(get_all_alerts))
+                            .route("/get_all/{alert_id}", web::get().to(get_alert_handler))
+                            .route("/get_all/{account_id}", web::get().to(get_all_alerts_handler))
+                            .route("/delete_alert/{alert_id}", web::delete().to(delete_alert_handler))
+                            .route("/acknowledge_alert/{alert_id}", web::put().to(acknowledge_alert_handler))
                     )
             )
     })
