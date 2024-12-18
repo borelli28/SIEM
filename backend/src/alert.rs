@@ -6,7 +6,7 @@ use chrono::{Utc};
 use uuid::Uuid;
 use crate::schema::alerts; 
 
-#[derive(Debug, Serialize, Deserialize, Queryable, Insertable)]
+#[derive(Debug, Serialize, Deserialize, Queryable, Insertable, AsChangeset)]
 #[diesel(table_name = alerts)]
 pub struct Alert {
     pub id: String,
@@ -14,6 +14,7 @@ pub struct Alert {
     pub account_id: String,
     pub severity: String,
     pub message: String,
+    pub acknowledged: bool,
     pub created_at: String,
 }
 
@@ -25,6 +26,7 @@ impl Alert {
             account_id: rule.account_id.clone(),
             severity: rule.severity.clone(),
             message: format!("Alert triggered: {} - {}", rule.name, rule.description),
+            acknowledged: false,
             created_at: Utc::now().to_string(),
         }
     }
@@ -52,4 +54,14 @@ pub fn list_alerts(conn: &mut SqliteConnection, account_id: &String) -> Result<V
 pub fn delete_alert(conn: &mut SqliteConnection, id: String) -> Result<bool, diesel::result::Error> {
     let result = diesel::delete(alerts::table.find(id)).execute(conn)?;
     Ok(result > 0)
+}
+
+pub fn acknowledge_alert(conn: &mut SqliteConnection, id: String) -> Result<bool, diesel::result::Error> {
+    use crate::schema::alerts::dsl::*;
+
+    let updated_rows = diesel::update(alerts.find(id))
+        .set(acknowledged.eq(true))
+        .execute(conn)?;
+
+    Ok(updated_rows > 0)
 }
