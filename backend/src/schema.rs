@@ -29,6 +29,7 @@ diesel::table! {
         account_id -> Text,
         severity -> Text,
         message -> Text,
+        acknowledged -> Bool,
         created_at -> Text,
     }
 }
