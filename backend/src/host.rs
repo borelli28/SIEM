@@ -31,7 +31,7 @@ pub fn create_host(host: &Host, _account_id: &String) -> Result<(), diesel::resu
     Ok(())
 }
 
-pub fn get_host(host_id: &str) -> Result<Option<Host>, diesel::result::Error> {
+pub fn get_host(host_id: &String) -> Result<Option<Host>, diesel::result::Error> {
     let mut conn = establish_connection();
     host::table.find(host_id).first(&mut conn).optional()
 }
@@ -49,7 +49,7 @@ pub fn update_host(host: &Host) -> Result<(), diesel::result::Error> {
     Ok(())
 }
 
-pub fn delete_host(host_id: &str) -> Result<bool, diesel::result::Error> {
+pub fn delete_host(host_id: &String) -> Result<bool, diesel::result::Error> {
     let mut conn = establish_connection();
     let num_deleted = diesel::delete(host::table.find(host_id))
         .execute(&mut conn)?;
