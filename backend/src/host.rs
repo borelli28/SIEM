@@ -7,21 +7,23 @@ use uuid::Uuid;
 #[diesel(table_name = host)]
 pub struct Host {
     pub id: String,
+    pub account_id: String,
     pub ip_address: Option<String>,
     pub hostname: Option<String>,
 }
 
 impl Host {
-    pub fn new(ip_address: Option<String>, hostname: Option<String>) -> Self {
+    pub fn new(account_id: String, ip_address: Option<String>, hostname: Option<String>) -> Self {
         Host {
             id: Uuid::new_v4().to_string(),
+            account_id,
             ip_address,
             hostname,
         }
     }
 }
 
-pub fn create_host(host: &Host) -> Result<(), diesel::result::Error> {
+pub fn create_host(host: &Host, _account_id: &String) -> Result<(), diesel::result::Error> {
     let mut conn = establish_connection();
     diesel::insert_into(host::table)
         .values(host)
