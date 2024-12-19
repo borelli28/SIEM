@@ -36,9 +36,11 @@ pub fn get_host(host_id: &String) -> Result<Option<Host>, diesel::result::Error>
     host::table.find(host_id).first(&mut conn).optional()
 }
 
-pub fn get_all_hosts() -> Result<Vec<Host>, diesel::result::Error> {
+pub fn get_all_hosts(account_id: &String) -> Result<Vec<Host>, diesel::result::Error> {
     let mut conn = establish_connection();
-    host::table.load::<Host>(&mut conn)
+    host::table
+        .filter(host::account_id.eq(account_id))
+        .load::<Host>(&mut conn)
 }
 
 pub fn update_host(host: &Host) -> Result<(), diesel::result::Error> {
