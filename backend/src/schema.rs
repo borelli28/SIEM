@@ -35,9 +35,19 @@ diesel::table! {
 }
 
 diesel::table! {
+    host (id) {
+        id -> Text,
+        account_id -> Text,
+        ip_address -> Nullable<Text>,
+        hostname -> Nullable<Text>,
+    }
+}
+
+diesel::table! {
     logs (id) {
         id -> Nullable<Integer>,
         account_id -> Text,
+        host_id -> Text,
         version -> Nullable<Text>,
         device_vendor -> Nullable<Text>,
         device_product -> Nullable<Text>,
@@ -51,11 +61,14 @@ diesel::table! {
 
 diesel::joinable!(alert_rules -> accounts (account_id));
 diesel::joinable!(alerts -> alert_rules (rule_id));
+diesel::joinable!(host -> accounts (account_id));
 diesel::joinable!(logs -> accounts (account_id));
+diesel::joinable!(logs -> host (host_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     accounts,
     alert_rules,
     alerts,
+    host,
     logs,
 );

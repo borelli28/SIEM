@@ -1,6 +1,7 @@
 CREATE TABLE logs (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     account_id TEXT NOT NULL,
+    host_id TEXT NOT NULL,
     version TEXT,
     device_vendor TEXT,
     device_product TEXT,
@@ -9,5 +10,6 @@ CREATE TABLE logs (
     name TEXT,
     severity TEXT,
     extensions TEXT,
-    FOREIGN KEY (account_id) REFERENCES accounts(id)
+    FOREIGN KEY (account_id) REFERENCES accounts(id),
+    FOREIGN KEY (host_id) REFERENCES host(id)
 );

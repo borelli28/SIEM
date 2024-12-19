@@ -1,28 +1,15 @@
 use crate::database::establish_connection;
 use crate::collector::LogEntry;
+use crate::schema::logs;
 use diesel::prelude::*;
 use std::error::Error;
 use serde_json;
-
-table! {
-    logs (id) {
-        account_id -> Text,
-        id -> Integer,
-        version -> Nullable<Text>,
-        device_vendor -> Nullable<Text>,
-        device_product -> Nullable<Text>,
-        device_version -> Nullable<Text>,
-        signature_id -> Nullable<Text>,
-        name -> Nullable<Text>,
-        severity -> Nullable<Text>,
-        extensions -> Text,
-    }
-}
 
 #[derive(Insertable)]
 #[diesel(table_name = logs)]
 struct NewLog {
     account_id: String,
+    host_id: String,
     version: Option<String>,
     device_vendor: Option<String>,
     device_product: Option<String>,
@@ -39,6 +26,7 @@ pub async fn insert_log(log: &LogEntry) -> Result<(), Box<dyn Error>> {
 
     let new_log = NewLog {
         account_id: log.account_id.clone(),
+        host_id: log.account_id.clone(),
         version: Some(log.version.clone()),
         device_vendor: Some(log.device_vendor.clone()),
         device_product: Some(log.device_product.clone()),

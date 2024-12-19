@@ -1,5 +1,6 @@
-use sqlx::{Result, query, query_as};
-use sqlx::sqlite::SqlitePool;
+use crate::database::establish_connection;
+use crate::schema::accounts;
+use diesel::prelude::*;
 use uuid::Uuid;
 use argon2::{
     password_hash::{
@@ -15,7 +16,8 @@ fn hash_password(password: &str) -> Result<String, argon2::password_hash::Error>
     argon2.hash_password(password.as_bytes(), &salt).map(|hash| hash.to_string())
 }
 
-#[derive(Debug)]
+#[derive(Queryable, Insertable, AsChangeset, Debug)]
+#[diesel(table_name = accounts)]
 pub struct Account {
     pub id: String,
     pub name: String,
@@ -23,7 +25,7 @@ pub struct Account {
 }
 
 impl Account {
-    pub fn new(name: &str, password: &str) -> Result<Self, argon2::password_hash::Error> {
+    pub fn new(name: &String, password: &String) -> Result<Self, argon2::password_hash::Error> {
         let password_hash = hash_password(password)?;
 
         Ok(Account {
@@ -33,84 +35,64 @@ impl Account {
         })
     }
 
-    pub fn verify_password(&self, password: &str) -> bool {
+    pub fn verify_password(&self, password: &String) -> bool {
         let parsed_hash = PasswordHash::new(&self.password_hash).unwrap();
         Argon2::default().verify_password(password.as_bytes(), &parsed_hash).is_ok()
     }
 }
 
-pub async fn create_account(pool: &SqlitePool, name: &str, password: &str) -> Result<Account> {
-    let account = Account::new(name, password).map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
-    query(
-        "INSERT INTO accounts (id, name, password_hash) VALUES (?, ?, ?)"
-    )
-    .bind(&account.id)
-    .bind(&account.name)
-    .bind(&account.password_hash)
-    .execute(pool)
-    .await?;
+pub fn create_account(name: &String, password: &String) -> Result<Account, diesel::result::Error> {
+    let mut conn = establish_connection();
+    let account = Account::new(name, password).map_err(|e| diesel::result::Error::DatabaseError(
+        diesel::result::DatabaseErrorKind::__Unknown, Box::new(e.to_string())
+    ))?;
+
+    diesel::insert_into(accounts::table)
+        .values(&account)
+        .execute(&mut conn)?;
     Ok(account)
 }
 
-pub async fn get_account(pool: &SqlitePool, id: &str) -> Result<Option<Account>> {
-    let account = query_as::<sqlx::Sqlite, Account>(
-        "SELECT id, name, password_hash FROM accounts WHERE id = ?"
-    )
-    .bind(id)
-    .fetch_optional(pool)
-    .await?;
-
-    Ok(account)
+pub fn get_account(id: &String) -> Result<Option<Account>, diesel::result::Error> {
+    let mut conn = establish_connection();
+    accounts::table.find(id).first(&mut conn).optional()
 }
 
-pub async fn update_account(pool: &SqlitePool, id: &str, name: Option<&str>, password: Option<&str>) -> Result<bool> {
-    let mut query = String::from("UPDATE accounts SET");
-    let mut first = true;
+pub fn update_account(id: &String, name: Option<&String>, password: Option<&String>) -> Result<bool, diesel::result::Error> {
+    let mut conn = establish_connection();
+    let mut updates = Vec::new();
 
     if let Some(new_name) = name {
-        query.push_str(if first { " name = ?" } else { ", name = ?" });
-        first = false;
-    }
-
-    if password.is_some() {
-        query.push_str(if first { " password_hash = ?" } else { ", password_hash = ?" });
-        first = false;
-    }
-
-    query.push_str(" WHERE id = ?");
-
-    let mut query_builder = query(&query).bind(id);
-
-    if let Some(new_name) = name {
-        query_builder = query_builder.bind(new_name);
+        updates.push(accounts::name.eq(new_name));
     }
 
     if let Some(new_password) = password {
-        let password_hash = hash_password(new_password)
-            .map_err(|e| sqlx::Error::Protocol(e.to_string()))?;
-        query_builder = query_builder.bind(password_hash);
+        let password_hash = hash_password(new_password).map_err(|e| diesel::result::Error::DatabaseError(
+            diesel::result::DatabaseErrorKind::__Unknown, Box::new(e.to_string())
+        ))?;
+        updates.push(accounts::password_hash.eq(password_hash));
     }
 
-    let rows_affected = query_builder.execute(pool).await?.rows_affected();
-    Ok(rows_affected > 0)
+    let affected_rows = diesel::update(accounts::table.find(id))
+        .set(updates)
+        .execute(&mut conn)?;
+    Ok(affected_rows > 0)
 }
 
-pub async fn delete_account(pool: &SqlitePool, id: &str) -> Result<bool> {
-    let result = query("DELETE FROM accounts WHERE id = ?")
-        .bind(id)
-        .execute(pool)
-        .await?;
-
-    Ok(result.rows_affected() > 0)
+pub fn delete_account(id: &String) -> Result<bool, diesel::result::Error> {
+    let mut conn = establish_connection();
+    let affected_rows = diesel::delete(accounts::table.find(id))
+        .execute(&mut conn)?;
+    Ok(affected_rows > 0)
 }
 
-pub async fn verify_login(pool: &SqlitePool, name: &str, password: &str) -> Result<Option<Account>> {
-    let account = query_as::<sqlx::Sqlite, Account>(
-        "SELECT id, name, password_hash FROM accounts WHERE name = ?"
-    )
-    .bind(name)
-    .fetch_optional(pool)
-    .await?;
+pub fn verify_login(name: &String, password: &String) -> Result<Option<Account>, diesel::result::Error> {
+    let mut conn = establish_connection();
+
+    let account: Option<Account> = accounts::table
+        .filter(accounts::name.eq(name))
+        .first(&mut conn)
+        .optional()?;
 
     if let Some(account) = account {
         if account.verify_password(password) {

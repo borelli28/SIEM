@@ -3,15 +3,23 @@ use serde_json::json;
 use crate::collector::{LogCollector, ParseLogError, process_logs};
 use crate::batch_maker::create_batch;
 use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert};
+use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delete_host};
 
 pub async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
 
-pub async fn import_log_handler(collector: web::Data<LogCollector>, log: web::Json<String>, account_id: String) -> impl Responder {
+// Logs Handlers
+//
+pub async fn import_log_handler(
+    collector: web::Data<LogCollector>, 
+    log: web::Json<String>, 
+    account_id: web::Json<String>, 
+    host_id: web::Json<String>
+    ) -> impl Responder {
     match create_batch(&log.into_inner()).await {
         Ok(_) => {
-            match process_logs(&collector, account_id).await {
+            match process_logs(&collector, account_id.to_string(), host_id.to_string()).await {
                 Ok(_) => HttpResponse::Ok().json(json!({ "status": "ok" })),
                 Err(e) => {
                     eprintln!("Error processing logs: {}", e);
@@ -35,6 +43,8 @@ pub async fn import_log_handler(collector: web::Data<LogCollector>, log: web::Js
     }
 }
 
+// Alert Handlers
+//
 pub async fn get_alert_handler(alert_id: web::Path<String>) -> impl Responder {
     match get_alert(&alert_id.to_string()) {
         Ok(alert) => HttpResponse::Ok().json(alert),
@@ -67,6 +77,58 @@ pub async fn delete_alert_handler(alert_id: web::Path<String>) -> impl Responder
 
 pub async fn acknowledge_alert_handler(alert_id: web::Path<String>) -> impl Responder {
     match acknowledge_alert(&alert_id.to_string()) {
+        Ok(ok) => HttpResponse::Ok().json(ok),
+        Err(err) => HttpResponse::InternalServerError().json(json!({
+            "status": "error",
+            "message": err.to_string()
+        }))
+    }
+}
+
+// Host Handlers
+//
+pub async fn create_host_handler(host: web::Json<Host>, account_id: web::Path<String>) -> impl Responder {
+    match create_host(&host, &account_id.to_string()) {
+        Ok(host) => HttpResponse::Ok().json(host),
+        Err(err) => HttpResponse::InternalServerError().json(json!({
+            "status": "error",
+            "message": err.to_string()
+        }))
+    }
+}
+
+pub async fn get_host_handler(host_id: web::Path<String>) -> impl Responder {
+    match get_host(&host_id.to_string()) {
+        Ok(host) => HttpResponse::Ok().json(host),
+        Err(err) => HttpResponse::InternalServerError().json(json!({
+            "status": "error",
+            "message": err.to_string()
+        }))
+    }
+}
+
+pub async fn get_all_hosts_handler(account_id: web::Path<String>) -> impl Responder {
+    match get_all_hosts(&account_id.to_string()) {
+        Ok(host) => HttpResponse::Ok().json(host),
+        Err(err) => HttpResponse::InternalServerError().json(json!({
+            "status": "error",
+            "message": err.to_string()
+        }))
+    }
+}
+
+pub async fn edit_host_handler(host: web::Json<Host>) -> impl Responder {
+    match update_host(&host) {
+        Ok(ok) => HttpResponse::Ok().json(ok),
+        Err(err) => HttpResponse::InternalServerError().json(json!({
+            "status": "error",
+            "message": err.to_string()
+        }))
+    }
+}
+
+pub async fn delete_host_handler(host_id: web::Path<String>) -> impl Responder {
+    match delete_host(&host_id.to_string()) {
         Ok(ok) => HttpResponse::Ok().json(ok),
         Err(err) => HttpResponse::InternalServerError().json(json!({
             "status": "error",
