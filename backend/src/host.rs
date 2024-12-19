@@ -1,9 +1,10 @@
 use crate::database::establish_connection;
+use serde::{Serialize, Deserialize};
 use crate::schema::host;
 use diesel::prelude::*;
 use uuid::Uuid;
 
-#[derive(Queryable, Insertable, AsChangeset, Debug)]
+#[derive(Queryable, Insertable, AsChangeset, Debug, Serialize, Deserialize)]
 #[diesel(table_name = host)]
 pub struct Host {
     pub id: String,
