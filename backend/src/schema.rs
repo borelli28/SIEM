@@ -37,6 +37,7 @@ diesel::table! {
 diesel::table! {
     host (id) {
         id -> Text,
+        account_id -> Text,
         ip_address -> Nullable<Text>,
         hostname -> Nullable<Text>,
     }
@@ -60,6 +61,7 @@ diesel::table! {
 
 diesel::joinable!(alert_rules -> accounts (account_id));
 diesel::joinable!(alerts -> alert_rules (rule_id));
+diesel::joinable!(host -> accounts (account_id));
 diesel::joinable!(logs -> accounts (account_id));
 diesel::joinable!(logs -> host (host_id));
 
