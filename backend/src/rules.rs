@@ -5,13 +5,13 @@ use evalexpr::{
     DefaultNumericTypes
 };
 use crate::database::establish_connection;
-use crate::collector::LogEntry;
 use crate::alert::{create_alert, Alert};
+use crate::schema::alert_rules;
+use crate::collector::LogEntry;
 use diesel::prelude::*;
 use std::error::Error;
 use chrono::Utc;
 use uuid::Uuid;
-use crate::schema::alert_rules;
 
 #[derive(Debug, Queryable, Insertable, Clone, AsChangeset)]
 #[diesel(table_name = alert_rules)]
