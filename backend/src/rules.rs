@@ -73,14 +73,16 @@ pub fn delete_rule(id: &str) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn list_rules() -> Result<Vec<AlertRule>, Box<dyn Error>> {
+pub fn list_rules(account_id: &String) -> Result<Vec<AlertRule>, Box<dyn Error>> {
     let mut conn = establish_connection();
-    let results = alert_rules::table.load::<AlertRule>(&mut conn)?;
+    let results = alert_rules::table
+        .filter(alert_rules::account_id.eq(account_id))
+        .load::<AlertRule>(&mut conn)?;
     Ok(results)
 }
 
 pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> Result<Vec<Alert>, Box<dyn Error>> {
-    let rules = list_rules()?;
+    let rules = list_rules(&account_id)?;
     let mut triggered_alerts = Vec::new();
 
     for rule in rules {
