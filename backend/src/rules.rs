@@ -6,6 +6,7 @@ use evalexpr::{
 };
 use crate::database::establish_connection;
 use crate::alert::{create_alert, Alert};
+use serde::{Serialize, Deserialize};
 use crate::schema::alert_rules;
 use crate::collector::LogEntry;
 use diesel::prelude::*;
@@ -13,7 +14,7 @@ use std::error::Error;
 use chrono::Utc;
 use uuid::Uuid;
 
-#[derive(Debug, Queryable, Insertable, Clone, AsChangeset)]
+#[derive(Debug, Queryable, Insertable, Clone, AsChangeset, Serialize, Deserialize)]
 #[diesel(table_name = alert_rules)]
 pub struct AlertRule {
     pub id: String,
