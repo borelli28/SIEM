@@ -1,4 +1,9 @@
-use evalexpr::{eval_boolean_with_context, ContextWithMutableVariables, HashMapContext, DefaultNumericTypes};
+use evalexpr::{
+    eval_boolean_with_context, 
+    ContextWithMutableVariables, 
+    HashMapContext, 
+    DefaultNumericTypes
+};
 use crate::database::establish_connection;
 use crate::collector::LogEntry;
 use crate::alert::{create_alert, Alert};
