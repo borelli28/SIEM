@@ -53,7 +53,7 @@ pub fn create_rule(rule: &AlertRule) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn get_rule(id: &str) -> Result<Option<AlertRule>, Box<dyn Error>> {
+pub fn get_rule(id: &String) -> Result<Option<AlertRule>, Box<dyn Error>> {
     let mut conn = establish_connection();
     let result = alert_rules::table.find(id).first(&mut conn).optional()?;
     Ok(result)
@@ -67,7 +67,7 @@ pub fn update_rule(rule: &AlertRule) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn delete_rule(id: &str) -> Result<(), Box<dyn Error>> {
+pub fn delete_rule(id: &String) -> Result<(), Box<dyn Error>> {
     let mut conn = establish_connection();
     diesel::delete(alert_rules::table.find(id)).execute(&mut conn)?;
     Ok(())
@@ -98,7 +98,7 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
 }
 
 // Evaluate a condition string against a log entry
-fn evaluate_condition(condition: &str, log: &LogEntry) -> bool {
+fn evaluate_condition(condition: &String, log: &LogEntry) -> bool {
     let mut context: HashMapContext<DefaultNumericTypes> = HashMapContext::new();
 
     // Context = Key/Value pairs like Dictionaries
