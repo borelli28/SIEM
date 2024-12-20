@@ -4,6 +4,7 @@ use crate::collector::{LogCollector, ParseLogError, process_logs};
 use crate::batch_maker::create_batch;
 use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert};
 use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delete_host};
+use crate::rules::{AlertRule, create_rule};
 
 pub async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -129,6 +130,18 @@ pub async fn edit_host_handler(host: web::Json<Host>) -> impl Responder {
 
 pub async fn delete_host_handler(host_id: web::Path<String>) -> impl Responder {
     match delete_host(&host_id.to_string()) {
+        Ok(ok) => HttpResponse::Ok().json(ok),
+        Err(err) => HttpResponse::InternalServerError().json(json!({
+            "status": "error",
+            "message": err.to_string()
+        }))
+    }
+}
+
+// Host Handlers
+//
+pub async fn create_rule_handler(rule: web::Json<AlertRule>) -> impl Responder {
+    match create_rule(&rule) {
         Ok(ok) => HttpResponse::Ok().json(ok),
         Err(err) => HttpResponse::InternalServerError().json(json!({
             "status": "error",
