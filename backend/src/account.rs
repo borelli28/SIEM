@@ -10,6 +10,36 @@ use argon2::{
     Argon2
 };
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize, AsExpression, FromSqlRow)]
+#[diesel(sql_type = diesel::sql_types::Text)]
+pub enum Role {
+    Admin,
+    Analyst,
+}
+
+// Convert from enum to database TEXT representation
+impl ToSql<diesel::sql_types::Text, Sqlite> for Role {
+    fn to_sql<'b>(&'b self, out: &mut serialize::Output<'b, '_, Sqlite>) -> serialize::Result {
+        let s = match *self {
+            Role::Admin => "Admin",
+            Role::Analyst => "Analyst",
+        };
+        out.set_value(s);
+        Ok(serialize::IsNull::No)
+    }
+}
+// Convert from enum to database TEXT representation
+impl FromSql<diesel::sql_types::Text, Sqlite> for Role {
+    fn from_sql(bytes: diesel::backend::RawValue<'_, Sqlite>) -> deserialize::Result<Self> {
+        let s = String::from_utf8(bytes.as_bytes().to_vec())?;
+        match s.as_str() {
+            "Admin" => Ok(Role::Admin),
+            "Analyst" => Ok(Role::Analyst),
+            _ => Err("Unrecognized role".into()),
+        }
+    }
+}
+
 fn hash_password(password: &str) -> Result<String, argon2::password_hash::Error> {
     let salt = SaltString::generate(&mut OsRng);
     let argon2 = Argon2::default();
@@ -22,6 +52,7 @@ pub struct Account {
     pub id: String,
     pub name: String,
     pub password_hash: String,
+    pub role: Role,
 }
 
 impl Account {
