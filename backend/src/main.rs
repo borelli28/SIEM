@@ -41,7 +41,10 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/backend")
                     .route("/", web::get().to(index))
-                    .route("/import_log", web::post().to(import_log_handler))
+                    .service(
+                        web::scope("/log")
+                            .route("/import", web::post().to(import_log_handler))
+                    )
                     .service(
                         web::scope("/alert")
                             .route("/{alert_id}", web::get().to(get_alert_handler))
