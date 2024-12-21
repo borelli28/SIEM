@@ -88,14 +88,6 @@
       </table>
     </section>
 
-    <section id="search">
-      <h2>Log Search</h2>
-      <form on:submit|preventDefault={handleSearch}>
-        <input type="text" bind:value={searchQuery} placeholder="Enter search criteria...">
-        <button type="submit">Search</button>
-      </form>
-    </section>
-
     <nav>
       <a href="/settings">Settings</a>
       <a href="/alerts">All Alerts</a>
