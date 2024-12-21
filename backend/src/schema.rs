@@ -5,6 +5,7 @@ diesel::table! {
         id -> Nullable<Text>,
         name -> Text,
         password -> Text,
+        role -> Text,
     }
 }
 
