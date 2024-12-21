@@ -99,6 +99,7 @@
     <nav>
       <a href="/settings">Settings</a>
       <a href="/alerts">All Alerts</a>
+      <a href="/search">Search</a>
     </nav>
 
     <p>Visit <a href="https://svelte.dev/docs/kit" target="_blank">svelte.dev/docs/kit</a> to read the documentation</p>
