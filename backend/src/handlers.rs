@@ -5,6 +5,7 @@ use crate::batch_maker::create_batch;
 use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert};
 use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delete_host};
 use crate::rules::{AlertRule, create_rule, get_rule, list_rules, update_rule, delete_rule};
+use crate::log::{get_all_logs};
 
 pub async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -41,6 +42,16 @@ pub async fn import_log_handler(
             }
         },
         Err(_) => HttpResponse::BadRequest().json(json!({ "status": "error", "message": "Invalid log format" })),
+    }
+}
+
+pub async fn get_logs_handler(account_id: web::Path<String>) -> impl Responder {
+    match get_all_logs(&account_id) {
+        Ok(logs) => HttpResponse::Ok().json(logs),
+        Err(err) => HttpResponse::InternalServerError().json(json!({
+            "status": "error",
+            "message": err.to_string()
+        }))
     }
 }
 

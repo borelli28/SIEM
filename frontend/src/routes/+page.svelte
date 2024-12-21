@@ -53,7 +53,7 @@
 </script>
 
 <svelte:head>
-  <title>SIEM Dashboard</title>
+  <title>Dashboard</title>
   <link rel="stylesheet" href="/css/dashboard.css">
 </svelte:head>
 
@@ -88,17 +88,10 @@
       </table>
     </section>
 
-    <section id="search">
-      <h2>Log Search</h2>
-      <form on:submit|preventDefault={handleSearch}>
-        <input type="text" bind:value={searchQuery} placeholder="Enter search criteria...">
-        <button type="submit">Search</button>
-      </form>
-    </section>
-
     <nav>
       <a href="/settings">Settings</a>
       <a href="/alerts">All Alerts</a>
+      <a href="/search">Search</a>
     </nav>
 
     <p>Visit <a href="https://svelte.dev/docs/kit" target="_blank">svelte.dev/docs/kit</a> to read the documentation</p>

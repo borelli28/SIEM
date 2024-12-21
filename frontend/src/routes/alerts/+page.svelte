@@ -47,7 +47,7 @@
 </script>
 
 <svelte:head>
-  <title>SIEM Alerts</title>
+  <title>Alerts</title>
   <link rel="stylesheet" href="/css/alerts.css">
 </svelte:head>
 
