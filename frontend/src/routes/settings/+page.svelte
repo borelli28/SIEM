@@ -7,7 +7,7 @@
     event.preventDefault();
     console.log('Creating new account:', newAccount);
     // Implement account creation logic here
-    newAccount = { username: '', password: '', role: 'analyst' };
+    newAccount = { name: '', password: '', role: 'Analyst' };
   }
 
   function addLogSource(event) {
@@ -38,8 +38,8 @@
       <h2>Create New Account</h2>
       <form on:submit={createAccount}>
         <div>
-          <label for="username">Username:</label>
-          <input type="text" id="username" bind:value={newAccount.username} required>
+          <label for="name">Name:</label>
+          <input type="text" id="name" bind:value={newAccount.name} required>
         </div>
         <div>
           <label for="password">Password:</label>
@@ -48,8 +48,8 @@
         <div>
           <label for="role">Role:</label>
           <select id="role" bind:value={newAccount.role}>
-            <option value="analyst">Analyst</option>
-            <option value="admin">Admin</option>
+            <option value="Analyst">Analyst</option>
+            <option value="Admin">Admin</option>
           </select>
         </div>
         <button type="submit">Create Account</button>
