@@ -53,7 +53,7 @@
 </script>
 
 <svelte:head>
-  <title>SIEM Dashboard</title>
+  <title>Dashboard</title>
   <link rel="stylesheet" href="/css/dashboard.css">
 </svelte:head>
 

@@ -30,7 +30,7 @@
 </script>
 
 <svelte:head>
-  <title>SIEM Log Search</title>
+  <title>Log Search</title>
   <link rel="stylesheet" href="/css/search.css">
 </svelte:head>
 

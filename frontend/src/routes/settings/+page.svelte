@@ -27,7 +27,7 @@
 
 <svelte:head>
   <link rel="stylesheet" href="/css/settings.css">
-  <title>SIEM Settings</title>
+  <title>Settings</title>
 </svelte:head>
 
 <main>
