@@ -9,6 +9,7 @@ mod alert;
 mod schema;
 mod handlers;
 mod host;
+mod log;
 
 use actix_web::{web, App, HttpServer};
 use crate::collector::LogCollector;
@@ -28,7 +29,8 @@ use crate::handlers::{
     get_rule_handler,
     get_all_rules_handler,
     edit_rule_handler,
-    delete_rule_handler
+    delete_rule_handler,
+    get_logs_handler
 };
 
 #[actix_web::main]
@@ -44,6 +46,7 @@ async fn main() -> std::io::Result<()> {
                     .service(
                         web::scope("/log")
                             .route("/import", web::post().to(import_log_handler))
+                            .route("/all/{account_id}", web::get().to(get_logs_handler))
                     )
                     .service(
                         web::scope("/alert")
