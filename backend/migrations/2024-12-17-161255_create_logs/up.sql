@@ -1,5 +1,5 @@
 CREATE TABLE logs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id TEXT PRIMARY KEY NOT NULL,
     account_id TEXT NOT NULL,
     host_id TEXT NOT NULL,
     version TEXT,
