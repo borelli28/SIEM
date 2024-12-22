@@ -1,12 +1,14 @@
 <script>
-  let newAccount = { username: '', password: '', role: 'analyst' };
+  let newAccount = { name: '', password: '', role: 'Analyst' };
   let newLogSource = { name: '', type: 'syslog', address: '' };
   let newHost = { name: '', ip: '' };
+  let alertMessage = '';
+  let alertType = '';
 
   async function createAccount(event) {
       event.preventDefault();
 
-      const newAccount = {
+      const accountData = {
           id: "0",
           name: document.getElementById('name').value,
           password: document.getElementById('password').value,
@@ -19,33 +21,35 @@
               headers: {
                   'Content-Type': 'application/json',
               },
-              body: JSON.stringify(newAccount),
+              body: JSON.stringify(accountData),
           });
 
           const contentType = response.headers.get("content-type");
           if (contentType && contentType.includes("application/json")) {
               const data = await response.json();
+              alertMessage = 'Account created successfully!';
+              alertType = 'success';
+              newAccount = { name: '', password: '', role: 'Analyst' };
           } else {
               const text = await response.text();
               throw new Error("Expected JSON but received non-JSON response");
           }
       } catch (error) {
           console.error("Error creating account:", error);
-          alert(`Error: ${error.message}`);
+          alertMessage = `Error: ${error.message}`;
+          alertType = 'error';
       }
   }
 
   function addLogSource(event) {
     event.preventDefault();
     console.log('Adding new log source:', newLogSource);
-    // Implement log source addition logic here
     newLogSource = { name: '', type: 'syslog', address: '' };
   }
 
   function addHost(event) {
     event.preventDefault();
     console.log('Adding new host:', newHost);
-    // Implement host addition logic here
     newHost = { name: '', ip: '' };
   }
 </script>
@@ -58,6 +62,12 @@
 <main>
   <div id="container">
     <h1>SIEM Settings</h1>
+
+    {#if alertMessage}
+      <div class={`alert ${alertType}`}>
+        {alertMessage}
+      </div>
+    {/if}
 
     <section>
       <h2>Create New Account</h2>
