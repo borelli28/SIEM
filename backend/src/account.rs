@@ -1,8 +1,10 @@
 use crate::database::establish_connection;
 use diesel::result::Error as DieselError;
+use serde::{Serialize, Deserialize};
 use crate::schema::accounts;
 use diesel::prelude::*;
 use uuid::Uuid;
+use std::fmt;
 use argon2::{
     password_hash::{
         rand_core::OsRng,
@@ -25,7 +27,18 @@ impl From<DieselError> for AccountError {
     }
 }
 
-#[derive(Queryable, Insertable, AsChangeset, Debug)]
+impl fmt::Display for AccountError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            AccountError::InvalidRole => write!(f, "Invalid role provided"),
+            AccountError::DieselError(err) => write!(f, "Database error: {}", err),
+            AccountError::PasswordHashError(err) => write!(f, "Password hash error: {}", err),
+            AccountError::ExpectedField(field) => write!(f, "Missing required field: {}", field),
+        }
+    }
+}
+
+#[derive(Queryable, Insertable, AsChangeset, Debug, Serialize, Deserialize)]
 #[diesel(table_name = accounts)]
 pub struct Account {
     pub id: String,
