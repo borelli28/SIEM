@@ -37,6 +37,7 @@ use crate::handlers::{
     edit_account_handler,
     delete_account_handler
 };
+use actix_cors::Cors;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -45,6 +46,13 @@ async fn main() -> std::io::Result<()> {
     HttpServer::new(move || {
         App::new()
             .app_data(collector.clone())
+            .wrap(
+                Cors::default()
+                    .allowed_origin("http://localhost:5173")
+                    .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
+                    .allowed_headers(vec!["Content-Type", "Authorization"])
+                    .max_age(3600)
+            )
             .service(
                 web::scope("/backend")
                     .route("/", web::get().to(index))
