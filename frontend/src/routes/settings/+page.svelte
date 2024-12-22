@@ -1,26 +1,18 @@
 <script>
-  let newAccount = { username: '', password: '', role: 'analyst' };
   let newLogSource = { name: '', type: 'syslog', address: '' };
   let newHost = { name: '', ip: '' };
-
-  function createAccount(event) {
-    event.preventDefault();
-    console.log('Creating new account:', newAccount);
-    // Implement account creation logic here
-    newAccount = { username: '', password: '', role: 'analyst' };
-  }
+  let alertMessage = '';
+  let alertType = '';
 
   function addLogSource(event) {
     event.preventDefault();
     console.log('Adding new log source:', newLogSource);
-    // Implement log source addition logic here
     newLogSource = { name: '', type: 'syslog', address: '' };
   }
 
   function addHost(event) {
     event.preventDefault();
     console.log('Adding new host:', newHost);
-    // Implement host addition logic here
     newHost = { name: '', ip: '' };
   }
 </script>
@@ -34,27 +26,11 @@
   <div id="container">
     <h1>SIEM Settings</h1>
 
-    <section>
-      <h2>Create New Account</h2>
-      <form on:submit={createAccount}>
-        <div>
-          <label for="username">Username:</label>
-          <input type="text" id="username" bind:value={newAccount.username} required>
-        </div>
-        <div>
-          <label for="password">Password:</label>
-          <input type="password" id="password" bind:value={newAccount.password} required>
-        </div>
-        <div>
-          <label for="role">Role:</label>
-          <select id="role" bind:value={newAccount.role}>
-            <option value="analyst">Analyst</option>
-            <option value="admin">Admin</option>
-          </select>
-        </div>
-        <button type="submit">Create Account</button>
-      </form>
-    </section>
+    {#if alertMessage}
+      <div class={`alert ${alertType}`}>
+        {alertMessage}
+      </div>
+    {/if}
 
     <section>
       <h2>Add New Log Source</h2>
