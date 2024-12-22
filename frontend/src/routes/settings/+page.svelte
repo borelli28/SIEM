@@ -3,11 +3,36 @@
   let newLogSource = { name: '', type: 'syslog', address: '' };
   let newHost = { name: '', ip: '' };
 
-  function createAccount(event) {
-    event.preventDefault();
-    console.log('Creating new account:', newAccount);
-    // Implement account creation logic here
-    newAccount = { name: '', password: '', role: 'Analyst' };
+  async function createAccount(event) {
+      event.preventDefault();
+
+      const newAccount = {
+          id: "0",
+          name: document.getElementById('name').value,
+          password: document.getElementById('password').value,
+          role: document.getElementById('role').value || 'Analyst'
+      };
+
+      try {
+          const response = await fetch('http://localhost:4200/backend/account/', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+              },
+              body: JSON.stringify(newAccount),
+          });
+
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+              const data = await response.json();
+          } else {
+              const text = await response.text();
+              throw new Error("Expected JSON but received non-JSON response");
+          }
+      } catch (error) {
+          console.error("Error creating account:", error);
+          alert(`Error: ${error.message}`);
+      }
   }
 
   function addLogSource(event) {
