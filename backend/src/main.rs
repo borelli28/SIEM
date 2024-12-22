@@ -10,6 +10,7 @@ mod schema;
 mod handlers;
 mod host;
 mod log;
+mod account;
 
 use actix_web::{web, App, HttpServer};
 use crate::collector::LogCollector;
@@ -30,7 +31,11 @@ use crate::handlers::{
     get_all_rules_handler,
     edit_rule_handler,
     delete_rule_handler,
-    get_logs_handler
+    get_logs_handler,
+    create_account_handler,
+    get_account_handler,
+    edit_account_handler,
+    delete_account_handler
 };
 
 #[actix_web::main]
@@ -70,6 +75,13 @@ async fn main() -> std::io::Result<()> {
                             .route("/all/{account_id}", web::get().to(get_all_rules_handler))
                             .route("/{rule_id}", web::put().to(edit_rule_handler))
                             .route("/{rule_id}", web::delete().to(delete_rule_handler))
+                    )
+                    .service(
+                        web::scope("/account")
+                            .route("/", web::post().to(create_account_handler))
+                            .route("/{account_id}", web::get().to(get_account_handler))
+                            .route("/{account_id}", web::put().to(edit_account_handler))
+                            .route("/{account_id}", web::delete().to(delete_account_handler))
                     )
             )
     })
