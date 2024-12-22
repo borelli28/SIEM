@@ -265,7 +265,15 @@ pub async fn login_account_handler(account: web::Json<Account>) -> impl Responde
     let password = account.password;
 
     match verify_login(&name, &password) {
-        Ok(account) => HttpResponse::Ok().json(account),
+        Ok(Some(account)) => HttpResponse::Ok().json(json!({
+            "status": "success",
+            "message": "Login successful!",
+            "account": account
+        })),
+        Ok(None) => HttpResponse::Unauthorized().json(json!({
+            "status": "error",
+            "message": "Invalid username or password"
+        })),
         Err(err) => match err {
             AccountError::InvalidRole => HttpResponse::BadRequest().json(json!({
                 "status": "error",
@@ -278,7 +286,7 @@ pub async fn login_account_handler(account: web::Json<Account>) -> impl Responde
             _ => HttpResponse::InternalServerError().json(json!({
                 "status": "error",
                 "message": "An internal error occurred"
-            }))
-        }
+            })),
+        },
     }
 }
