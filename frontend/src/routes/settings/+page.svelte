@@ -1,45 +1,8 @@
 <script>
-  let newAccount = { name: '', password: '', role: 'Analyst' };
   let newLogSource = { name: '', type: 'syslog', address: '' };
   let newHost = { name: '', ip: '' };
   let alertMessage = '';
   let alertType = '';
-
-  async function createAccount(event) {
-      event.preventDefault();
-
-      const accountData = {
-          id: "0",
-          name: document.getElementById('name').value,
-          password: document.getElementById('password').value,
-          role: document.getElementById('role').value || 'Analyst'
-      };
-
-      try {
-          const response = await fetch('http://localhost:4200/backend/account/', {
-              method: 'POST',
-              headers: {
-                  'Content-Type': 'application/json',
-              },
-              body: JSON.stringify(accountData),
-          });
-
-          const contentType = response.headers.get("content-type");
-          if (contentType && contentType.includes("application/json")) {
-              const data = await response.json();
-              alertMessage = 'Account created successfully!';
-              alertType = 'success';
-              newAccount = { name: '', password: '', role: 'Analyst' };
-          } else {
-              const text = await response.text();
-              throw new Error("Expected JSON but received non-JSON response");
-          }
-      } catch (error) {
-          console.error("Error creating account:", error);
-          alertMessage = `Error: ${error.message}`;
-          alertType = 'error';
-      }
-  }
 
   function addLogSource(event) {
     event.preventDefault();
@@ -68,28 +31,6 @@
         {alertMessage}
       </div>
     {/if}
-
-    <section>
-      <h2>Create New Account</h2>
-      <form on:submit={createAccount}>
-        <div>
-          <label for="name">Name:</label>
-          <input type="text" id="name" bind:value={newAccount.name} required>
-        </div>
-        <div>
-          <label for="password">Password:</label>
-          <input type="password" id="password" bind:value={newAccount.password} required>
-        </div>
-        <div>
-          <label for="role">Role:</label>
-          <select id="role" bind:value={newAccount.role}>
-            <option value="Analyst">Analyst</option>
-            <option value="Admin">Admin</option>
-          </select>
-        </div>
-        <button type="submit">Create Account</button>
-      </form>
-    </section>
 
     <section>
       <h2>Add New Log Source</h2>
