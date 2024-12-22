@@ -6,7 +6,7 @@ use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert};
 use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delete_host};
 use crate::rules::{AlertRule, create_rule, get_rule, list_rules, update_rule, delete_rule};
 use crate::log::{get_all_logs};
-use crate::account::{Account, AccountError, create_account, get_account, update_account, delete_account};
+use crate::account::{Account, AccountError, create_account, get_account, update_account, delete_account, verify_login};
 
 pub async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -256,5 +256,29 @@ pub async fn delete_account_handler(account_id: web::Path<String>) -> impl Respo
             "status": "error",
             "message": err.to_string()
         }))
+    }
+}
+
+pub async fn login_account_handler(account: web::Json<Account>) -> impl Responder {
+    let account = account.into_inner();
+    let name = account.name;
+    let password = account.password;
+
+    match verify_login(&name, &password) {
+        Ok(account) => HttpResponse::Ok().json(account),
+        Err(err) => match err {
+            AccountError::InvalidRole => HttpResponse::BadRequest().json(json!({
+                "status": "error",
+                "message": "Invalid role provided"
+            })),
+            AccountError::ExpectedField(field) => HttpResponse::BadRequest().json(json!({
+                "status": "error",
+                "message": format!("Missing required field: {}", field)
+            })),
+            _ => HttpResponse::InternalServerError().json(json!({
+                "status": "error",
+                "message": "An internal error occurred"
+            }))
+        }
     }
 }

@@ -35,7 +35,8 @@ use crate::handlers::{
     create_account_handler,
     get_account_handler,
     edit_account_handler,
-    delete_account_handler
+    delete_account_handler,
+    login_account_handler
 };
 use actix_cors::Cors;
 
@@ -87,6 +88,7 @@ async fn main() -> std::io::Result<()> {
                     .service(
                         web::scope("/account")
                             .route("/", web::post().to(create_account_handler))
+                            .route("/login", web::post().to(login_account_handler))
                             .route("/{account_id}", web::get().to(get_account_handler))
                             .route("/{account_id}", web::put().to(edit_account_handler))
                             .route("/{account_id}", web::delete().to(delete_account_handler))
