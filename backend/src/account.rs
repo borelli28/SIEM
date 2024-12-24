@@ -2,6 +2,7 @@ use crate::database::establish_connection;
 use diesel::result::Error as DieselError;
 use serde::{Serialize, Deserialize};
 use crate::schema::accounts;
+use actix_session::Session;
 use diesel::prelude::*;
 use uuid::Uuid;
 use std::fmt;
@@ -19,6 +20,7 @@ pub enum AccountError {
     DieselError(DieselError),
     PasswordHashError(String),
     ExpectedField(String),
+    SessionError(String),
 }
 
 impl From<DieselError> for AccountError {
@@ -34,6 +36,7 @@ impl fmt::Display for AccountError {
             AccountError::DieselError(err) => write!(f, "Database error: {}", err),
             AccountError::PasswordHashError(err) => write!(f, "Password hash error: {}", err),
             AccountError::ExpectedField(field) => write!(f, "Missing required field: {}", field),
+            AccountError::SessionError(err) => write!(f, "Session Error: {}", err),
         }
     }
 }
@@ -128,9 +131,8 @@ pub fn delete_account(id: &String) -> Result<bool, AccountError> {
     Ok(affected_rows > 0)
 }
 
-pub fn verify_login(name: &String, password: &String) -> Result<Option<Account>, AccountError> {
+pub fn verify_login(session: &Session, name: &String, password: &String) -> Result<Option<Account>, AccountError> {
     let mut conn = establish_connection();
-
     let account: Option<Account> = accounts::table
         .filter(accounts::name.eq(name))
         .first(&mut conn)
@@ -138,11 +140,13 @@ pub fn verify_login(name: &String, password: &String) -> Result<Option<Account>,
 
     if let Some(account) = account {
         if account.verify_password(password) {
-            Ok(Some(account))
+            session.insert("session_id", account.id.clone()).map_err(|e| AccountError::SessionError(e.to_string()))?;
+            session.renew();
+            return Ok(Some(account)); // Login successful
         } else {
-            Ok(None)
+            return Ok(None); // Password incorrect
         }
-    } else {
-        Ok(None)
     }
+
+    Ok(None) // No account found with the provided name
 }
