@@ -1,11 +1,10 @@
-use actix_web::{dev::Payload, Error, FromRequest, HttpRequest, HttpMessage};
+use actix_web::{Error, FromRequest, HttpRequest};
+use actix_session::{Session, SessionExt};
 use actix_web::error::ErrorUnauthorized;
-use futures::future::{err, ok, Ready};
 use std::time::{Duration, SystemTime};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
-use actix_session::Session;
 use uuid::Uuid;
 
 const SESSION_DURATION_MINUTES: u64 = 20;
