@@ -79,7 +79,7 @@ pub fn create_session(req: &HttpRequest, session: &Session, account_id: &str) ->
     let session_data = SessionData {
         account_id: account_id.to_string(),
         user_agent,
-        expires: SystemTime::now() + Duration::from_minutes(SESSION_DURATION_MINUTES),
+        expires: SystemTime::now() + Duration::from_secs(SESSION_DURATION_MINUTES * 60),
     };
 
     update_session(&session_store, session, &session_data, None)
@@ -94,7 +94,7 @@ pub fn verify_session(req: &HttpRequest, session: &Session) -> Result<String, Er
             // Regenerate session ID and update expiration
             if session_data.expires > SystemTime::now() {
                 let mut new_session_data = session_data.clone();
-                new_session_data.expires = SystemTime::now() + Duration::from_minutes(SESSION_DURATION_MINUTES);
+                new_session_data.expires = SystemTime::now() + Duration::from_secs(SESSION_DURATION_MINUTES * 60);
                 drop(store); // Release the read lock before calling update_session
                 update_session(&session_store, session, &new_session_data, Some(session_id))?;
                 return Ok(new_session_data.account_id);
