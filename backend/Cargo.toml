@@ -7,7 +7,6 @@ edition = "2021"
 actix-cors = "0.7.0"
 actix-session = { version = "0.10.1", features = ["cookie-session"] }
 actix-web = "4.9.0"
-aes-gcm = "0.10.3"
 argon2 = "0.5.3"
 chrono = "0.4.39"
 diesel = { version = "2.2.6", features = ["sqlite", "chrono", "uuid"] }
@@ -20,4 +19,3 @@ serde = { version = "1.0.215", features = ["derive"] }
 serde_json = "1.0.133"
 tokio = { version = "1.42.0", features = ["full"] }
 uuid = { version = "1.11.0", features = ["v4", "fast-rng"] }
-dotenv = "0.15.0"
