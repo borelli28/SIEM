@@ -1,4 +1,5 @@
 use actix_web::{web, HttpResponse, Responder};
+use actix_session::Session;
 use serde_json::json;
 use crate::collector::{LogCollector, ParseLogError, process_logs};
 use crate::batch_maker::create_batch;
@@ -259,12 +260,12 @@ pub async fn delete_account_handler(account_id: web::Path<String>) -> impl Respo
     }
 }
 
-pub async fn login_account_handler(account: web::Json<Account>) -> impl Responder {
-    let account = account.into_inner();
-    let name = account.name;
-    let password = account.password;
+pub async fn login_account_handler(session: Session, account: web::Json<Account>) -> impl Responder {
+    let account_data = account.into_inner();
+    let name = account_data.name;
+    let password = account_data.password;
 
-    match verify_login(&name, &password) {
+    match verify_login(&session, &name, &password) {
         Ok(Some(account)) => HttpResponse::Ok().json(json!({
             "status": "success",
             "message": "Login successful!",
