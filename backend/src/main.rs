@@ -11,6 +11,7 @@ mod handlers;
 mod host;
 mod log;
 mod account;
+mod auth;
 
 use actix_web::{web, App, HttpServer};
 use crate::collector::LogCollector;
