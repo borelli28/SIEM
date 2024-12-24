@@ -38,15 +38,29 @@ use crate::handlers::{
     delete_account_handler,
     login_account_handler
 };
+use actix_session::{SessionMiddleware, storage::CookieSessionStore};
+use actix_web::cookie::Key;
 use actix_cors::Cors;
+use dotenvy::dotenv;
+use std::env;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let collector = web::Data::new(LogCollector::new());
+    dotenv().ok();
+    let secret_key = env::var("SESSION_SECRET_KEY").expect("SESSION_SECRET_KEY must be set");
+    let cookie_key = Key::from(secret_key.as_bytes());
 
     HttpServer::new(move || {
         App::new()
             .app_data(collector.clone())
+            .wrap(
+                SessionMiddleware::builder(CookieSessionStore::default(), cookie_key.clone())
+                    .cookie_secure(true)
+                    .cookie_http_only(true)
+                    .cookie_same_site(actix_web::cookie::SameSite::Strict)
+                    .build()
+            )
             .wrap(
                 Cors::default()
                     .allowed_origin("http://localhost:5173")
