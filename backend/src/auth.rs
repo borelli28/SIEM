@@ -70,22 +70,6 @@ fn update_session(
     Ok(())
 }
 
-pub fn create_session(req: &HttpRequest, session: &Session, account_id: &str) -> Result<(), Error> {
-    let session_store = req.app_data::<SessionStore>().unwrap().clone();
-    let user_agent = req.headers().get("User-Agent")
-        .and_then(|h| h.to_str().ok())
-        .unwrap_or("Unknown")
-        .to_string();
-
-    let session_data = SessionData {
-        account_id: account_id.to_string(),
-        user_agent,
-        expires: SystemTime::now() + Duration::from_secs(SESSION_DURATION_MINUTES * 60),
-    };
-
-    update_session(&session_store, session, &session_data, None)
-}
-
 pub fn verify_session(req: &HttpRequest, session: &Session) -> Result<String, Error> {
     let session_store = req.app_data::<SessionStore>().unwrap().clone();
 
