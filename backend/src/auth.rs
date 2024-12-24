@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, RwLock};
 use actix_session::Session;
-use dotenv::dotenv;
 use uuid::Uuid;
 
 const SESSION_DURATION_MINUTES: u64 = 20;
