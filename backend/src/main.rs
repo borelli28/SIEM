@@ -57,9 +57,9 @@ async fn main() -> std::io::Result<()> {
             .app_data(collector.clone())
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), cookie_key.clone())
-                    .cookie_secure(true)
+                    .cookie_secure(false) // Set to true in PRODUCTION
                     .cookie_http_only(true)
-                    .cookie_same_site(actix_web::cookie::SameSite::Strict)
+                    .cookie_same_site(actix_web::cookie::SameSite::Lax)
                     .build()
             )
             .wrap(
@@ -67,6 +67,7 @@ async fn main() -> std::io::Result<()> {
                     .allowed_origin("http://localhost:5173")
                     .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
                     .allowed_headers(vec!["Content-Type", "Authorization"])
+                    .supports_credentials()
                     .max_age(3600)
             )
             .service(
