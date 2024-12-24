@@ -1,4 +1,4 @@
-use actix_web::{Error, FromRequest, HttpRequest};
+use actix_web::{dev::Payload, Error, FromRequest, HttpRequest};
 use actix_session::{Session, SessionExt};
 use actix_web::error::ErrorUnauthorized;
 use std::time::{Duration, SystemTime};
@@ -26,26 +26,28 @@ pub struct AuthSession {
 
 impl FromRequest for AuthSession {
     type Error = Error;
-    type Future = Ready<Result<AuthSession, Error>>;
+    type Future = std::pin::Pin<Box<dyn std::future::Future<Output = Result<AuthSession, Error>>>>;
 
-    fn from_request(req: &HttpRequest) -> Self::Future {
+    fn from_request(req: &HttpRequest, _pl: &mut Payload) -> Self::Future {
         let session = req.get_session();
         let session_store = req.app_data::<SessionStore>().unwrap().clone();
 
-        match session.get::<String>("session_id") {
-            Ok(Some(session_id)) => {
-                // Acquire a read lock on the session store
-                let store = session_store.read().unwrap();
-                if let Some(session_data) = store.get(&session_id) {
-                    // Check if the session has not expired
-                    if session_data.expires > SystemTime::now() {
-                        return ok(AuthSession { account_id: session_data.account_id.clone() });
+        let future = async move {
+            match session.get::<String>("session_id") {
+                Ok(Some(session_id)) => {
+                    let store = session_store.read().unwrap();
+                    if let Some(session_data) = store.get(&session_id) {
+                        if session_data.expires > SystemTime::now() {
+                            return Ok(AuthSession { account_id: session_data.account_id.clone() });
+                        }
                     }
-                }
-            },
-            _ => {} // No session_id found or error occurred
-        }
-        err(ErrorUnauthorized("Unauthorized"))  // No valid session was found
+                },
+                _ => {}
+            }
+            Err(ErrorUnauthorized("Unauthorized")) // No valid session was found
+        };
+
+        Box::pin(future) // Pin the future for return --> :)
     }
 }
 
