@@ -62,9 +62,28 @@ impl FromRequest for AuthSession {
     }
 }
 
+fn update_session(
+    session_store: &SessionStore,
+    session: &Session,
+    session_data: &SessionData,
+    old_session_id: Option<String>
+) -> Result<(), Error> {
+    let new_session_id = Uuid::new_v4().to_string();
+    let (encrypted_data, nonce) = encrypt_session_data(session_data)?;
+
+    let mut store = session_store.write().unwrap();
+    if let Some(old_id) = old_session_id {
+        store.remove(&old_id);
+    }
+    store.insert(new_session_id.clone(), (encrypted_data, nonce));
+    session.insert("session_id", new_session_id)?;
+    session.renew();
+
+    Ok(())
+}
+
 pub fn create_session(req: &HttpRequest, session: &Session, account_id: &str) -> Result<(), Error> {
     let session_store = req.app_data::<SessionStore>().unwrap().clone();
-    let session_id = Uuid::new_v4().to_string();
     let user_agent = req.headers().get("User-Agent")
         .and_then(|h| h.to_str().ok())
         .unwrap_or("Unknown")
@@ -76,32 +95,22 @@ pub fn create_session(req: &HttpRequest, session: &Session, account_id: &str) ->
         expires: SystemTime::now() + Duration::from_minutes(SESSION_DURATION_MINUTES),
     };
 
-    let (encrypted_data, nonce) = encrypt_session_data(&session_data)?;
-    session_store.write().unwrap().insert(session_id.clone(), (encrypted_data, nonce));
-    session.insert("session_id", session_id)?;
-    session.renew();
-
-    Ok(())
+    update_session(&session_store, session, &session_data, None)
 }
 
 pub fn verify_session(req: &HttpRequest, session: &Session) -> Result<String, Error> {
     let session_store = req.app_data::<SessionStore>().unwrap().clone();
 
     if let Ok(Some(session_id)) = session.get::<String>("session_id") {
-        let mut store = session_store.write().unwrap();
+        let store = session_store.read().unwrap();
         if let Some((encrypted_data, nonce)) = store.get(&session_id) {
             match decrypt_session_data(encrypted_data, nonce) {
                 Ok(mut session_data) => {
+                    // Regenerate session ID and update expiration
                     if session_data.expires > SystemTime::now() {
-                        // Regenerate session ID and update expiration
-                        let new_session_id = Uuid::new_v4().to_string();
                         session_data.expires = SystemTime::now() + Duration::from_minutes(SESSION_DURATION_MINUTES);
-                        let (new_encrypted_data, new_nonce) = encrypt_session_data(&session_data)?;
-                        store.remove(&session_id);
-                        store.insert(new_session_id.clone(), (new_encrypted_data, new_nonce));
-                        session.insert("session_id", new_session_id)?;
-                        session.renew();
-
+                        drop(store); // Release the read lock before calling update_session
+                        update_session(&session_store, session, &session_data, Some(session_id))?;
                         return Ok(session_data.account_id);
                     }
                 },
