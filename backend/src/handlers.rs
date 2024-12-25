@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse, HttpRequest, Responder};
 use actix_session::Session;
 use serde_json::json;
 use crate::collector::{LogCollector, ParseLogError, process_logs};
@@ -14,8 +14,8 @@ pub async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
 
-pub async fn verify_session_handler(session: Session) -> impl Responder {
-    match verify_session(&session) {
+pub async fn verify_session_handler(session: Session, req: HttpRequest) -> impl Responder {
+    match verify_session(&session, &req) {
         Ok(account_id) => HttpResponse::Ok().json(serde_json::json!({
             "authenticated": true,
             "account_id": account_id
@@ -274,12 +274,12 @@ pub async fn delete_account_handler(account_id: web::Path<String>) -> impl Respo
     }
 }
 
-pub async fn login_account_handler(session: Session, account: web::Json<Account>) -> impl Responder {
+pub async fn login_account_handler(session: Session, account: web::Json<Account>, req: HttpRequest) -> impl Responder {
     let account_data = account.into_inner();
     let name = account_data.name;
     let password = account_data.password;
 
-    match verify_login(&session, &name, &password) {
+    match verify_login(&session, &name, &password, &req) {
         Ok(Some(account)) => HttpResponse::Ok().json(json!({
             "status": "success",
             "message": "Login successful!",
