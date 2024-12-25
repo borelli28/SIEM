@@ -35,7 +35,7 @@ input[type="text"] {
 
 button {
   padding: 5px 10px;
-  background-color: #CC0000;
+  background-color: #4CAF50;
   color: white;
   border: none;
   cursor: pointer;
@@ -64,4 +64,8 @@ nav a {
 .error {
   background-color: #f8d7da;
   color: #721c24;
+}
+
+#logout-btn {
+  background-color: #CC0000;
 }
