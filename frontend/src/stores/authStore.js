@@ -5,7 +5,7 @@ export const user = writable(null);
 
 export async function checkAuth() {
     try {
-        const response = await fetch('http://localhost:4200/backend/account/check-auth', {
+        const response = await fetch('http://localhost:4200/backend/check-auth', {
             credentials: 'include'
         });
         if (response.ok) {
@@ -25,7 +25,7 @@ export async function checkAuth() {
 
 export async function logout() {
     try {
-        await fetch('http://localhost:4200/backend/account/logout', {
+        await fetch('http://localhost:4200/backend/logout', {
             method: 'POST',
             credentials: 'include'
         });

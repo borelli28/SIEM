@@ -35,7 +35,7 @@
         alertMessage = 'Login successful! Redirecting...';
         setTimeout(() => {
           window.location.href = '/';
-        }, 1500); // Redirect after 1.5 seconds
+        }, 500); // Redirect after .5 seconds
       } else {
         alertType = 'error';
         alertMessage = 'Invalid credentials';
