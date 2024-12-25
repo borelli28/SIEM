@@ -6,6 +6,8 @@
   let sortField = 'timestamp';
   let sortDirection = 'desc';
   let filterSeverity = 'all';
+  let alertMessage = '';
+  let alertType = 'error';
 
   onMount(async () => {
     await checkAuth();

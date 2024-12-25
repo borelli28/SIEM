@@ -8,6 +8,8 @@
   let logType = 'all';
   let severity = 'all';
   let logs = [];
+  let alertMessage = '';
+  let alertType = 'error';
 
   onMount(async () => {
     await checkAuth();
