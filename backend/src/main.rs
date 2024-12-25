@@ -36,7 +36,8 @@ use crate::handlers::{
     get_account_handler,
     edit_account_handler,
     delete_account_handler,
-    login_account_handler
+    login_account_handler,
+    verify_session_handler
 };
 use actix_web::{web, cookie::time::Duration, cookie::Key, App, HttpServer};
 use actix_session::{SessionMiddleware, storage::CookieSessionStore};
@@ -78,6 +79,7 @@ async fn main() -> std::io::Result<()> {
             .service(
                 web::scope("/backend")
                     .route("/", web::get().to(index))
+                    .route("/check-auth", web::get().to(verify_session_handler))
                     .service(
                         web::scope("/log")
                             .route("/import", web::post().to(import_log_handler))

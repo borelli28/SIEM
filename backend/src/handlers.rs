@@ -8,9 +8,23 @@ use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delet
 use crate::rules::{AlertRule, create_rule, get_rule, list_rules, update_rule, delete_rule};
 use crate::log::{get_all_logs};
 use crate::account::{Account, AccountError, create_account, get_account, update_account, delete_account, verify_login};
+use crate::auth_session::{verify_session};
 
 pub async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
+}
+
+pub async fn verify_session_handler(session: Session) -> impl Responder {
+    match verify_session(&session) {
+        Ok(account_id) => HttpResponse::Ok().json(serde_json::json!({
+            "authenticated": true,
+            "account_id": account_id
+        })),
+        Err(_) => HttpResponse::Unauthorized().json(serde_json::json!({
+            "authenticated": false,
+            "message": "Not authenticated"
+        }))
+    }
 }
 
 // Logs Handlers
