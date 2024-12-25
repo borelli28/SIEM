@@ -60,7 +60,7 @@ async fn main() -> std::io::Result<()> {
                     .cookie_secure(false) // Set to true in PRODUCTION
                     .cookie_http_only(true)
                     .cookie_same_site(actix_web::cookie::SameSite::Lax)
-                    .cookie_name("session".to_string())
+                    .cookie_name("auth_session".to_string())
                     .session_lifecycle(
                         PersistentSession::default()
                             .session_ttl(Duration::minutes(20))
