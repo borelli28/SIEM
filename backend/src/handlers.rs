@@ -8,7 +8,7 @@ use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delet
 use crate::rules::{AlertRule, create_rule, get_rule, list_rules, update_rule, delete_rule};
 use crate::log::{get_all_logs};
 use crate::account::{Account, AccountError, create_account, get_account, update_account, delete_account, verify_login};
-use crate::auth_session::{verify_session};
+use crate::auth_session::{verify_session, invalidate_session};
 
 pub async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -25,6 +25,13 @@ pub async fn verify_session_handler(session: Session, req: HttpRequest) -> impl 
             "message": "Not authenticated"
         }))
     }
+}
+
+pub async fn logout_handler(session: Session) -> impl Responder {
+    invalidate_session(&session);
+    HttpResponse::Ok().json(serde_json::json!({
+        "message": "Logged out successfully"
+    }))
 }
 
 // Logs Handlers
