@@ -11,7 +11,6 @@ mod handlers;
 mod host;
 mod log;
 mod account;
-mod auth;
 
 use crate::collector::LogCollector;
 use crate::handlers::{
