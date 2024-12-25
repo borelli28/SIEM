@@ -13,16 +13,27 @@ impl FromRequest for AuthSession {
 
     fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
         let session = req.get_session();
-        match verify_session(&session) {
+        match verify_session(&session, &req) {
             Ok(account_id) => ready(Ok(AuthSession { account_id })),
             Err(e) => ready(Err(e)),
         }
     }
 }
 
-pub fn verify_session(session: &Session) -> Result<String, Error> {
+pub fn verify_session(session: &Session, req: &HttpRequest) -> Result<String, Error> {
     match session.get::<String>("account_id") {
         Ok(Some(account_id)) => {
+            // Check session user agent
+            let stored_user_agent: Option<String> = session.get("user_agent")
+                .map_err(|_| ErrorUnauthorized("Session error"))?;
+            let current_user_agent = req.headers().get(actix_web::http::header::USER_AGENT)
+                .and_then(|h| h.to_str().ok())
+                .unwrap_or("unknown")
+                .to_string();
+            if stored_user_agent.as_deref() != Some(&current_user_agent) {
+                return Err(ErrorUnauthorized("Session user agent mismatch"));
+            }
+
             // Check if the last_activity is set
             match session.get::<SystemTime>("last_activity") {
                 Ok(Some(last_activity)) => {
