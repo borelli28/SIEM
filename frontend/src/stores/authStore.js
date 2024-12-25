@@ -25,13 +25,19 @@ export async function checkAuth() {
 
 export async function logout() {
     try {
-        await fetch('http://localhost:4200/backend/logout', {
+        const response = await fetch('http://localhost:4200/backend/logout', {
             method: 'POST',
             credentials: 'include'
         });
-        isAuthenticated.set(false);
-        user.set(null);
+
+        if (response.ok) {
+            isAuthenticated.set(false);
+            user.set(null);
+            return { success: true };
+        } else {
+            return { success: false, message: "Logout didn't work" };
+        }
     } catch (error) {
-        console.error('Error logging out:', error);
+        return { success: false, message: "Error logging out" };
     }
 }
