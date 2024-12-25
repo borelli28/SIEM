@@ -2,6 +2,7 @@
   import { onMount } from 'svelte';
   import Chart from 'chart.js/auto';
   import { isAuthenticated, checkAuth, logout } from '../stores/authStore.js';
+
   let alertMessage = '';
   let alertType = 'error';
 

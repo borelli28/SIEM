@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { isAuthenticated, checkAuth, logout } from '../../stores/authStore.js';
 
   let alerts = [];
   let sortField = 'timestamp';
@@ -7,6 +8,11 @@
   let filterSeverity = 'all';
 
   onMount(async () => {
+    await checkAuth();
+    if (!$isAuthenticated) {
+      window.location.href = '/login';
+      return;
+    }
     // Fetch alerts data
     await fetchAlerts();
   });
