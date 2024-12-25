@@ -2,6 +2,8 @@
   import { onMount } from 'svelte';
   import Chart from 'chart.js/auto';
   import { isAuthenticated, checkAuth, logout } from '../stores/authStore.js';
+  let alertMessage = '';
+  let alertType = 'error';
 
   let searchQuery = '';
   let alerts = [
@@ -59,8 +61,16 @@
   }
 
   async function handleLogout() {
-    await logout();
-    window.location.href = '/login';
+      const result = await logout();
+      if (!result.success) {
+          console.log(result.message);
+          alertType = 'error';
+          alertMessage = 'Logout unsucesful';
+      } else {
+          alertType = 'success';
+          alertMessage = 'Logout successful';
+          window.location.href = '/login';
+      }
   }
 </script>
 
@@ -73,6 +83,12 @@
   <main>
     <div id="container">
       <h1>SIEM Dashboard</h1>
+
+      {#if alertMessage}
+        <div class={`alert ${alertType}`}>
+          {alertMessage}
+        </div>
+      {/if}
 
       <section id="graphs">
         <h2>Log Analysis</h2>
