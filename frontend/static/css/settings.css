@@ -60,3 +60,7 @@ nav {
   background-color: #f8d7da;
   color: #721c24;
 }
+
+#logout-btn {
+  background-color: #CC0000;
+}

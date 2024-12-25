@@ -1,12 +1,17 @@
 <script>
+  import { isAuthenticated, user } from '../../stores/authStore.js';
+
   let username = '';
   let password = '';
   let alertMessage = '';
-  let alertType = '';
+  let alertType = 'error';
 
-  async function handleSubmit() {
+  async function handleLogin(event) {
+    event.preventDefault();
+    alertMessage = '';
+
     const loginData = {
-    	id: "0",
+      id: "0",
       name: username,
       password: password,
       role: "no"
@@ -22,32 +27,23 @@
         credentials: 'include'
       });
 
-      const contentType = response.headers.get('Content-Type') || '';
-      let errorMessage = '';
-
-      if (!response.ok) {
-        if (contentType.includes('application/json')) {
-          const errorData = await response.json();
-          errorMessage = errorData.message || 'Failed to log in.';
-        } else {
-          const errorText = await response.text();
-          errorMessage = `Unexpected response: ${errorText}`;
-        }
-        throw new Error(errorMessage);
-      }
-
-      if (contentType.includes('application/json')) {
+      if (response.ok) {
         const data = await response.json();
-        alertMessage = 'Login successful!';
+        isAuthenticated.set(true);
+        user.set(data.user);
         alertType = 'success';
+        alertMessage = 'Login successful! Redirecting...';
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 500); // Redirect after .5 seconds
       } else {
-        alertMessage = 'Login successful, but response is not JSON.';
-        alertType = 'success';
+        alertType = 'error';
+        alertMessage = 'Invalid credentials';
       }
     } catch (error) {
-      console.error('Error logging in:', error);
-      alertMessage = `Error: ${error.message}`;
+      console.error('Login error:', error);
       alertType = 'error';
+      alertMessage = 'An error occurred during login';
     }
   }
 </script>
@@ -65,7 +61,7 @@
         {alertMessage}
       </div>
     {/if}
-    <form on:submit|preventDefault={handleSubmit}>
+    <form on:submit={handleLogin}>
       <div>
         <label for="username">Username:</label>
         <input type="text" id="username" bind:value={username} required>
@@ -77,6 +73,6 @@
       <button type="submit">Log In</button>
     </form>
     <p>New to our platform? <a href="/register">Register here</a></p>
-    <p>Visit <a href="https://svelte.dev/docs/kit" target="_blank">svelte.dev/docs/kit</a> to read the documentation</p>
+    <p>Visit <a href="https://svelte.dev/docs" target="_blank">svelte.dev/docs</a> to read the documentation</p>
   </div>
 </main>

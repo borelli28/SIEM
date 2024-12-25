@@ -3,6 +3,7 @@ use diesel::result::Error as DieselError;
 use serde::{Serialize, Deserialize};
 use crate::schema::accounts;
 use actix_session::Session;
+use actix_web::HttpRequest;
 use diesel::prelude::*;
 use uuid::Uuid;
 use std::fmt;
@@ -131,7 +132,7 @@ pub fn delete_account(id: &String) -> Result<bool, AccountError> {
     Ok(affected_rows > 0)
 }
 
-pub fn verify_login(session: &Session, name: &String, password: &String) -> Result<Option<Account>, AccountError> {
+pub fn verify_login(session: &Session, name: &String, password: &String, req: &HttpRequest) -> Result<Option<Account>, AccountError> {
     let mut conn = establish_connection();
     let account: Option<Account> = accounts::table
         .filter(accounts::name.eq(name))
@@ -140,7 +141,20 @@ pub fn verify_login(session: &Session, name: &String, password: &String) -> Resu
 
     if let Some(account) = account {
         if account.verify_password(password) {
-            session.insert("session_id", account.id.clone()).map_err(|e| AccountError::SessionError(e.to_string()))?;
+            // Store account ID
+            session.insert("account_id", account.id.clone())
+                .map_err(|e| AccountError::SessionError(e.to_string()))?;
+
+            let user_agent = req.headers().get(actix_web::http::header::USER_AGENT)
+                .and_then(|h| h.to_str().ok())
+                .unwrap_or("unknown")
+                .to_string();
+            session.insert("user_agent", user_agent)
+                .map_err(|e| AccountError::SessionError(e.to_string()))?;
+
+            // Store last activity time
+            session.insert("last_activity", std::time::SystemTime::now())
+                .map_err(|e| AccountError::SessionError(e.to_string()))?;
             session.renew();
             return Ok(Some(account)); // Login successful
         } else {

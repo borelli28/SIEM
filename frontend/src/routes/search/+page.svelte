@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { isAuthenticated, checkAuth, logout } from '../../stores/authStore.js';
 
   let searchQuery = '';
   let startDate = '';
@@ -7,8 +8,15 @@
   let logType = 'all';
   let severity = 'all';
   let logs = [];
+  let alertMessage = '';
+  let alertType = 'error';
 
-  onMount(() => {
+  onMount(async () => {
+    await checkAuth();
+    if (!$isAuthenticated) {
+      window.location.href = '/login';
+      return;
+    }
     // Initialize date inputs with today's date
     const today = new Date().toISOString().split('T')[0];
     startDate = today;
@@ -26,6 +34,19 @@
       { id: 3, timestamp: '2023-12-08T12:00:00Z', type: 'application', message: 'Database connection error', severity: 'error' },
       { id: 4, timestamp: '2023-12-08T13:45:00Z', type: 'network', message: 'Unusual outbound traffic detected', severity: 'critical' },
     ];
+  }
+
+  async function handleLogout() {
+      const result = await logout();
+      if (!result.success) {
+          console.log(result.message);
+          alertType = 'error';
+          alertMessage = 'Logout unsucesful';
+      } else {
+          alertType = 'success';
+          alertMessage = 'Logout successful';
+          window.location.href = '/login';
+      }
   }
 </script>
 
@@ -88,6 +109,7 @@
 
     <nav>
       <a href="/">Back to Dashboard</a>
+      <button on:click={handleLogout} id="logout-btn">Logout</button>
     </nav>
   </div>
 </main>

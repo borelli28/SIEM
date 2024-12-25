@@ -1,12 +1,20 @@
 <script>
   import { onMount } from 'svelte';
+  import { isAuthenticated, checkAuth, logout } from '../../stores/authStore.js';
 
   let alerts = [];
   let sortField = 'timestamp';
   let sortDirection = 'desc';
   let filterSeverity = 'all';
+  let alertMessage = '';
+  let alertType = 'error';
 
   onMount(async () => {
+    await checkAuth();
+    if (!$isAuthenticated) {
+      window.location.href = '/login';
+      return;
+    }
     // Fetch alerts data
     await fetchAlerts();
   });
@@ -43,6 +51,19 @@
     } else {
       alerts = alerts.filter(alert => alert.severity.toLowerCase() === filterSeverity.toLowerCase());
     }
+  }
+
+  async function handleLogout() {
+      const result = await logout();
+      if (!result.success) {
+          console.log(result.message);
+          alertType = 'error';
+          alertMessage = 'Logout unsucesful';
+      } else {
+          alertType = 'success';
+          alertMessage = 'Logout successful';
+          window.location.href = '/login';
+      }
   }
 </script>
 
@@ -89,6 +110,7 @@
 
     <nav>
       <a href="/">Back to Dashboard</a>
+      <button on:click={handleLogout} id="logout-btn">Logout</button>
     </nav>
   </div>
 </main>

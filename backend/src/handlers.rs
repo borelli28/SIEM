@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse, Responder};
+use actix_web::{web, HttpResponse, HttpRequest, Responder};
 use actix_session::Session;
 use serde_json::json;
 use crate::collector::{LogCollector, ParseLogError, process_logs};
@@ -8,9 +8,30 @@ use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delet
 use crate::rules::{AlertRule, create_rule, get_rule, list_rules, update_rule, delete_rule};
 use crate::log::{get_all_logs};
 use crate::account::{Account, AccountError, create_account, get_account, update_account, delete_account, verify_login};
+use crate::auth_session::{verify_session, invalidate_session};
 
 pub async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
+}
+
+pub async fn verify_session_handler(session: Session, req: HttpRequest) -> impl Responder {
+    match verify_session(&session, &req) {
+        Ok(account_id) => HttpResponse::Ok().json(serde_json::json!({
+            "authenticated": true,
+            "account_id": account_id
+        })),
+        Err(_) => HttpResponse::Unauthorized().json(serde_json::json!({
+            "authenticated": false,
+            "message": "Not authenticated"
+        }))
+    }
+}
+
+pub async fn logout_handler(session: Session) -> impl Responder {
+    invalidate_session(&session);
+    HttpResponse::Ok().json(serde_json::json!({
+        "message": "Logged out successfully"
+    }))
 }
 
 // Logs Handlers
@@ -260,12 +281,12 @@ pub async fn delete_account_handler(account_id: web::Path<String>) -> impl Respo
     }
 }
 
-pub async fn login_account_handler(session: Session, account: web::Json<Account>) -> impl Responder {
+pub async fn login_account_handler(session: Session, account: web::Json<Account>, req: HttpRequest) -> impl Responder {
     let account_data = account.into_inner();
     let name = account_data.name;
     let password = account_data.password;
 
-    match verify_login(&session, &name, &password) {
+    match verify_login(&session, &name, &password, &req) {
         Ok(Some(account)) => HttpResponse::Ok().json(json!({
             "status": "success",
             "message": "Login successful!",

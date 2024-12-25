@@ -1,8 +1,19 @@
 <script>
+  import { onMount } from 'svelte';
+  import { isAuthenticated, checkAuth, logout } from '../../stores/authStore.js';
+
   let newLogSource = { name: '', type: 'syslog', address: '' };
   let newHost = { name: '', ip: '' };
   let alertMessage = '';
-  let alertType = '';
+  let alertType = 'error';
+
+  onMount(async () => {
+    await checkAuth();
+    if (!$isAuthenticated) {
+      window.location.href = '/login';
+      return;
+    }
+  });
 
   function addLogSource(event) {
     event.preventDefault();
@@ -14,6 +25,19 @@
     event.preventDefault();
     console.log('Adding new host:', newHost);
     newHost = { name: '', ip: '' };
+  }
+
+  async function handleLogout() {
+      const result = await logout();
+      if (!result.success) {
+          console.log(result.message);
+          alertType = 'error';
+          alertMessage = 'Logout unsucesful';
+      } else {
+          alertType = 'success';
+          alertMessage = 'Logout successful';
+          window.location.href = '/login';
+      }
   }
 </script>
 
@@ -72,6 +96,7 @@
 
     <nav>
       <a href="/">Back to Dashboard</a>
+      <button on:click={handleLogout} id="logout-btn">Logout</button>
     </nav>
   </div>
 </main>
