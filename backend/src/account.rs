@@ -140,7 +140,12 @@ pub fn verify_login(session: &Session, name: &String, password: &String) -> Resu
 
     if let Some(account) = account {
         if account.verify_password(password) {
-            session.insert("account_id", account.id.clone()).map_err(|e| AccountError::SessionError(e.to_string()))?;
+            // Store account ID
+            session.insert("account_id", account.id.clone())
+                .map_err(|e| AccountError::SessionError(e.to_string()))?;
+            // Store last activity time
+            session.insert("last_activity", std::time::SystemTime::now())
+                .map_err(|e| AccountError::SessionError(e.to_string()))?;
             session.renew();
             return Ok(Some(account)); // Login successful
         } else {
