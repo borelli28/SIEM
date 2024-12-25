@@ -12,7 +12,6 @@ mod host;
 mod log;
 mod account;
 
-use actix_web::{web, App, HttpServer};
 use crate::collector::LogCollector;
 use crate::handlers::{
     index,
@@ -38,20 +37,41 @@ use crate::handlers::{
     delete_account_handler,
     login_account_handler
 };
+use actix_web::{web, cookie::time::Duration, cookie::Key, App, HttpServer};
+use actix_session::{SessionMiddleware, storage::CookieSessionStore};
+use actix_session::config::PersistentSession;
 use actix_cors::Cors;
+use dotenvy::dotenv;
+use std::env;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let collector = web::Data::new(LogCollector::new());
+    dotenv().ok();
+    let secret_key = env::var("SESSION_SECRET_KEY").expect("SESSION_SECRET_KEY must be set");
+    let cookie_key = Key::from(secret_key.as_bytes());
 
     HttpServer::new(move || {
         App::new()
             .app_data(collector.clone())
             .wrap(
+                SessionMiddleware::builder(CookieSessionStore::default(), cookie_key.clone())
+                    .cookie_secure(false) // Set to true in PRODUCTION
+                    .cookie_http_only(true)
+                    .cookie_same_site(actix_web::cookie::SameSite::Lax)
+                    .cookie_name("auth_session".to_string())
+                    .session_lifecycle(
+                        PersistentSession::default()
+                            .session_ttl(Duration::minutes(20))
+                    )
+                    .build()
+            )
+            .wrap(
                 Cors::default()
                     .allowed_origin("http://localhost:5173")
                     .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
                     .allowed_headers(vec!["Content-Type", "Authorization"])
+                    .supports_credentials()
                     .max_age(3600)
             )
             .service(
