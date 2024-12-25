@@ -50,6 +50,19 @@
       alerts = alerts.filter(alert => alert.severity.toLowerCase() === filterSeverity.toLowerCase());
     }
   }
+
+  async function handleLogout() {
+      const result = await logout();
+      if (!result.success) {
+          console.log(result.message);
+          alertType = 'error';
+          alertMessage = 'Logout unsucesful';
+      } else {
+          alertType = 'success';
+          alertMessage = 'Logout successful';
+          window.location.href = '/login';
+      }
+  }
 </script>
 
 <svelte:head>
@@ -95,6 +108,7 @@
 
     <nav>
       <a href="/">Back to Dashboard</a>
+      <button on:click={handleLogout} id="logout-btn">Logout</button>
     </nav>
   </div>
 </main>

@@ -122,7 +122,7 @@
         <a href="/settings">Settings</a>
         <a href="/alerts">All Alerts</a>
         <a href="/search">Search</a>
-        <button on:click={handleLogout}>Logout</button>
+        <button on:click={handleLogout} id="logout-btn">Logout</button>
       </nav>
 
       <p>Visit <a href="https://svelte.dev/docs" target="_blank">svelte.dev/docs</a> to read the documentation</p>
