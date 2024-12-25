@@ -13,7 +13,6 @@ mod log;
 mod account;
 mod auth;
 
-use actix_web::{web, App, HttpServer};
 use crate::collector::LogCollector;
 use crate::handlers::{
     index,
@@ -39,8 +38,9 @@ use crate::handlers::{
     delete_account_handler,
     login_account_handler
 };
+use actix_web::{web, cookie::time::Duration, cookie::Key, App, HttpServer};
 use actix_session::{SessionMiddleware, storage::CookieSessionStore};
-use actix_web::cookie::Key;
+use actix_session::config::PersistentSession;
 use actix_cors::Cors;
 use dotenvy::dotenv;
 use std::env;
@@ -61,6 +61,10 @@ async fn main() -> std::io::Result<()> {
                     .cookie_http_only(true)
                     .cookie_same_site(actix_web::cookie::SameSite::Lax)
                     .cookie_name("session".to_string())
+                    .session_lifecycle(
+                        PersistentSession::default()
+                            .session_ttl(Duration::minutes(20))
+                    )
                     .build()
             )
             .wrap(
