@@ -81,7 +81,7 @@ async fn main() -> std::io::Result<()> {
                 web::scope("/backend")
                     .route("/", web::get().to(index))
                     .route("/check-auth", web::get().to(verify_session_handler))
-                    .route("/logout", web::get().to(logout_handler))
+                    .route("/logout", web::post().to(logout_handler))
                     .service(
                         web::scope("/log")
                             .route("/import", web::post().to(import_log_handler))
