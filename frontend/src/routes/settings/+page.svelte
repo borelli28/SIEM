@@ -1,8 +1,19 @@
 <script>
+  import { onMount } from 'svelte';
+  import { isAuthenticated, checkAuth, logout } from '../../stores/authStore.js';
+
   let newLogSource = { name: '', type: 'syslog', address: '' };
   let newHost = { name: '', ip: '' };
   let alertMessage = '';
   let alertType = '';
+
+  onMount(async () => {
+    await checkAuth();
+    if (!$isAuthenticated) {
+      window.location.href = '/login';
+      return;
+    }
+  });
 
   function addLogSource(event) {
     event.preventDefault();

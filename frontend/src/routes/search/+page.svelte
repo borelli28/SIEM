@@ -1,5 +1,6 @@
 <script>
   import { onMount } from 'svelte';
+  import { isAuthenticated, checkAuth, logout } from '../../stores/authStore.js';
 
   let searchQuery = '';
   let startDate = '';
@@ -8,7 +9,12 @@
   let severity = 'all';
   let logs = [];
 
-  onMount(() => {
+  onMount(async () => {
+    await checkAuth();
+    if (!$isAuthenticated) {
+      window.location.href = '/login';
+      return;
+    }
     // Initialize date inputs with today's date
     const today = new Date().toISOString().split('T')[0];
     startDate = today;
