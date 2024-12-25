@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import Chart from 'chart.js/auto';
+  import { isAuthenticated, checkAuth, logout } from '../stores/authStore.js';
 
   let searchQuery = '';
   let alerts = [
@@ -9,7 +10,13 @@
     { id: 3, ruleName: 'Unusual Network Traffic', host: '192.168.1.102', severity: 'Low' },
   ];
 
-  onMount(() => {
+  onMount(async () => {
+    await checkAuth();
+    if (!$isAuthenticated) {
+      window.location.href = '/login';
+      return;
+    }
+
     // Example chart
     const ctx = document.getElementById('logsChart');
     new Chart(ctx, {
@@ -50,6 +57,11 @@
     console.log('Searching for:', searchQuery);
     // Implement your search logic here
   }
+
+  async function handleLogout() {
+    await logout();
+    window.location.href = '/login';
+  }
 </script>
 
 <svelte:head>
@@ -57,43 +69,48 @@
   <link rel="stylesheet" href="/css/dashboard.css">
 </svelte:head>
 
-<main>
-  <div id="container">
-    <h1>SIEM Dashboard</h1>
+{#if $isAuthenticated}
+  <main>
+    <div id="container">
+      <h1>SIEM Dashboard</h1>
 
-    <section id="graphs">
-      <h2>Log Analysis</h2>
-      <canvas id="logsChart"></canvas>
-    </section>
+      <section id="graphs">
+        <h2>Log Analysis</h2>
+        <canvas id="logsChart"></canvas>
+      </section>
 
-    <section id="alerts">
-      <h2>Recent Alerts</h2>
-      <table>
-        <thead>
-          <tr>
-            <th>Rule Name</th>
-            <th>Host</th>
-            <th>Severity</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each alerts as alert}
+      <section id="alerts">
+        <h2>Recent Alerts</h2>
+        <table>
+          <thead>
             <tr>
-              <td>{alert.ruleName}</td>
-              <td>{alert.host}</td>
-              <td>{alert.severity}</td>
+              <th>Rule Name</th>
+              <th>Host</th>
+              <th>Severity</th>
             </tr>
-          {/each}
-        </tbody>
-      </table>
-    </section>
+          </thead>
+          <tbody>
+            {#each alerts as alert}
+              <tr>
+                <td>{alert.ruleName}</td>
+                <td>{alert.host}</td>
+                <td>{alert.severity}</td>
+              </tr>
+            {/each}
+          </tbody>
+        </table>
+      </section>
 
-    <nav>
-      <a href="/settings">Settings</a>
-      <a href="/alerts">All Alerts</a>
-      <a href="/search">Search</a>
-    </nav>
+      <nav>
+        <a href="/settings">Settings</a>
+        <a href="/alerts">All Alerts</a>
+        <a href="/search">Search</a>
+        <button on:click={handleLogout}>Logout</button>
+      </nav>
 
-    <p>Visit <a href="https://svelte.dev/docs/kit" target="_blank">svelte.dev/docs/kit</a> to read the documentation</p>
-  </div>
-</main>
+      <p>Visit <a href="https://svelte.dev/docs" target="_blank">svelte.dev/docs</a> to read the documentation</p>
+    </div>
+  </main>
+{:else}
+  <p>Checking authentication...</p>
+{/if}
