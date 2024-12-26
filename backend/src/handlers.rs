@@ -9,6 +9,7 @@ use crate::rules::{AlertRule, create_rule, get_rule, list_rules, update_rule, de
 use crate::log::{get_all_logs};
 use crate::account::{Account, AccountError, create_account, get_account, update_account, delete_account, verify_login};
 use crate::auth_session::{verify_session, invalidate_session};
+use crate::csrf::{CsrfMiddleware};
 
 pub async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -310,5 +311,23 @@ pub async fn login_account_handler(session: Session, account: web::Json<Account>
                 "message": "An internal error occurred"
             })),
         },
+    }
+}
+
+// CSRF Handlers
+//
+pub async fn get_csrf(csrf: web::Data<CsrfMiddleware>, req: HttpRequest) -> HttpResponse {
+    let form_id = req.headers()
+        .get("X-Form-ID")
+        .and_then(|v| v.to_str().ok())
+        .unwrap_or("default");
+
+    match csrf.generate_token_pair(form_id) {
+        Ok((token, cookie)) => {
+            HttpResponse::Ok()
+                .cookie(cookie)
+                .json(token)
+        },
+        Err(_) => HttpResponse::InternalServerError().finish(),
     }
 }

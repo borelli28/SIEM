@@ -40,7 +40,7 @@ use crate::handlers::{
     login_account_handler,
     verify_session_handler,
     logout_handler,
-    get_csrf_token
+    get_csrf
 };
 use actix_web::{web, cookie::time::Duration, cookie::Key, App, HttpServer};
 use actix_session::{SessionMiddleware, storage::CookieSessionStore, config::PersistentSession};
@@ -97,7 +97,10 @@ async fn main() -> std::io::Result<()> {
                     .route("/", web::get().to(index))
                     .route("/check-auth", web::get().to(verify_session_handler))
                     .route("/logout", web::post().to(logout_handler))
-                    .route("/get-csrf-token", web::get().to(get_csrf_token))
+                    .service(
+                        web::scope("/csrf")
+                            .route("/", web::get().to(get_csrf))
+                    )
                     .service(
                         web::scope("/log")
                             .route("/import", web::post().to(import_log_handler))
