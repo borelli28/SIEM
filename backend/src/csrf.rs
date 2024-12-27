@@ -1,9 +1,9 @@
-use actix_web::{dev::ServiceRequest, Error, HttpMessage, cookie::Cookie};
+use actix_web::{cookie::Cookie, error::ErrorForbidden, Error, HttpRequest};
 use csrf::{ChaCha20Poly1305CsrfProtection, CsrfProtection};
 use std::time::{Duration, SystemTime};
 use serde::{Deserialize, Serialize};
-use std::sync::{Arc, Mutex};
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 use rand::RngCore;
 
 const MINUTES_20: i64 = 20 * 60;
@@ -79,7 +79,7 @@ impl CsrfMiddleware {
     }
 }
 
-pub async fn csrf_validator(req: ServiceRequest, csrf: &CsrfMiddleware) -> Result<ServiceRequest, Error> {
+pub async fn csrf_validator(req: &HttpRequest, csrf: &CsrfMiddleware) -> Result<(), Error> {
     let token = req
         .headers()
         .get("X-CSRF-Token")
@@ -91,15 +91,15 @@ pub async fn csrf_validator(req: ServiceRequest, csrf: &CsrfMiddleware) -> Resul
         .headers()
         .get("X-Form-ID")
         .and_then(|v| v.to_str().ok())
-        .ok_or_else(|| Error::from(actix_web::error::ErrorForbidden("Missing Form ID")))?;
+        .ok_or_else(|| ErrorForbidden("Missing Form ID"))?;
 
     if let (Some(token), Some(cookie)) = (token, cookie) {
         if csrf.validate_token(token, &cookie, form_id) {
-            Ok(req)
+            Ok(())
         } else {
-            Err(Error::from(actix_web::error::ErrorForbidden("Invalid CSRF token")))
+            Err(ErrorForbidden("Invalid CSRF token"))
         }
     } else {
-        Err(Error::from(actix_web::error::ErrorForbidden("Missing CSRF token or cookie")))
+        Err(ErrorForbidden("Missing CSRF token or cookie"))
     }
 }
