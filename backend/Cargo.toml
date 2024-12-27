@@ -8,6 +8,7 @@ actix-cors = "0.7.0"
 actix-session = { version = "0.10.1", features = ["cookie-session"] }
 actix-web = "4.9.0"
 argon2 = "0.5.3"
+base64 = "0.22.1"
 chrono = "0.4.39"
 csrf = "0.4.1"
 diesel = { version = "2.2.6", features = ["sqlite", "chrono", "uuid"] }
