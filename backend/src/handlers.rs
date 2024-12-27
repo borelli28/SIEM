@@ -336,33 +336,40 @@ pub async fn delete_account_handler(
     }
 }
 
-pub async fn login_account_handler(session: Session, account: web::Json<Account>, req: HttpRequest) -> impl Responder {
+pub async fn login_account_handler(
+    req: HttpRequest,
+    session: Session,
+    account: web::Json<Account>,
+    csrf: web::Data<CsrfMiddleware>
+) -> Result<HttpResponse, Error> {
+    csrf_validator(&req, &csrf).await?;
+
     let account_data = account.into_inner();
     let name = account_data.name;
     let password = account_data.password;
     match verify_login(&session, &name, &password, &req) {
-        Ok(Some(account)) => HttpResponse::Ok().json(json!({
+        Ok(Some(account)) => Ok(HttpResponse::Ok().json(json!({
             "status": "success",
             "message": "Login successful!",
             "account": account
-        })),
-        Ok(None) => HttpResponse::Unauthorized().json(json!({
+        }))),
+        Ok(None) => Ok(HttpResponse::Unauthorized().json(json!({
             "status": "error",
             "message": "Invalid username or password"
-        })),
+        }))),
         Err(err) => match err {
-            AccountError::InvalidRole => HttpResponse::BadRequest().json(json!({
+            AccountError::InvalidRole => Ok(HttpResponse::BadRequest().json(json!({
                 "status": "error",
                 "message": "Invalid role provided"
-            })),
-            AccountError::ExpectedField(field) => HttpResponse::BadRequest().json(json!({
+            }))),
+            AccountError::ExpectedField(field) => Ok(HttpResponse::BadRequest().json(json!({
                 "status": "error",
                 "message": format!("Missing required field: {}", field)
-            })),
-            _ => HttpResponse::InternalServerError().json(json!({
+            }))),
+            _ => Ok(HttpResponse::InternalServerError().json(json!({
                 "status": "error",
                 "message": "An internal error occurred"
-            })),
+            }))),
         },
     }
 }
