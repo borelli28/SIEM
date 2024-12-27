@@ -6,7 +6,6 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use rand::RngCore;
-use log::error;
 
 const MINUTES_20: i64 = 20 * 60;
 
@@ -32,16 +31,10 @@ impl CsrfMiddleware {
         }
     }
 
-    // Generate the CSRF token and cookie
     pub fn generate_token_pair(&self, form_id: &str) -> Result<(CsrfToken, Cookie), csrf::CsrfError> {
-        // Generate the token pair
         let (token, cookie) = self.csrf_protection.generate_token_pair(None, MINUTES_20)
-            .map_err(|e| {
-                error!("Failed to generate CSRF token pair: {:?}", e);
-                csrf::CsrfError::InternalError
-            })?;
+            .map_err(|_| csrf::CsrfError::InternalError)?;
 
-        // Base64 encode the cookie value
         let cookie_value = general_purpose::STANDARD.encode(cookie.value());
 
         let csrf_token = CsrfToken {
@@ -49,14 +42,13 @@ impl CsrfMiddleware {
             form_id: form_id.to_string(),
         };
 
-        // Build the CSRF cookie with error handling
         let cookie = Cookie::build("csrf_token", cookie_value.clone())
             .http_only(true)
-            .secure(false) // Set to true in PRODUCTION
+            .secure(true) // Set to true in PRODUCTION
+            .same_site(actix_web::cookie::SameSite::Lax) // Adjust as necessary
             .path("/")
             .finish();
 
-        // Calculate expiration time and store the token
         let expiration = SystemTime::now() + Duration::from_secs(MINUTES_20.try_into().unwrap());
         let mut tokens = self.tokens.lock().unwrap();
         tokens.insert(form_id.to_string(), (cookie_value, expiration));
@@ -64,19 +56,17 @@ impl CsrfMiddleware {
         Ok((csrf_token, cookie))
     }
 
-    // Validate the CSRF cookie and ensure form ID is valid
-    pub fn validate_token(&self, cookie: &str, form_id: &str) -> bool {
+    pub fn validate_token(&self, cookie: &str, form_id: &str) -> Result<(), Error> {
         let tokens = self.tokens.lock().unwrap();
         if let Some((stored_cookie, expiration)) = tokens.get(form_id) {
             if stored_cookie != cookie || SystemTime::now() > *expiration {
-                return false; // Token or session expired
+                return Err(ErrorForbidden("Token or session expired").into());
             }
         } else {
-            return false; // No matching token found for the form ID
+            return Err(ErrorForbidden("No matching token found for the form ID").into());
         }
 
-        // If we reach here, it means the cookie is valid and not expired
-        true
+        Ok(())
     }
 
     pub fn clean_expired_tokens(&self) {
@@ -85,33 +75,20 @@ impl CsrfMiddleware {
     }
 }
 
-// CSRF Validator
 pub async fn csrf_validator(req: &HttpRequest, csrf: &CsrfMiddleware) -> Result<(), Error> {
-    // Extract CSRF cookie
     let cookie = req.cookie("csrf_token").map(|c| c.value().to_string());
-    println!("CSRF Cookie from request: {:?}", cookie);
 
-    // Extract form ID
     let form_id = req.headers().get("X-Form-ID")
         .and_then(|v| v.to_str().ok())
-        .ok_or_else(|| {
-            error!("Missing Form ID from headers");
-            ErrorForbidden("Missing Form ID")
-        })?;
+        .ok_or_else(|| ErrorForbidden("Missing Form ID"))?;
 
-    // Validate cookie
     if cookie.is_none() {
-        error!("Missing CSRF cookie");
         return Err(ErrorForbidden("Missing CSRF cookie"));
     }
 
     let cookie_value = cookie.unwrap();
+    
+    csrf.validate_token(&cookie_value, form_id)?;
 
-    // Validate the CSRF cookie with your logic
-    if csrf.validate_token(&cookie_value, form_id) {
-        return Ok(()); // Validation passed
-    }
-
-    error!("CSRF token validation failed for form ID: {}", form_id);
-    Err(ErrorForbidden("Invalid CSRF token"))
+    Ok(())
 }

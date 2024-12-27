@@ -11,8 +11,6 @@ use crate::account::{Account, AccountError, create_account, get_account, update_
 use crate::auth_session::{verify_session, invalidate_session};
 use crate::csrf::{CsrfMiddleware, csrf_validator};
 
-use log::{error, info};
-
 pub async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
@@ -379,22 +377,18 @@ pub async fn login_account_handler(
 // CSRF Handlers
 //
 pub async fn get_csrf_handler(req: HttpRequest, csrf: web::Data<CsrfMiddleware>) -> HttpResponse {
-    info!("Received CSRF token request");
     let form_id = req.headers()
         .get("X-Form-ID")
         .and_then(|v| v.to_str().ok())
         .unwrap_or("default");
-    info!("Form ID: {}", form_id);
 
     match csrf.generate_token_pair(form_id) {
         Ok((token, cookie)) => {
-            info!("Generated CSRF token successfully");
             HttpResponse::Ok()
                 .cookie(cookie)
                 .json(token)
         },
-        Err(e) => {
-            error!("Failed to generate CSRF token: {:?}", e);
+        Err(_) => {
             HttpResponse::InternalServerError().finish()
         },
     }
