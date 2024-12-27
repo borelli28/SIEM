@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
-  import { isAuthenticated, checkAuth, logout } from '../../stores/authStore.js';
+  import { getCsrfToken } from '../../services/csrfService';
+  import { isAuthenticated, checkAuth, logout } from '../../services/authService.js';
 
   let alerts = [];
   let sortField = 'timestamp';
@@ -8,6 +9,7 @@
   let filterSeverity = 'all';
   let alertMessage = '';
   let alertType = 'error';
+  let formId = 'alert-form';
 
   onMount(async () => {
     await checkAuth();
@@ -15,7 +17,14 @@
       window.location.href = '/login';
       return;
     }
-    // Fetch alerts data
+
+    try {
+      await getCsrfToken(formId);
+    } catch (error) {
+        alertMessage = 'Failed to fetch CSRF token';
+        alertType = 'error';
+    }
+
     await fetchAlerts();
   });
 

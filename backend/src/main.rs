@@ -12,6 +12,7 @@ mod host;
 mod log;
 mod account;
 mod auth_session;
+mod csrf;
 
 use crate::collector::LogCollector;
 use crate::handlers::{
@@ -38,25 +39,45 @@ use crate::handlers::{
     delete_account_handler,
     login_account_handler,
     verify_session_handler,
-    logout_handler
+    logout_handler,
+    get_csrf_handler,
+    csrf_validator_handler
 };
 use actix_web::{web, cookie::time::Duration, cookie::Key, App, HttpServer};
-use actix_session::{SessionMiddleware, storage::CookieSessionStore};
-use actix_session::config::PersistentSession;
+use actix_session::{SessionMiddleware, storage::CookieSessionStore, config::PersistentSession};
+use crate::csrf::CsrfMiddleware;
 use actix_cors::Cors;
 use dotenvy::dotenv;
 use std::env;
+
+use env_logger;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let collector = web::Data::new(LogCollector::new());
     dotenv().ok();
+
+    env_logger::init();
+
     let secret_key = env::var("SESSION_SECRET_KEY").expect("SESSION_SECRET_KEY must be set");
     let cookie_key = Key::from(secret_key.as_bytes());
+
+    // Create CSRF middleware
+    let csrf = web::Data::new(CsrfMiddleware::new());
+
+    // Start a background task to clean expired tokens
+    let csrf_clone = csrf.clone();
+    actix_web::rt::spawn(async move {
+        loop {
+            actix_web::rt::time::sleep(std::time::Duration::from_secs(3600)).await;
+            csrf_clone.clean_expired_tokens();
+        }
+    });
 
     HttpServer::new(move || {
         App::new()
             .app_data(collector.clone())
+            .app_data(csrf.clone())
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), cookie_key.clone())
                     .cookie_secure(false) // Set to true in PRODUCTION
@@ -64,8 +85,7 @@ async fn main() -> std::io::Result<()> {
                     .cookie_same_site(actix_web::cookie::SameSite::Lax)
                     .cookie_name("auth_session".to_string())
                     .session_lifecycle(
-                        PersistentSession::default()
-                            .session_ttl(Duration::minutes(20))
+                        PersistentSession::default().session_ttl(Duration::minutes(20))
                     )
                     .build()
             )
@@ -73,7 +93,7 @@ async fn main() -> std::io::Result<()> {
                 Cors::default()
                     .allowed_origin("http://localhost:5173")
                     .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-                    .allowed_headers(vec!["Content-Type", "Authorization"])
+                    .allowed_headers(vec!["Content-Type", "Authorization", "X-CSRF-Token", "X-Form-ID"])
                     .supports_credentials()
                     .max_age(3600)
             )
@@ -82,6 +102,11 @@ async fn main() -> std::io::Result<()> {
                     .route("/", web::get().to(index))
                     .route("/check-auth", web::get().to(verify_session_handler))
                     .route("/logout", web::post().to(logout_handler))
+                    .service(
+                        web::scope("/csrf")
+                            .route("/", web::get().to(get_csrf_handler))
+                            .route("/validate", web::post().to(csrf_validator_handler))
+                    )
                     .service(
                         web::scope("/log")
                             .route("/import", web::post().to(import_log_handler))

@@ -1,7 +1,7 @@
 <script>
   import { onMount } from 'svelte';
   import Chart from 'chart.js/auto';
-  import { isAuthenticated, checkAuth, logout } from '../stores/authStore.js';
+  import { isAuthenticated, checkAuth, logout } from '../services/authService.js';
 
   let alertMessage = '';
   let alertType = 'error';

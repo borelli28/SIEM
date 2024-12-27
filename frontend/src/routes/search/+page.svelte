@@ -1,6 +1,7 @@
 <script>
   import { onMount } from 'svelte';
-  import { isAuthenticated, checkAuth, logout } from '../../stores/authStore.js';
+  import { getCsrfToken } from '../../services/csrfService';
+  import { isAuthenticated, checkAuth, logout } from '../../services/authService.js';
 
   let searchQuery = '';
   let startDate = '';
@@ -10,6 +11,7 @@
   let logs = [];
   let alertMessage = '';
   let alertType = 'error';
+  let formId = 'search-form';
 
   onMount(async () => {
     await checkAuth();
@@ -21,6 +23,13 @@
     const today = new Date().toISOString().split('T')[0];
     startDate = today;
     endDate = today;
+
+    try {
+      await getCsrfToken(formId);
+    } catch (error) {
+        alertMessage = 'Failed to fetch CSRF token';
+        alertType = 'error';
+    }
   });
 
   async function handleSearch(event) {

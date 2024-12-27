@@ -1,17 +1,26 @@
 <script>
   import { onMount } from 'svelte';
-  import { isAuthenticated, checkAuth, logout } from '../../stores/authStore.js';
+  import { getCsrfToken } from '../../services/csrfService';
+  import { isAuthenticated, checkAuth, logout } from '../../services/authService.js';
 
   let newLogSource = { name: '', type: 'syslog', address: '' };
   let newHost = { name: '', ip: '' };
   let alertMessage = '';
   let alertType = 'error';
+  let formId = 'setting-form';
 
   onMount(async () => {
     await checkAuth();
     if (!$isAuthenticated) {
       window.location.href = '/login';
       return;
+    }
+
+    try {
+      await getCsrfToken(formId);
+    } catch (error) {
+        alertMessage = 'Failed to fetch CSRF token';
+        alertType = 'error';
     }
   });
 

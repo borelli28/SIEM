@@ -1,10 +1,23 @@
 <script>
-  import { isAuthenticated, user } from '../../stores/authStore.js';
+  import { onMount } from 'svelte';
+  import { getCsrfToken } from '../../services/csrfService';
+  import { isAuthenticated, user } from '../../services/authService.js';
 
   let username = '';
   let password = '';
   let alertMessage = '';
   let alertType = 'error';
+  let csrfToken = '';
+  let formId = 'login-form';
+
+  onMount(async () => {
+      try {
+          csrfToken = await getCsrfToken(formId);
+      } catch (error) {
+          alertMessage = 'Failed to fetch CSRF token';
+          alertType = 'error';
+      }
+  });
 
   async function handleLogin(event) {
     event.preventDefault();
@@ -22,6 +35,7 @@
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'X-Form-ID': formId
         },
         body: JSON.stringify(loginData),
         credentials: 'include'
