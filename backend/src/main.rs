@@ -40,7 +40,7 @@ use crate::handlers::{
     login_account_handler,
     verify_session_handler,
     logout_handler,
-    get_csrf,
+    get_csrf_handler,
     csrf_validator_handler
 };
 use actix_web::{web, cookie::time::Duration, cookie::Key, App, HttpServer};
@@ -50,10 +50,14 @@ use actix_cors::Cors;
 use dotenvy::dotenv;
 use std::env;
 
+use env_logger;
+
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
     let collector = web::Data::new(LogCollector::new());
     dotenv().ok();
+
+    env_logger::init();
 
     let secret_key = env::var("SESSION_SECRET_KEY").expect("SESSION_SECRET_KEY must be set");
     let cookie_key = Key::from(secret_key.as_bytes());
@@ -100,7 +104,7 @@ async fn main() -> std::io::Result<()> {
                     .route("/logout", web::post().to(logout_handler))
                     .service(
                         web::scope("/csrf")
-                            .route("/", web::get().to(get_csrf))
+                            .route("/", web::get().to(get_csrf_handler))
                             .route("/validate", web::post().to(csrf_validator_handler))
                     )
                     .service(
