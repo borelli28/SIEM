@@ -1,10 +1,13 @@
 use actix_web::{cookie::Cookie, error::ErrorForbidden, Error, HttpRequest};
 use csrf::{ChaCha20Poly1305CsrfProtection, CsrfProtection};
+use base64::{engine::general_purpose, Engine};
 use std::time::{Duration, SystemTime};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 use rand::RngCore;
+use log::error;
+
 
 const MINUTES_20: i64 = 20 * 60;
 
@@ -31,21 +34,28 @@ impl CsrfMiddleware {
     }
 
     pub fn generate_token_pair(&self, form_id: &str) -> Result<(CsrfToken, Cookie), csrf::CsrfError> {
-        let (token, cookie) = self.csrf_protection.generate_token_pair(None, MINUTES_20)?;
-        let cookie_value = std::str::from_utf8(cookie.value())
-            .map_err(|_| csrf::CsrfError::InternalError)?
-            .to_string();
+        // Generate the token pair
+        let (token, cookie) = self.csrf_protection.generate_token_pair(None, MINUTES_20)
+            .map_err(|e| {
+                error!("Failed to generate CSRF token pair: {:?}", e);
+                csrf::CsrfError::InternalError
+            })?;
+
+        // Base64 encode the cookie value
+        let cookie_value = general_purpose::STANDARD.encode(cookie.value());
 
         let csrf_token = CsrfToken {
             token: token.b64_string(),
             form_id: form_id.to_string(),
         };
 
+        // Build the CSRF cookie with error handling
         let cookie = Cookie::build("csrf_token", cookie_value.clone())
             .http_only(true)
-            .secure(true)
+            .secure(false) // Set to true in PRODUCTION
             .finish();
 
+        // Calculate expiration time and store the token
         let expiration = SystemTime::now() + Duration::from_secs(MINUTES_20.try_into().unwrap());
         let mut tokens = self.tokens.lock().unwrap();
         tokens.insert(form_id.to_string(), (cookie_value, expiration));
