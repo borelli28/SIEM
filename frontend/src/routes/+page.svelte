@@ -1,7 +1,6 @@
 <script>
   import { onMount } from 'svelte';
   import Chart from 'chart.js/auto';
-  import { getCsrfToken } from '../services/csrfService';
   import { isAuthenticated, checkAuth, logout } from '../services/authService.js';
 
   let alertMessage = '';
