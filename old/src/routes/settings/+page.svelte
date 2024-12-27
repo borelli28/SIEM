@@ -1,26 +1,40 @@
 <script>
   import { onMount } from 'svelte';
   import { getCsrfToken } from '../../services/csrfService';
-  import { isAuthenticated, checkAuth, logout } from '../../services/authService.js';
+  import { isAuthenticated, checkAuth, logout, user } from '../../services/authService.js';
+  import { get } from 'svelte/store'; // Import get to read store values
 
   let newLogSource = { name: '', type: 'syslog', address: '' };
-  let newHost = { name: '', ip: '' };
+  let newHost = { hostname: '', ip: '' };
   let alertMessage = '';
   let alertType = 'error';
   let formId = 'setting-form';
+  let accountId = '';
 
   onMount(async () => {
     await checkAuth();
-    if (!$isAuthenticated) {
+
+    // Get the authentication status and user information
+    const authStatus = get(isAuthenticated); // Get current authentication status
+    const currentUser = get(user); // Get the current user information
+
+    // Check if the user is authenticated
+    if (!authStatus) {
       window.location.href = '/login';
       return;
+    }
+
+    // Set accountId based on the user information from the store
+    if (currentUser) {
+      accountId = currentUser.accountId; // Adjust this depending on the actual structure of your user object
+      console.log(`Account ID: ${accountId}`); // For debugging purposes
     }
 
     try {
       await getCsrfToken(formId);
     } catch (error) {
-        alertMessage = 'Failed to fetch CSRF token';
-        alertType = 'error';
+      alertMessage = 'Failed to fetch CSRF token';
+      alertType = 'error';
     }
   });
 
@@ -30,23 +44,47 @@
     newLogSource = { name: '', type: 'syslog', address: '' };
   }
 
-  function addHost(event) {
+  async function addHost(event) {
     event.preventDefault();
-    console.log('Adding new host:', newHost);
-    newHost = { name: '', ip: '' };
+    newHost = { hostname: '', ip: '' };
+
+    try {
+      const response = await fetch(`http://localhost:4200/backend/host/${accountId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Form-ID': formId
+        },
+        body: JSON.stringify(newHost),
+        credentials: 'include'
+      });
+
+      if (response.ok) {
+        const data = await response.json(); // Await the response.json() correctly
+        alertType = 'success';
+        alertMessage = 'New host added';
+      } else {
+        alertType = 'error';
+        alertMessage = 'Could not add new host';
+      }
+    } catch (error) {
+      console.error('Error adding host:', error);
+      alertType = 'error';
+      alertMessage = 'An error occurred during the request';
+    }
   }
 
   async function handleLogout() {
-      const result = await logout();
-      if (!result.success) {
-          console.log(result.message);
-          alertType = 'error';
-          alertMessage = 'Logout unsucesful';
-      } else {
-          alertType = 'success';
-          alertMessage = 'Logout successful';
-          window.location.href = '/login';
-      }
+    const result = await logout();
+    if (!result.success) {
+      console.log(result.message);
+      alertType = 'error';
+      alertMessage = 'Logout unsuccessful';
+    } else {
+      alertType = 'success';
+      alertMessage = 'Logout successful';
+      window.location.href = '/login';
+    }
   }
 </script>
 
@@ -93,7 +131,7 @@
       <form on:submit={addHost}>
         <div>
           <label for="hostName">Host Name:</label>
-          <input type="text" id="hostName" bind:value={newHost.name} required>
+          <input type="text" id="hostName" bind:value={newHost.hostname} required>
         </div>
         <div>
           <label for="hostIP">IP Address:</label>
