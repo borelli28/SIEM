@@ -333,18 +333,8 @@ pub async fn get_csrf(req: HttpRequest, csrf: web::Data<CsrfMiddleware>) -> Http
 }
 
 pub async fn csrf_validator_handler(req: HttpRequest, csrf: web::Data<CsrfMiddleware>) -> Result<HttpResponse, Error> {
-    let token = req.headers().get("X-CSRF-Token").and_then(|h| h.to_str().ok());
-    let cookie = req.cookie("csrf_token").map(|c| c.value().to_string());
-    let form_id = req.headers().get("X-Form-ID").and_then(|h| h.to_str().ok());
-
-    if let (Some(token), Some(cookie), Some(form_id)) = (token, cookie, form_id) {
-        if csrf.validate_token(token, &cookie, form_id) {
-            return Ok(HttpResponse::Ok().finish()); // CSRF validation passed
-        } else {
-            return Ok(HttpResponse::Forbidden().finish()); // CSRF validation failed
-        }
+    match csrf_validator(&req, &csrf).await {
+        Ok(_) => Ok(HttpResponse::Ok().finish()), // CSRF validation passed
+        Err(e) => Ok(HttpResponse::Forbidden().body(e.to_string())), // CSRF validation failed
     }
-
-    // If any parameter is missing
-    Ok(HttpResponse::Forbidden().finish())
 }
