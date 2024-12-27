@@ -1,4 +1,4 @@
-use actix_web::{web, HttpResponse, HttpRequest, Responder};
+use actix_web::{web, HttpResponse, HttpRequest, Responder, Error};
 use actix_session::Session;
 use serde_json::json;
 use crate::collector::{LogCollector, ParseLogError, process_logs};
@@ -9,7 +9,7 @@ use crate::rules::{AlertRule, create_rule, get_rule, list_rules, update_rule, de
 use crate::log::{get_all_logs};
 use crate::account::{Account, AccountError, create_account, get_account, update_account, delete_account, verify_login};
 use crate::auth_session::{verify_session, invalidate_session};
-use crate::csrf::{CsrfMiddleware};
+use crate::csrf::{CsrfMiddleware, csrf_validator};
 
 pub async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -316,7 +316,7 @@ pub async fn login_account_handler(session: Session, account: web::Json<Account>
 
 // CSRF Handlers
 //
-pub async fn get_csrf(csrf: web::Data<CsrfMiddleware>, req: HttpRequest) -> HttpResponse {
+pub async fn get_csrf(req: HttpRequest, csrf: web::Data<CsrfMiddleware>) -> HttpResponse {
     let form_id = req.headers()
         .get("X-Form-ID")
         .and_then(|v| v.to_str().ok())
@@ -330,4 +330,21 @@ pub async fn get_csrf(csrf: web::Data<CsrfMiddleware>, req: HttpRequest) -> Http
         },
         Err(_) => HttpResponse::InternalServerError().finish(),
     }
+}
+
+pub async fn csrf_validator_handler(req: HttpRequest, csrf: web::Data<CsrfMiddleware>) -> Result<HttpResponse, Error> {
+    let token = req.headers().get("X-CSRF-Token").and_then(|h| h.to_str().ok());
+    let cookie = req.cookie("csrf_token").map(|c| c.value().to_string());
+    let form_id = req.headers().get("X-Form-ID").and_then(|h| h.to_str().ok());
+
+    if let (Some(token), Some(cookie), Some(form_id)) = (token, cookie, form_id) {
+        if csrf.validate_token(token, &cookie, form_id) {
+            return Ok(HttpResponse::Ok().finish()); // CSRF validation passed
+        } else {
+            return Ok(HttpResponse::Forbidden().finish()); // CSRF validation failed
+        }
+    }
+
+    // If any parameter is missing
+    Ok(HttpResponse::Forbidden().finish())
 }
