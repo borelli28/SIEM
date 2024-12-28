@@ -1,12 +1,21 @@
 import { getCsrfToken } from '../../services/csrfService.js';
 
+const formId = 'register-form'
+let csrfToken;
+
+async function fetchCsrfToken() {
+    try {
+        csrfToken = await getCsrfToken(formId);
+    } catch (error) {
+        console.error('Error fetching CSRF token:', error);
+    }
+}
+
 async function handleSubmit(event) {
     event.preventDefault();
     const name = document.getElementById('name').value;
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    const formId = 'register-form'
-
     const alertContainer = document.getElementById('alert-container');
 
     if (password !== confirmPassword) {
@@ -17,14 +26,11 @@ async function handleSubmit(event) {
     const newAccount = { id: '0', name: name, password: password, role: 'Admin'};
 
     try {
-        const csrfToken = await getCsrfToken(formId);
-
         const response = await fetch('http://localhost:4200/backend/account/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
-                'X-Form-ID': formId,
-                'X-XSRF-TOKEN': csrfToken
+                'X-Form-ID': formId
             },
             body: JSON.stringify(newAccount),
             credentials: 'include'
@@ -32,15 +38,17 @@ async function handleSubmit(event) {
 
         if (response.ok) {
             alertContainer.innerHTML = `<div class="alert success">Account created successfully!</div>`;
-            document.getElementById('name').value = '';
-            document.getElementById('password').value = '';
-            document.getElementById('confirmPassword').value = '';
         } else {
             const errorData = await response.json();
-            console.log(errorData);
             alertContainer.innerHTML = `<div class="alert error">Error: ${errorData.message || 'Failed to create account.'}</div>`;
         }
     } catch (error) {
         alertContainer.innerHTML = `<div class="alert error">Error creating account: ${error.message}</div>`;
     }
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetchCsrfToken();
+    const form = document.getElementById('register-form');
+    form.addEventListener('submit', handleSubmit);
+});

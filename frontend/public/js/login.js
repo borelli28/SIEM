@@ -40,7 +40,6 @@ async function handleLogin(event) {
             alertContainer.innerHTML = `<div class="alert error">Invalid credentials</div>`;
         }
     } catch (error) {
-        console.error('Login error:', error);
         alertContainer.innerHTML = `<div class="alert error">An error occurred during login</div>`;
     }
 }
