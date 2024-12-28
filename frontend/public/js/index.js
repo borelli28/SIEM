@@ -15,7 +15,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     await checkAuth();
 
     if (!isAuthenticated) {
-        window.location.href = '/login.html';
+        window.location.href = '/login';
         return;
     }
 
@@ -51,7 +51,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('logout-btn').addEventListener('click', async () => {
         const result = await logout();
         if (result.success) {
-            window.location.href = '/login.html';
+            window.location.href = '/login';
         } else {
             alertContainer.innerHTML = `<div class="alert error">${result.message}</div>`;
         }
