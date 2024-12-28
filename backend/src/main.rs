@@ -93,7 +93,7 @@ async fn main() -> std::io::Result<()> {
                 Cors::default()
                     .allowed_origin("http://localhost:3000")
                     .allowed_methods(vec!["GET", "POST", "PUT", "DELETE", "OPTIONS"])
-                    .allowed_headers(vec!["Content-Type", "Authorization", "X-CSRF-Token", "X-Form-ID"])
+                    .allowed_headers(vec!["Content-Type", "Authorization", "X-Form-ID"])
                     .supports_credentials()
                     .max_age(3600)
             )
