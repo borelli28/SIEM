@@ -1,4 +1,4 @@
-import { logout } from './services/authService.js';
+import { logout } from '../../services/authService.js';
 
 document.addEventListener('DOMContentLoaded', () => {
     const alertContainer = document.getElementById('alert-container');

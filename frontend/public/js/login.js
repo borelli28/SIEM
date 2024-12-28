@@ -1,4 +1,4 @@
-import { isAuthenticated, logout } from './services/authService.js';
+import { isAuthenticated, logout } from '../../services/authService.js';
 
 async function handleLogin(event) {
     event.preventDefault();

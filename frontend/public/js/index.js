@@ -1,4 +1,4 @@
-import { isAuthenticated, checkAuth, logout } from './services/authService.js';
+import { isAuthenticated, checkAuth, logout } from '../../services/authService.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const alertContainer = document.getElementById('alert-container');
