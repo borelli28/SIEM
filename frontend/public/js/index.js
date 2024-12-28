@@ -1,4 +1,4 @@
-import { isAuthenticated, checkAuth, logout } from '../../services/authService.js';
+import { getAuthenticationStatus, checkAuth, logout } from '../../services/authService.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const alertContainer = document.getElementById('alert-container');
@@ -11,10 +11,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         { id: 3, ruleName: 'Unusual Network Traffic', host: '192.168.1.102', severity: 'Low' },
     ];
 
-    // Check Authentication
     await checkAuth();
-
-    if (!isAuthenticated) {
+    if (!getAuthenticationStatus()) {
         window.location.href = '/login';
         return;
     }
