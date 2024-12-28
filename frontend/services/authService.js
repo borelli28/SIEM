@@ -1,6 +1,14 @@
 let isAuthenticated = false;
 let user = null;
 
+export function getAuthenticationStatus() {
+    return isAuthenticated;
+}
+
+export function setAuthenticationStatus(status) {
+    isAuthenticated = status;
+}
+
 export async function checkAuth() {
     try {
         const response = await fetch('http://localhost:4200/backend/check-auth', {
@@ -8,15 +16,15 @@ export async function checkAuth() {
         });
         if (response.ok) {
             const data = await response.json();
-            isAuthenticated = true;
+            setAuthenticationStatus(true);
             user = data.user;
         } else {
-            isAuthenticated = false;
+            setAuthenticationStatus(false);
             user = null;
         }
     } catch (error) {
         console.error('Error checking auth:', error);
-        isAuthenticated = false;
+        setAuthenticationStatus(false);
         user = null;
     }
 }
@@ -28,7 +36,7 @@ export async function logout() {
             credentials: 'include'
         });
         if (response.ok) {
-            isAuthenticated = false;
+            setAuthenticationStatus(false);
             user = null;
             return { success: true };
         }
@@ -38,4 +46,4 @@ export async function logout() {
     }
 }
 
-export { isAuthenticated, user };
+export { user };
