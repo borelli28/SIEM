@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/alerts.css">
+    <title>Alerts</title>
+</head>
+<body>
+    <main>
+        <div class="container">
+            <h1>SIEM Alerts</h1>
+            <div class="filter-container">
+                <label for="severity-filter">Filter by Severity:</label>
+                <select id="severity-filter">
+                    <option value="all">All</option>
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                </select>
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rule Name</th>
+                        <th>Host</th>
+                        <th>Severity</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="alerts-body"></tbody>
+            </table>
+            <nav>
+                <a href="/">Back to Dashboard</a>
+                <button id="logout-btn">Logout</button>
+            </nav>
+        </div>
+    </main>
+    <script type="module" src="/js/alerts.js"></script>
+</body>
+</html>

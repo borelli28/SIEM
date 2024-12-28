@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/settings.css">
+    <title>Settings</title>
+</head>
+<body>
+    <main>
+        <div id="container">
+            <h1>SIEM Settings</h1>
+            <div id="alert-container"></div>
+            <section>
+                <h2>Add New Log Source</h2>
+                <form id="logSourceForm">
+                    <div>
+                        <label for="sourceName">Source Name:</label>
+                        <input type="text" id="sourceName" required>
+                    </div>
+                    <div>
+                        <label for="sourceType">Source Type:</label>
+                        <select id="sourceType" required>
+                            <option value="syslog">Syslog</option>
+                            <option value="winlog">Windows Event Log</option>
+                            <option value="apache">Apache Log</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="sourceAddress">Source Address:</label>
+                        <input type="text" id="sourceAddress" required>
+                    </div>
+                    <button type="submit">Add Log Source</button>
+                </form>
+            </section>
+
+            <section>
+                <h2>Add New Host</h2>
+                <form id="hostForm">
+                    <div>
+                        <label for="hostName">Host Name:</label>
+                        <input type="text" id="hostName" required>
+                    </div>
+                    <div>
+                        <label for="hostIP">IP Address:</label>
+                        <input type="text" id="hostIP" required>
+                    </div>
+                    <button type="submit">Add Host</button>
+                </form>
+            </section>
+
+            <nav>
+                <a href="/">Back to Dashboard</a>
+                <button id="logout-btn">Logout</button>
+            </nav>
+        </div>
+    </main>
+    <script type="module" src="/js/settings.js"></script>
+</body>
+</html>

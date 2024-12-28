@@ -1,7 +1,13 @@
-import { writable } from 'svelte/store';
+let isAuthenticated = false;
+let user = null;
 
-export const isAuthenticated = writable(false);
-export const user = writable(null);
+export function getAuthenticationStatus() {
+    return isAuthenticated;
+}
+
+export function setAuthenticationStatus(status) {
+    isAuthenticated = status;
+}
 
 export async function checkAuth() {
     try {
@@ -10,16 +16,16 @@ export async function checkAuth() {
         });
         if (response.ok) {
             const data = await response.json();
-            isAuthenticated.set(true);
-            user.set(data.user);
+            setAuthenticationStatus(true);
+            user = data.account_id;
         } else {
-            isAuthenticated.set(false);
-            user.set(null);
+            setAuthenticationStatus(false);
+            user = null;
         }
     } catch (error) {
         console.error('Error checking auth:', error);
-        isAuthenticated.set(false);
-        user.set(null);
+        setAuthenticationStatus(false);
+        user = null;
     }
 }
 
@@ -29,15 +35,15 @@ export async function logout() {
             method: 'POST',
             credentials: 'include'
         });
-
         if (response.ok) {
-            isAuthenticated.set(false);
-            user.set(null);
+            setAuthenticationStatus(false);
+            user = null;
             return { success: true };
-        } else {
-            return { success: false, message: "Logout didn't work" };
         }
+        return { success: false, message: "Logout didn't work" };
     } catch (error) {
         return { success: false, message: "Error logging out" };
     }
 }
+
+export { user };

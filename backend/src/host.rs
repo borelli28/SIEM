@@ -13,21 +13,27 @@ pub struct Host {
     pub hostname: Option<String>,
 }
 
-impl Host {
-    pub fn new(account_id: String, ip_address: Option<String>, hostname: Option<String>) -> Self {
-        Host {
-            id: Uuid::new_v4().to_string(),
-            account_id,
-            ip_address,
-            hostname,
-        }
-    }
-}
-
 pub fn create_host(host: &Host, _account_id: &String) -> Result<(), diesel::result::Error> {
     let mut conn = establish_connection();
+    let id = Uuid::new_v4().to_string();
+
+    if let Some(ref hostname) = host.hostname {
+        if hostname_exists(_account_id, hostname)? {
+            return Err(diesel::result::Error::DatabaseError(
+                diesel::result::DatabaseErrorKind::UniqueViolation,
+                Box::new(format!("A host with the hostname '{}' already exists.", hostname)),
+            ));
+        }
+    }
+
+    let new_host = Host {
+        id,
+        account_id: _account_id.clone(),
+        ip_address: host.ip_address.clone(),
+        hostname: host.hostname.clone(),
+    };
     diesel::insert_into(host::table)
-        .values(host)
+        .values(new_host)
         .execute(&mut conn)?;
     Ok(())
 }
@@ -57,4 +63,14 @@ pub fn delete_host(host_id: &String) -> Result<bool, diesel::result::Error> {
     let num_deleted = diesel::delete(host::table.find(host_id))
         .execute(&mut conn)?;
     Ok(num_deleted > 0)
+}
+
+fn hostname_exists(account_id: &String, hostname: &String) -> Result<bool, diesel::result::Error> {
+    let mut conn = establish_connection();
+    let count: i64 = host::table
+        .filter(host::account_id.eq(account_id))
+        .filter(host::hostname.eq(hostname))
+        .count()
+        .get_result(&mut conn)?;
+    Ok(count > 0)
 }

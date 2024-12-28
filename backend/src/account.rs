@@ -78,6 +78,10 @@ pub fn create_account(name: String, password: String, role: String) -> Result<us
         return Err(AccountError::InvalidRole);
     }
 
+    if account_exists(&name)? {
+        return Err(AccountError::ExpectedField(format!("Account name '{}' already exists.", name)));
+    }
+
     let hashed_password = Account::hash_password(&password)?;
 
     let new_account = Account {
@@ -163,4 +167,15 @@ pub fn verify_login(session: &Session, name: &String, password: &String, req: &H
     }
 
     Ok(None) // No account found with the provided name
+}
+
+pub fn account_exists(name: &String) -> Result<bool, AccountError> {
+    let mut conn = establish_connection();
+
+    let count: i64 = accounts::table
+        .filter(accounts::name.eq(name))
+        .count()
+        .get_result(&mut conn)?;
+
+    Ok(count > 0)
 }
