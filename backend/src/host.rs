@@ -13,21 +13,18 @@ pub struct Host {
     pub hostname: Option<String>,
 }
 
-impl Host {
-    pub fn new(account_id: String, ip_address: Option<String>, hostname: Option<String>) -> Self {
-        Host {
-            id: Uuid::new_v4().to_string(),
-            account_id,
-            ip_address,
-            hostname,
-        }
-    }
-}
-
 pub fn create_host(host: &Host, _account_id: &String) -> Result<(), diesel::result::Error> {
     let mut conn = establish_connection();
+    let id = Uuid::new_v4().to_string();
+
+    let new_host = Host {
+        id,
+        account_id: _account_id.clone(),
+        ip_address: host.ip_address.clone(),
+        hostname: host.hostname.clone(),
+    };
     diesel::insert_into(host::table)
-        .values(host)
+        .values(new_host)
         .execute(&mut conn)?;
     Ok(())
 }
