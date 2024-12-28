@@ -8,7 +8,8 @@ export async function getCsrfToken(formId) {
         if (!response.ok) {
             throw new Error('Failed to get CSRF token');
         }
-        return await response.json();
+        const data = await response.json();
+        return data.csrfToken;
     } catch (error) {
         console.error('Error getting CSRF token:', error);
         throw error;
