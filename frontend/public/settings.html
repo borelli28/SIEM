@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/settings.css">
+    <title>Settings</title>
+</head>
+<body>
+    <main>
+        <div id="container">
+            <h1>SIEM Settings</h1>
+            <div id="alert-container"></div>
+            <section>
+                <h2>Add New Log Source</h2>
+                <form onsubmit="addLogSource(event)">
+                    <div>
+                        <label for="sourceName">Source Name:</label>
+                        <input type="text" id="sourceName" required>
+                    </div>
+                    <div>
+                        <label for="sourceType">Source Type:</label>
+                        <select id="sourceType">
+                            <option value="syslog">Syslog</option>
+                            <option value="winlog">Windows Event Log</option>
+                            <option value="apache">Apache Log</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="sourceAddress">Source Address:</label>
+                        <input type="text" id="sourceAddress" required>
+                    </div>
+                    <button type="submit">Add Log Source</button>
+                </form>
+            </section>
+            <nav>
+                <a href="/">Back to Dashboard</a>
+                <button id="logout-btn">Logout</button>
+            </nav>
+        </div>
+    </main>
+    <script src="/js/settings.js"></script>
+</body>
+</html>

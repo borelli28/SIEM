@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/search.css">
+    <title>Log Search</title>
+</head>
+<body>
+    <main>
+        <div id="container">
+            <h1>SIEM Log Search</h1>
+            <div id="alert-container"></div>
+            <form onsubmit="handleSearch(event)">
+                <div class="search-controls">
+                    <input type="text" id="searchQuery" placeholder="Search logs...">
+                    <input type="date" id="startDate">
+                    <input type="date" id="endDate">
+                    <select id="logType">
+                        <option value="all">All Log Types</option>
+                        <option value="system">System</option>
+                        <option value="security">Security</option>
+                        <option value="application">Application</option>
+                        <option value="network">Network</option>
+                    </select>
+                    <select id="severity">
+                        <option value="all">All Severities</option>
+                        <option value="info">Info</option>
+                        <option value="warning">Warning</option>
+                        <option value="error">Error</option>
+                        <option value="critical">Critical</option>
+                    </select>
+                    <button type="submit">Search</button>
+                </div>
+            </form>
+            <table id="logs-table">
+                <thead>
+                    <tr>
+                        <th>Timestamp</th>
+                        <th>Type</th>
+                        <th>Message</th>
+                        <th>Severity</th>
+                    </tr>
+                </thead>
+                <tbody id="logs-body"></tbody>
+            </table>
+            <nav>
+                <a href="/">Back to Dashboard</a>
+                <button id="logout-btn">Logout</button>
+            </nav>
+        </div>
+    </main>
+    <script src="/js/search.js"></script>
+</body>
+</html>
