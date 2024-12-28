@@ -73,7 +73,6 @@ async function addHost(event) {
         const hostName = document.getElementById('hostName').value;
         const hostIP = document.getElementById('hostIP').value;
         const accountId = user;
-        console.log(accountId);
         const alertContainer = document.getElementById('alert-container');
 
         const response = await fetch(`http://localhost:4200/backend/host/${accountId}`, {
@@ -87,10 +86,7 @@ async function addHost(event) {
         });
 
         if (response.ok) {
-            const data = await response.json();
-            console.log(data);
-            alertContainer.innerHTML = `<div class="alert success">Host "${data.name}" with IP "${data.ip}" added successfully!</div>`;
-            document.getElementById('hostForm').reset();
+            alertContainer.innerHTML = `<div class="alert success">Host added successfully!</div>`;
         } else {
             const error = await response.json();
             alertContainer.innerHTML = `<div class="alert error">${error.message}</div>`;
