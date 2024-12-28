@@ -82,7 +82,7 @@ async function addHost(event) {
                 'Content-Type': 'application/json',
                 'X-Form-ID': formId
             },
-            body: JSON.stringify({ id: '0', name: hostName, ip: hostIP, account_id: accountId }),
+            body: JSON.stringify({ id: '0', hostname: hostName, ip_address: hostIP, account_id: accountId }),
             credentials: 'include'
         });
 
