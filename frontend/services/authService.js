@@ -17,7 +17,7 @@ export async function checkAuth() {
         if (response.ok) {
             const data = await response.json();
             setAuthenticationStatus(true);
-            user = data.user;
+            user = data.account_id;
         } else {
             setAuthenticationStatus(false);
             user = null;

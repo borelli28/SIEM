@@ -1,5 +1,7 @@
-import { getAuthenticationStatus, logout, checkAuth } from '../../services/authService.js';
+import { getAuthenticationStatus, logout, checkAuth, user } from '../../services/authService.js';
 import { getCsrfToken } from '../../services/csrfService.js';
+
+const formId = 'settings-form';
 
 document.addEventListener('DOMContentLoaded', async () => {
     const alertContainer = document.getElementById('alert-container');
@@ -20,13 +22,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             alertContainer.innerHTML = `<div class="alert error">${result.message}</div>`;
         }
     });
+
+    document.getElementById('logSourceForm').addEventListener('submit', addLogSource);
+    document.getElementById('hostForm').addEventListener('submit', addHost);
 });
 
 let csrfToken;
 
 async function fetchCsrfToken() {
     try {
-        csrfToken = await getCsrfToken('settings-form');
+        csrfToken = await getCsrfToken(formId);
     } catch (error) {
         console.error('Error fetching CSRF token:', error);
     }
@@ -38,14 +43,14 @@ async function addLogSource(event) {
     const sourceName = document.getElementById('sourceName').value;
     const sourceType = document.getElementById('sourceType').value;
     const sourceAddress = document.getElementById('sourceAddress').value;
-    const accountId = user.id;
+    const accountId = user;
     const alertContainer = document.getElementById('alert-container');
 
     const response = await fetch(`http://localhost:4200/backend/log/${accountId}`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'X-Form-ID': 'logSourceForm'
+            'X-Form-ID': formId
         },
         body: JSON.stringify({ name: sourceName, type: sourceType, address: sourceAddress }),
         credentials: 'include'
@@ -64,27 +69,33 @@ async function addLogSource(event) {
 async function addHost(event) {
     event.preventDefault();
 
-    const hostName = document.getElementById('hostName').value;
-    const hostIP = document.getElementById('hostIP').value;
-    const accountId = user.id;
-    const alertContainer = document.getElementById('alert-container');
+    try {
+        const hostName = document.getElementById('hostName').value;
+        const hostIP = document.getElementById('hostIP').value;
+        const accountId = user;
+        console.log(accountId);
+        const alertContainer = document.getElementById('alert-container');
 
-    const response = await fetch(`http://localhost:4200/backend/host/${accountId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Form-ID': 'hostForm'
-        },
-        body: JSON.stringify({ name: hostName, ip: hostIP }),
-        credentials: 'include'
-    });
+        const response = await fetch(`http://localhost:4200/backend/host/${accountId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            body: JSON.stringify({ id: '0', name: hostName, ip: hostIP, account_id: accountId }),
+            credentials: 'include'
+        });
 
-    if (response.ok) {
-        const data = await response.json();
-        alertContainer.innerHTML = `<div class="alert success">Host "${data.name}" with IP "${data.ip}" added successfully!</div>`;
-        document.getElementById('hostForm').reset();
-    } else {
-        const error = await response.json();
-        alertContainer.innerHTML = `<div class="alert error">${error.message}</div>`;
+        if (response.ok) {
+            const data = await response.json();
+            console.log(data);
+            alertContainer.innerHTML = `<div class="alert success">Host "${data.name}" with IP "${data.ip}" added successfully!</div>`;
+            document.getElementById('hostForm').reset();
+        } else {
+            const error = await response.json();
+            alertContainer.innerHTML = `<div class="alert error">${error.message}</div>`;
+        }
+    } catch (error) {
+        console.error('Error adding host:', error);
     }
 }
