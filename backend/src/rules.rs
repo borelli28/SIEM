@@ -74,8 +74,21 @@ impl AlertRule {
 pub fn create_rule(rule: &AlertRule) -> Result<(), RuleError> {
     rule.validate()?;
     let mut conn = establish_connection();
+    let now = Utc::now().to_rfc3339();
+    let new_rule = AlertRule {
+        id: Uuid::new_v4().to_string(),
+        account_id: rule.account_id.clone(),
+        name: rule.name.clone(),
+        description: rule.description.clone(),
+        condition: rule.condition.clone(),
+        severity: rule.severity.clone(),
+        enabled: true,
+        created_at: now.clone(),
+        updated_at: now,
+    };
+
     diesel::insert_into(alert_rules::table)
-        .values(rule)
+        .values(&new_rule)
         .execute(&mut conn)?;
     Ok(())
 }
