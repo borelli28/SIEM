@@ -94,21 +94,30 @@ impl Alert {
         if alert.message.is_empty() {
             return Err(AlertError::ValidationError("Message cannot be empty".to_string()));
         }
-        // Validate severity
         AlertSeverity::from(alert.severity.clone());
-        // Validate created_at as a valid DateTime
         DateTime::parse_from_rfc3339(&alert.created_at)?;
         Ok(())
     }
 }
 
 pub fn create_alert(alert: &Alert) -> Result<Alert, AlertError> {
-    alert.validate(&alert)?;
+    let new_alert = Alert {
+        id: Uuid::new_v4().to_string(),
+        rule_id: alert.rule_id.clone(),
+        account_id: alert.account_id.clone(),
+        severity: alert.severity.clone(),
+        message: alert.message.clone(),
+        acknowledged: false,
+        created_at: Utc::now().to_rfc3339(),
+    };
+    new_alert.validate(&new_alert)?;
+
     let mut conn: SqliteConnection = db_conn();
     diesel::insert_into(alerts::table)
-        .values(alert)
+        .values(&new_alert)
         .execute(&mut conn)?;
-    Ok(alert.clone())
+
+    Ok(new_alert)
 }
 
 pub fn get_alert(alert_id: &String) -> Result<Option<Alert>, AlertError> {
