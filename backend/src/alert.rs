@@ -1,4 +1,3 @@
-use crate::rules::AlertRule;
 use diesel::prelude::*;
 use diesel::sqlite::SqliteConnection;
 use serde::{Deserialize, Serialize};
@@ -94,7 +93,7 @@ impl Alert {
         if alert.message.is_empty() {
             return Err(AlertError::ValidationError("Message cannot be empty".to_string()));
         }
-        AlertSeverity::from(alert.severity.clone());
+        let _ = AlertSeverity::from(alert.severity.clone());
         DateTime::parse_from_rfc3339(&alert.created_at)?;
         Ok(())
     }
