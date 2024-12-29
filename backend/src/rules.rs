@@ -10,9 +10,34 @@ use serde::{Serialize, Deserialize};
 use crate::schema::alert_rules;
 use crate::collector::LogEntry;
 use diesel::prelude::*;
-use std::error::Error;
 use chrono::Utc;
 use uuid::Uuid;
+use std::fmt;
+
+#[derive(Debug)]
+pub enum RuleError {
+    DatabaseError(diesel::result::Error),
+    ValidationError(String),
+    AlertCreationError(String),
+}
+
+impl fmt::Display for RuleError {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            RuleError::DatabaseError(err) => write!(f, "Database error: {}", err),
+            RuleError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
+            RuleError::AlertCreationError(msg) => write!(f, "Alert creation error: {}", msg),
+        }
+    }
+}
+
+impl std::error::Error for RuleError {}
+
+impl From<diesel::result::Error> for RuleError {
+    fn from(err: diesel::result::Error) -> Self {
+        RuleError::DatabaseError(err)
+    }
+}
 
 #[derive(Debug, Queryable, Insertable, Clone, AsChangeset, Serialize, Deserialize)]
 #[diesel(table_name = alert_rules)]
@@ -29,23 +54,25 @@ pub struct AlertRule {
 }
 
 impl AlertRule {
-    pub fn new(account_id: String, name: String, description: String, condition: String, severity: String) -> Self {
-        let now = Utc::now().to_rfc3339();
-        AlertRule {
-            id: Uuid::new_v4().to_string(),
-            account_id,
-            name,
-            description,
-            condition,
-            severity,
-            enabled: true,
-            created_at: now.clone(),
-            updated_at: now,
+    fn validate(&self) -> Result<(), RuleError> {
+        if self.account_id.is_empty() {
+            return Err(RuleError::ValidationError("Account ID cannot be empty".to_string()));
         }
+        if self.name.is_empty() {
+            return Err(RuleError::ValidationError("Rule name cannot be empty".to_string()));
+        }
+        if self.condition.is_empty() {
+            return Err(RuleError::ValidationError("Rule condition cannot be empty".to_string()));
+        }
+        if !["Low", "Medium", "High"].contains(&self.severity.as_str()) {
+            return Err(RuleError::ValidationError("Invalid severity level".to_string()));
+        }
+        Ok(())
     }
 }
 
-pub fn create_rule(rule: &AlertRule) -> Result<(), Box<dyn Error>> {
+pub fn create_rule(rule: &AlertRule) -> Result<(), RuleError> {
+    rule.validate()?;
     let mut conn = establish_connection();
     diesel::insert_into(alert_rules::table)
         .values(rule)
@@ -53,13 +80,17 @@ pub fn create_rule(rule: &AlertRule) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn get_rule(id: &String) -> Result<Option<AlertRule>, Box<dyn Error>> {
+pub fn get_rule(id: &String) -> Result<Option<AlertRule>, RuleError> {
+    if id.is_empty() {
+        return Err(RuleError::ValidationError("Rule ID cannot be empty".to_string()));
+    }
     let mut conn = establish_connection();
     let result = alert_rules::table.find(id).first(&mut conn).optional()?;
     Ok(result)
 }
 
-pub fn update_rule(rule: &AlertRule) -> Result<(), Box<dyn Error>> {
+pub fn update_rule(rule: &AlertRule) -> Result<(), RuleError> {
+    rule.validate()?;
     let mut conn = establish_connection();
     diesel::update(alert_rules::table.find(&rule.id))
         .set(rule)
@@ -67,13 +98,19 @@ pub fn update_rule(rule: &AlertRule) -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-pub fn delete_rule(id: &String) -> Result<(), Box<dyn Error>> {
+pub fn delete_rule(id: &String) -> Result<(), RuleError> {
+    if id.is_empty() {
+        return Err(RuleError::ValidationError("Rule ID cannot be empty".to_string()));
+    }
     let mut conn = establish_connection();
     diesel::delete(alert_rules::table.find(id)).execute(&mut conn)?;
     Ok(())
 }
 
-pub fn list_rules(account_id: &String) -> Result<Vec<AlertRule>, Box<dyn Error>> {
+pub fn list_rules(account_id: &String) -> Result<Vec<AlertRule>, RuleError> {
+    if account_id.is_empty() {
+        return Err(RuleError::ValidationError("Account ID cannot be empty".to_string()));
+    }
     let mut conn = establish_connection();
     let results = alert_rules::table
         .filter(alert_rules::account_id.eq(account_id))
@@ -81,7 +118,10 @@ pub fn list_rules(account_id: &String) -> Result<Vec<AlertRule>, Box<dyn Error>>
     Ok(results)
 }
 
-pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> Result<Vec<Alert>, Box<dyn Error>> {
+pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> Result<Vec<Alert>, RuleError> {
+    if account_id.is_empty() {
+        return Err(RuleError::ValidationError("Account ID cannot be empty".to_string()));
+    }
     let rules = list_rules(&account_id)?;
     let mut triggered_alerts = Vec::new();
 
@@ -97,7 +137,7 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
                 acknowledged: false,
                 created_at: Utc::now().to_rfc3339(),
             };
-            create_alert(&new_alert).expect("Failed to create alert");
+            create_alert(&new_alert).map_err(|e| RuleError::AlertCreationError(e.to_string()))?;
             triggered_alerts.push(new_alert);
         }
     }
