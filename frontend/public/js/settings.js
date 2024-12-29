@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     await fetchCsrfToken();
+    await populateHostList();
 
     document.getElementById('logout-btn').addEventListener('click', async () => {
         const result = await logout();
@@ -23,7 +24,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
-    document.getElementById('logSourceForm').addEventListener('submit', addLogSource);
+    document.getElementById('logForm').addEventListener('submit', uploadLogs);
     document.getElementById('hostForm').addEventListener('submit', addHost);
 });
 
@@ -37,32 +38,69 @@ async function fetchCsrfToken() {
     }
 }
 
-async function addLogSource(event) {
+async function populateHostList() {
+    try {
+        const response = await fetch(`http://localhost:4200/backend/host/all/${user}`, {
+            method: 'GET',
+            headers: {
+                'X-Form-ID': formId
+            },
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            const hosts = await response.json();
+            const hostSelect = document.getElementById('hostSelect');
+            hosts.forEach(host => {
+                const option = document.createElement('option');
+                option.value = host.id;
+                option.textContent = `${host.hostname} (${host.ip_address})`;
+                hostSelect.appendChild(option);
+            });
+        } else {
+            console.error('Failed to fetch hosts');
+        }
+    } catch (error) {
+        console.error('Error fetching hosts:', error);
+    }
+}
+
+async function uploadLogs(event) {
     event.preventDefault();
 
-    const sourceName = document.getElementById('sourceName').value;
-    const sourceType = document.getElementById('sourceType').value;
-    const sourceAddress = document.getElementById('sourceAddress').value;
-    const accountId = user;
+    const logFile = document.getElementById('logFile').files[0];
+    const hostId = document.getElementById('hostSelect').value;
     const alertContainer = document.getElementById('alert-container');
 
-    const response = await fetch(`http://localhost:4200/backend/log/${accountId}`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'X-Form-ID': formId
-        },
-        body: JSON.stringify({ name: sourceName, type: sourceType, address: sourceAddress }),
-        credentials: 'include'
-    });
+    if (!logFile || !hostId) {
+        alertContainer.innerHTML = '<div class="alert error">Please select a file and a host.</div>';
+        return;
+    }
 
-    if (response.ok) {
-        const data = await response.json();
-        alertContainer.innerHTML = `<div class="alert success">Log Source "${data.name}" added successfully!</div>`;
-        document.getElementById('logSourceForm').reset();
-    } else {
-        const error = await response.json();
-        alertContainer.innerHTML = `<div class="alert error">${error.message}</div>`;
+    const formData = new FormData();
+    formData.append('file', logFile);
+    formData.append('host_id', hostId);
+
+    try {
+        const response = await fetch(`http://localhost:4200/backend/log/import`, {
+            method: 'POST',
+            headers: {
+                'X-Form-ID': formId
+            },
+            body: formData,
+            credentials: 'include'
+        });
+
+        if (response.ok) {
+            alertContainer.innerHTML = '<div class="alert success">Logs uploaded successfully!</div>';
+            document.getElementById('logForm').reset();
+        } else {
+            const error = await response.json();
+            alertContainer.innerHTML = `<div class="alert error">${error.message}</div>`;
+        }
+    } catch (error) {
+        console.error('Error uploading logs:', error);
+        alertContainer.innerHTML = '<div class="alert error">An error occurred while uploading logs.</div>';
     }
 }
 
@@ -86,12 +124,15 @@ async function addHost(event) {
         });
 
         if (response.ok) {
-            alertContainer.innerHTML = `<div class="alert success">Host added successfully!</div>`;
+            alertContainer.innerHTML = '<div class="alert success">Host added successfully!</div>';
+            document.getElementById('hostForm').reset();
+            await populateHostList(); // Refresh the host list
         } else {
             const error = await response.json();
             alertContainer.innerHTML = `<div class="alert error">${error.message}</div>`;
         }
     } catch (error) {
         console.error('Error adding host:', error);
+        alertContainer.innerHTML = '<div class="alert error">An error occurred while adding the host.</div>';
     }
 }
