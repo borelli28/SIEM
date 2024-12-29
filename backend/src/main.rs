@@ -1,6 +1,5 @@
 mod global;
 mod database;
-mod storage;
 mod collector;
 mod batch_maker;
 mod message_queue;
