@@ -5,6 +5,7 @@ use crate::schema::accounts;
 use actix_session::Session;
 use actix_web::HttpRequest;
 use diesel::prelude::*;
+use regex::Regex;
 use uuid::Uuid;
 use std::fmt;
 use argon2::{
@@ -22,6 +23,7 @@ pub enum AccountError {
     PasswordHashError(String),
     ExpectedField(String),
     SessionError(String),
+    ValidationError(String),
 }
 
 impl From<DieselError> for AccountError {
@@ -38,6 +40,7 @@ impl fmt::Display for AccountError {
             AccountError::PasswordHashError(err) => write!(f, "Password hash error: {}", err),
             AccountError::ExpectedField(field) => write!(f, "Missing required field: {}", field),
             AccountError::SessionError(err) => write!(f, "Session Error: {}", err),
+            AccountError::ValidationError(err) => write!(f, "Validation Error: {}", err),
         }
     }
 }
@@ -68,18 +71,48 @@ impl Account {
             .map(|hash| hash.to_string())
             .map_err(|e| AccountError::PasswordHashError(e.to_string()))
     }
+
+    fn validate_name(name: &str) -> Result<(), AccountError> {
+        if name.len() < 3 || name.len() > 50 {
+            return Err(AccountError::ValidationError("Name must be between 3 and 50 characters".to_string()));
+        }
+        let name_regex = Regex::new(r"^[a-zA-Z0-9_-]+$").unwrap();
+        if !name_regex.is_match(name) {
+            return Err(AccountError::ValidationError("Name can only contain alphanumeric characters, underscores, and hyphens".to_string()));
+        }
+        Ok(())
+    }
+
+    fn validate_password(password: &str) -> Result<(), AccountError> {
+        if password.len() < 15 {
+            return Err(AccountError::ValidationError("Password must be at least 15 characters long".to_string()));
+        }
+        if !password.chars().any(|c| c.is_uppercase()) {
+            return Err(AccountError::ValidationError("Password must contain at least one uppercase letter".to_string()));
+        }
+        if !password.chars().any(|c| c.is_lowercase()) {
+            return Err(AccountError::ValidationError("Password must contain at least one lowercase letter".to_string()));
+        }
+        if !password.chars().any(|c| c.is_digit(10)) {
+            return Err(AccountError::ValidationError("Password must contain at least one number".to_string()));
+        }
+        Ok(())
+    }
 }
 
 pub fn create_account(name: String, password: String, role: String) -> Result<usize, AccountError> {
     let mut conn = establish_connection();
     let id = Uuid::new_v4().to_string();
 
+    Account::validate_name(&name)?;
+    Account::validate_password(&password)?;
+
     if !Account::is_valid_role(&role) {
         return Err(AccountError::InvalidRole);
     }
 
     if account_exists(&name)? {
-        return Err(AccountError::ExpectedField(format!("Account name '{}' already exists.", name)));
+        return Err(AccountError::ValidationError(format!("Account name '{}' already exists.", name)));
     }
 
     let hashed_password = Account::hash_password(&password)?;
@@ -98,6 +131,9 @@ pub fn create_account(name: String, password: String, role: String) -> Result<us
 }
 
 pub fn get_account(id: &String) -> Result<Option<Account>, AccountError> {
+    if id.is_empty() {
+        return Err(AccountError::ValidationError("Account ID cannot be empty".to_string()));
+    }
     let mut conn = establish_connection();
     accounts::table.filter(accounts::id.eq(id))
         .first(&mut conn)
@@ -109,15 +145,8 @@ pub fn update_account(account: &Account) -> Result<bool, AccountError> {
     if account.id.is_empty() {
         return Err(AccountError::ExpectedField("id".to_string()));
     }
-    if account.name.is_empty() {
-        return Err(AccountError::ExpectedField("name".to_string()));
-    }
-    if account.password.is_empty() {
-        return Err(AccountError::ExpectedField("password".to_string()));
-    }
-    if account.role.is_empty() {
-        return Err(AccountError::ExpectedField("role".to_string()));
-    }
+    Account::validate_name(&account.name)?;
+    Account::validate_password(&account.password)?;
     if !Account::is_valid_role(&account.role) {
         return Err(AccountError::InvalidRole);
     }
@@ -130,6 +159,9 @@ pub fn update_account(account: &Account) -> Result<bool, AccountError> {
 }
 
 pub fn delete_account(id: &String) -> Result<bool, AccountError> {
+    if id.is_empty() {
+        return Err(AccountError::ValidationError("Account ID cannot be empty".to_string()));
+    }
     let mut conn = establish_connection();
     let affected_rows = diesel::delete(accounts::table.filter(accounts::id.eq(id)))
         .execute(&mut conn)?;
@@ -137,6 +169,9 @@ pub fn delete_account(id: &String) -> Result<bool, AccountError> {
 }
 
 pub fn verify_login(session: &Session, name: &String, password: &String, req: &HttpRequest) -> Result<Option<Account>, AccountError> {
+    Account::validate_name(name)?;
+    Account::validate_password(password)?;
+
     let mut conn = establish_connection();
     let account: Option<Account> = accounts::table
         .filter(accounts::name.eq(name))
@@ -169,7 +204,8 @@ pub fn verify_login(session: &Session, name: &String, password: &String, req: &H
     Ok(None) // No account found with the provided name
 }
 
-pub fn account_exists(name: &String) -> Result<bool, AccountError> {
+fn account_exists(name: &String) -> Result<bool, AccountError> {
+    Account::validate_name(name)?;
     let mut conn = establish_connection();
 
     let count: i64 = accounts::table

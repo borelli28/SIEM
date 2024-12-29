@@ -1,9 +1,9 @@
 use crate::rules::evaluate_log_against_rules;
+use crate::log::{Log, create_log};
 use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, atomic::{AtomicU16, Ordering}};
 use std::collections::HashMap;
 use crate::global::GLOBAL_MESSAGE_QUEUE;
-use crate::storage;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogEntry {
@@ -119,8 +119,24 @@ pub async fn process_logs(collector: &LogCollector, account_id: String, host_id:
         let log_entry = parse_cef_log(&cef_log, &account_id, &host_id)?;
         collector.add_log(log_entry.clone());
 
-        // Insert log in the database
-        if let Err(e) = storage::insert_log(&log_entry).await {
+        // Insert Log into DB
+        let extensions_json = serde_json::to_string(&log_entry.extensions)
+            .map_err(|e| ParseLogError::DatabaseError(format!("Failed to serialize extensions: {}", e)))?;
+        let new_log = Log {
+            id: String::new(),
+            account_id: log_entry.account_id.clone(),
+            host_id: log_entry.host_id.clone(),
+            version: Some(log_entry.version.clone()),
+            device_vendor: Some(log_entry.device_vendor.clone()),
+            device_product: Some(log_entry.device_product.clone()),
+            device_version: Some(log_entry.device_version.clone()),
+            signature_id: Some(log_entry.signature_id.clone()),
+            name: Some(log_entry.name.clone()),
+            severity: Some(log_entry.severity.clone()),
+            extensions: Some(extensions_json),
+        };
+
+        if let Err(e) = create_log(&new_log) {
             eprintln!("Error inserting log into database: {}", e);
             return Err(ParseLogError::DatabaseError(format!(
                 "Error inserting log into database. Line number: {}",
