@@ -87,10 +87,18 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
 
     for rule in rules {
         // Added "&" to rule.account_id so we can compare equals types(&String)
-        if rule.enabled && &rule.account_id == account_id && evaluate_condition(&rule.condition, log) {
-            let alert = Alert::new(&rule);
-            create_alert(&alert).expect("Failed to create alert");
-            triggered_alerts.push(alert);
+        if (rule.enabled) && (&rule.account_id == account_id) && evaluate_condition(&rule.condition, log) {
+            let new_alert = Alert {
+                id: Uuid::new_v4().to_string(),
+                rule_id: rule.id.clone(),
+                account_id: rule.account_id.clone(),
+                severity: rule.severity.clone(),
+                message: format!("Alert triggered: {} - {}", rule.name, rule.description),
+                acknowledged: false,
+                created_at: Utc::now().to_rfc3339(),
+            };
+            create_alert(&new_alert).expect("Failed to create alert");
+            triggered_alerts.push(new_alert);
         }
     }
 
