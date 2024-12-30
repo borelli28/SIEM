@@ -16,14 +16,16 @@
                 <form id="logForm">
                     <div>
                         <label for="logFile">Log File:</label>
-                        <input type="file" id="logFile" required>
+                        <div id="input-spinner-container">
+                            <input type="file" id="logFile" required>
+                            <div class="spinner" id="loadingSpinner"></div>
+                        </div>
                     </div>
                     <div>
                         <label for="hostSelect">Host:</label>
                         <select id="hostSelect" required>
                         </select>
                     </div>
-                    <div class="spinner" id="loadingSpinner"></div>
                     <button type="submit">Upload</button>
                 </form>
             </section>
