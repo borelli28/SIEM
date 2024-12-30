@@ -27,4 +27,4 @@ package
 ### Other ###
 .env
 diesel.toml
-tmp/*
+/tmp/**
