@@ -71,6 +71,7 @@ async function uploadLogs(event) {
     const logFile = document.getElementById('logFile').files[0];
     const hostId = document.getElementById('hostSelect').value;
     const alertContainer = document.getElementById('alert-container');
+    const accountId = user;
 
     if (!logFile || !hostId) {
         alertContainer.innerHTML = '<div class="alert error">Please select a file and a host.</div>';
@@ -80,6 +81,7 @@ async function uploadLogs(event) {
     const formData = new FormData();
     formData.append('file', logFile);
     formData.append('host_id', hostId);
+    formData.append('account_id', accountId);
 
     try {
         const response = await fetch(`http://localhost:4200/backend/log/import`, {
