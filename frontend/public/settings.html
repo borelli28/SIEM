@@ -12,25 +12,21 @@
             <h1>SIEM Settings</h1>
             <div id="alert-container"></div>
             <section>
-                <h2>Add New Log Source</h2>
-                <form id="logSourceForm">
+                <h2>Upload Logs</h2>
+                <form id="logForm">
                     <div>
-                        <label for="sourceName">Source Name:</label>
-                        <input type="text" id="sourceName" required>
+                        <label for="logFile">Log File:</label>
+                        <div id="input-spinner-container">
+                            <input type="file" id="logFile" required>
+                            <div class="spinner" id="loadingSpinner"></div>
+                        </div>
                     </div>
                     <div>
-                        <label for="sourceType">Source Type:</label>
-                        <select id="sourceType" required>
-                            <option value="syslog">Syslog</option>
-                            <option value="winlog">Windows Event Log</option>
-                            <option value="apache">Apache Log</option>
+                        <label for="hostSelect">Host:</label>
+                        <select id="hostSelect" required>
                         </select>
                     </div>
-                    <div>
-                        <label for="sourceAddress">Source Address:</label>
-                        <input type="text" id="sourceAddress" required>
-                    </div>
-                    <button type="submit">Add Log Source</button>
+                    <button type="submit">Upload</button>
                 </form>
             </section>
 

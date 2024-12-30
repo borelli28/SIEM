@@ -42,14 +42,14 @@ use crate::handlers::{
     get_csrf_handler,
     csrf_validator_handler
 };
-use actix_web::{web, cookie::time::Duration, cookie::Key, App, HttpServer};
 use actix_session::{SessionMiddleware, storage::CookieSessionStore, config::PersistentSession};
+use actix_web::{web, cookie::time::Duration, cookie::Key, App, HttpServer};
+use actix_multipart::form::tempfile::TempFileConfig;
 use crate::csrf::CsrfMiddleware;
 use actix_cors::Cors;
 use dotenvy::dotenv;
-use std::env;
-
 use env_logger;
+use std::env;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
@@ -77,6 +77,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(collector.clone())
             .app_data(csrf.clone())
+            .app_data(TempFileConfig::default().directory("./tmp"))
             .wrap(
                 SessionMiddleware::builder(CookieSessionStore::default(), cookie_key.clone())
                     .cookie_secure(false) // Set to true in PRODUCTION

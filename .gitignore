@@ -27,3 +27,5 @@ package
 ### Other ###
 .env
 diesel.toml
+backend/tmp/*
+!backend/tmp/.gitkeep
