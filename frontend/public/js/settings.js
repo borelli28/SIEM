@@ -72,16 +72,20 @@ async function uploadLogs(event) {
     const hostId = document.getElementById('hostSelect').value;
     const alertContainer = document.getElementById('alert-container');
     const accountId = user;
+    const loadingSpinner = document.getElementById('loadingSpinner');
 
     if (!logFile || !hostId) {
         alertContainer.innerHTML = '<div class="alert error">Please select a file and a host.</div>';
         return;
     }
 
+    // Show the spinner
+    loadingSpinner.style.display = 'block';
+
     const formData = new FormData();
     formData.append('file', logFile);
     formData.append('host_id', hostId);
-    formData.append('account_id', accountId);
+    formData.append('account_id', accountId); 
 
     try {
         const response = await fetch(`http://localhost:4200/backend/log/import`, {
@@ -93,6 +97,9 @@ async function uploadLogs(event) {
             credentials: 'include'
         });
 
+        // Hide the spinner after the request completes
+        loadingSpinner.style.display = 'none';
+
         if (response.ok) {
             alertContainer.innerHTML = '<div class="alert success">Logs uploaded successfully!</div>';
             document.getElementById('logForm').reset();
@@ -101,6 +108,8 @@ async function uploadLogs(event) {
             alertContainer.innerHTML = `<div class="alert error">${error.message}</div>`;
         }
     } catch (error) {
+        // Hide the spinner if an error occurs
+        loadingSpinner.style.display = 'none';
         console.error('Error uploading logs:', error);
         alertContainer.innerHTML = '<div class="alert error">An error occurred while uploading logs.</div>';
     }
