@@ -1,7 +1,8 @@
+use actix_multipart::form::{tempfile::TempFile, MultipartForm, text::Text};
 use actix_web::{web, HttpResponse, HttpRequest, Responder, Error};
 use actix_session::Session;
 use serde_json::json;
-use crate::collector::{LogCollector, ParseLogError, process_logs};
+use crate::collector::{LogCollector, process_logs};
 use crate::batch_maker::create_batch;
 use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert};
 use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delete_host};
@@ -29,41 +30,42 @@ pub async fn logout_handler(session: Session) -> impl Responder {
 
 // Logs Handlers
 //
+#[derive(Debug, MultipartForm)]
+pub struct UploadForm {
+    #[multipart(rename = "file")]
+    log_file: TempFile,
+    account_id: Text<String>,
+    host_id: Text<String>,
+}
+
 pub async fn import_log_handler(
     req: HttpRequest,
     csrf: web::Data<CsrfMiddleware>,
     collector: web::Data<LogCollector>,
-    log: web::Json<String>,
-    account_id: web::Json<String>,
-    host_id: web::Json<String>
+    form: MultipartForm<UploadForm>,
 ) -> Result<HttpResponse, Error> {
     csrf_validator(&req, &csrf).await?;
-    
-    match create_batch(&log.into_inner()).await {
+
+    let UploadForm { log_file, account_id, host_id } = form.into_inner();
+    let log_file_path = log_file.file.path();
+    // log::debug!("Log file path: {:?}", log_file_path);
+
+    match create_batch(log_file_path.to_str().unwrap()).await {
         Ok(_) => {
             match process_logs(&collector, account_id.to_string(), host_id.to_string()).await {
                 Ok(_) => Ok(HttpResponse::Ok().json(json!({ "status": "ok" }))),
-                Err(e) => {
-                    eprintln!("Error processing logs: {}", e);
-                    match e {
-                        ParseLogError::DatabaseError(msg) => {
-                            Ok(HttpResponse::InternalServerError().json(json!({
-                                "status": "error",
-                                "message": "Database error",
-                                "details": msg
-                            })))
-                        },
-                        _ => Ok(HttpResponse::InternalServerError().json(json!({
-                            "status": "error",
-                            "message": "Failed to process logs"
-                        })))
-                    }
+                Err(err) => {
+                    Ok(HttpResponse::InternalServerError().json(json!({
+                        "status": "error",
+                        "message": "Failed to process logs",
+                        "details": err.to_string()
+                    })))
                 }
             }
         },
-        Err(_) => Ok(HttpResponse::BadRequest().json(json!({
+        Err(err) => Ok(HttpResponse::BadRequest().json(json!({
             "status": "error",
-            "message": "Invalid log format"
+            "message": format!("Invalid log format: {:?}", err)
         }))),
     }
 }
