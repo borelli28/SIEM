@@ -16,7 +16,6 @@ diesel = { version = "2.2.6", features = ["sqlite", "chrono", "uuid"] }
 dotenvy = "0.15.7"
 env_logger = "0.11.6"
 evalexpr = "12.0.1"
-futures-util = "0.3.31"
 lazy_static = "1.5.0"
 log = "0.4.22"
 rand = "0.8.5"
