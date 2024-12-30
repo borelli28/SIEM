@@ -5,7 +5,7 @@ edition = "2021"
 
 [dependencies]
 actix-cors = "0.7.0"
-actix-multipart = "0.7.2"
+actix-multipart = { version = "0.7.2", features = ["tempfile"] }
 actix-session = { version = "0.10.1", features = ["cookie-session"] }
 actix-web = "4.9.0"
 argon2 = "0.5.3"
