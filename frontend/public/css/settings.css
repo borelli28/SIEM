@@ -42,15 +42,10 @@ input, select {
     justify-content: center;
     flex-wrap: wrap;
     width: 100%;
-    outline: 3px solid blue;
 }
 
 #input-spinner-container input {
-    width: 100%;
-}
-
-* {
-    outline: 1px dashed red;
+    width: 60%;
 }
 
 .alert {
