@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::{self, BufReader, BufRead};
 use crate::global::GLOBAL_MESSAGE_QUEUE;
 
-// A Batch is <= 1000 log entries long
+// A Batch is <= 50 log entries long
 #[derive(Clone)]
 pub struct Batch {
     pub lines: Vec<String>,
@@ -20,7 +20,7 @@ impl Batch {
     }
 
     pub fn is_full(&self) -> bool {
-        self.lines.len() >= 1000
+        self.lines.len() >= 50
     }
 
     pub fn clear(&mut self) {
@@ -28,7 +28,7 @@ impl Batch {
     }
 }
 
-pub async fn create_batch(file_path: &str) -> Result<(), io::Error> {
+pub async fn create_batches(file_path: &str) -> Result<(), io::Error> {
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
     let mut current_batch = Batch::new();

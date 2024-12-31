@@ -85,7 +85,7 @@ async function uploadLogs(event) {
     const formData = new FormData();
     formData.append('file', logFile);
     formData.append('host_id', hostId);
-    formData.append('account_id', accountId); 
+    formData.append('account_id', accountId);
 
     try {
         const response = await fetch(`http://localhost:4200/backend/log/import`, {
