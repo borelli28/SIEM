@@ -51,12 +51,24 @@ async function populateHostList() {
         if (response.ok) {
             const hosts = await response.json();
             const hostSelect = document.getElementById('hostSelect');
-            hosts.forEach(host => {
+            hostSelect.innerHTML = '';
+
+            // No hosts
+            if (hosts.length === 0) {
                 const option = document.createElement('option');
-                option.value = host.id;
-                option.textContent = `${host.hostname} (${host.ip_address})`;
+                option.value = "";
+                option.textContent = "Add a new host below";
+                option.disabled = true;
+                option.selected = true;
                 hostSelect.appendChild(option);
-            });
+            } else {
+                hosts.forEach(host => {
+                    const option = document.createElement('option');
+                    option.value = host.id;
+                    option.textContent = `${host.hostname} (${host.ip_address})`;
+                    hostSelect.appendChild(option);
+                });
+            }
         } else {
             console.error('Failed to fetch hosts');
         }
