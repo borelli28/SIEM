@@ -4,6 +4,8 @@ use serde::{Serialize, Deserialize};
 use rusqlite::{Error as SqliteError, params};
 use uuid::Uuid;
 
+use rusqlite::OptionalExtension;
+
 #[derive(Debug)]
 pub enum HostError {
     DatabaseError(SqliteError),

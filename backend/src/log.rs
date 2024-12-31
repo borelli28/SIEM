@@ -4,6 +4,8 @@ use rusqlite::{Error as SqliteError, params};
 use uuid::Uuid;
 use std::fmt;
 
+use rusqlite::OptionalExtension;
+
 #[derive(Debug)]
 pub enum LogError {
     DatabaseError(SqliteError),

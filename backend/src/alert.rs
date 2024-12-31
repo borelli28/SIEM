@@ -5,6 +5,8 @@ use uuid::Uuid;
 use crate::database::establish_connection;
 use std::fmt;
 
+use rusqlite::OptionalExtension;
+
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum AlertSeverity {
     Low,

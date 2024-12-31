@@ -14,6 +14,8 @@ use argon2::{
     Argon2
 };
 
+use rusqlite::OptionalExtension;
+
 #[derive(Debug)]
 pub enum AccountError {
     InvalidRole,
