@@ -40,10 +40,6 @@ impl LogCollector {
         logs.push(log);
         line_number
     }
-
-    pub fn get_last_processed_id(&self) -> u16 {
-        self.next_id.load(Ordering::SeqCst) - 1
-    }
 }
 
 #[derive(Debug)]
