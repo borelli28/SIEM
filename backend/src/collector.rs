@@ -40,15 +40,6 @@ impl LogCollector {
         logs.push(log);
         line_number
     }
-
-    pub fn get_logs(&self) -> Vec<LogEntry> {
-        let logs = self.logs.lock().unwrap();
-        logs.clone()
-    }
-
-    pub fn get_last_processed_id(&self) -> u16 {
-        self.next_id.load(Ordering::SeqCst) - 1
-    }
 }
 
 #[derive(Debug)]
@@ -73,7 +64,7 @@ impl std::fmt::Display for ParseLogError {
 
 impl std::error::Error for ParseLogError {}
 
-pub fn parse_cef_log(cef_str: &str, account_id: &String, host_id_param: &String) -> Result<LogEntry, ParseLogError> {
+pub fn log_parser(cef_str: &str, account_id: &String, host_id_param: &String) -> Result<LogEntry, ParseLogError> {
     let parts: Vec<&str> = cef_str.split('|').collect();
     // Validate CEF format
     if parts.len() != 8 || !parts[0].starts_with("CEF:") {
@@ -116,7 +107,7 @@ pub async fn process_logs(collector: &LogCollector, account_id: String, host_id:
     })?;
 
     for cef_log in batch.lines {
-        let log_entry = parse_cef_log(&cef_log, &account_id, &host_id)?;
+        let log_entry = log_parser(&cef_log, &account_id, &host_id)?;
         collector.add_log(log_entry.clone());
 
         // Insert Log into DB
