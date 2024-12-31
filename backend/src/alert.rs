@@ -1,17 +1,9 @@
-use diesel::prelude::*;
-use diesel::sqlite::SqliteConnection;
+use rusqlite::{Connection, Error as SqliteError, params};
 use serde::{Deserialize, Serialize};
 use chrono::{Utc, DateTime, ParseError};
 use uuid::Uuid;
-use crate::schema::alerts; 
 use crate::database::establish_connection;
-use crate::schema::alerts::dsl::*;
 use std::fmt;
-
-fn db_conn() -> SqliteConnection {
-    let conn: SqliteConnection = establish_connection();
-    conn
-}
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum AlertSeverity {
@@ -43,7 +35,7 @@ impl From<String> for AlertSeverity {
 
 #[derive(Debug)]
 pub enum AlertError {
-    DatabaseError(diesel::result::Error),
+    DatabaseError(SqliteError),
     ValidationError(String),
     ParseError(ParseError),
 }
@@ -58,8 +50,8 @@ impl fmt::Display for AlertError {
     }
 }
 
-impl From<diesel::result::Error> for AlertError {
-    fn from(err: diesel::result::Error) -> Self {
+impl From<SqliteError> for AlertError {
+    fn from(err: SqliteError) -> Self {
         AlertError::DatabaseError(err)
     }
 }
@@ -70,8 +62,7 @@ impl From<ParseError> for AlertError {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, Queryable, Insertable, AsChangeset)]
-#[diesel(table_name = alerts)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Alert {
     pub id: String,
     pub rule_id: String,
@@ -111,10 +102,20 @@ pub fn create_alert(alert: &Alert) -> Result<Alert, AlertError> {
     };
     new_alert.validate(&new_alert)?;
 
-    let mut conn: SqliteConnection = db_conn();
-    diesel::insert_into(alerts::table)
-        .values(&new_alert)
-        .execute(&mut conn)?;
+    let conn = establish_connection()?;
+    conn.execute(
+        "INSERT INTO alerts (id, rule_id, account_id, severity, message, acknowledged, created_at) 
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)",
+        params![
+            new_alert.id,
+            new_alert.rule_id,
+            new_alert.account_id,
+            new_alert.severity,
+            new_alert.message,
+            new_alert.acknowledged,
+            new_alert.created_at,
+        ],
+    )?;
 
     Ok(new_alert)
 }
@@ -123,38 +124,80 @@ pub fn get_alert(alert_id: &String) -> Result<Option<Alert>, AlertError> {
     if alert_id.is_empty() {
         return Err(AlertError::ValidationError("Alert ID cannot be empty".to_string()));
     }
-    let mut conn: SqliteConnection = db_conn();
-    Ok(alerts::table.find(alert_id).first(&mut conn).optional()?)
+    
+    let conn = establish_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT id, rule_id, account_id, severity, message, acknowledged, created_at 
+         FROM alerts WHERE id = ?1"
+    )?;
+    
+    let alert = stmt.query_row(params![alert_id], |row| {
+        Ok(Alert {
+            id: row.get(0)?,
+            rule_id: row.get(1)?,
+            account_id: row.get(2)?,
+            severity: row.get(3)?,
+            message: row.get(4)?,
+            acknowledged: row.get(5)?,
+            created_at: row.get(6)?,
+        })
+    }).optional()?;
+
+    Ok(alert)
 }
 
 pub fn list_alerts(acct_id: &String) -> Result<Vec<Alert>, AlertError> {
     if acct_id.is_empty() {
         return Err(AlertError::ValidationError("Account ID cannot be empty".to_string()));
     }
-    let mut conn: SqliteConnection = db_conn();
-    Ok(alerts::table
-        .filter(alerts::account_id.eq(acct_id))
-        .order(alerts::created_at.desc())
-        .load::<Alert>(&mut conn)?)
+    
+    let conn = establish_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT id, rule_id, account_id, severity, message, acknowledged, created_at 
+         FROM alerts WHERE account_id = ?1 
+         ORDER BY created_at DESC"
+    )?;
+    
+    let alerts_iter = stmt.query_map(params![acct_id], |row| {
+        Ok(Alert {
+            id: row.get(0)?,
+            rule_id: row.get(1)?,
+            account_id: row.get(2)?,
+            severity: row.get(3)?,
+            message: row.get(4)?,
+            acknowledged: row.get(5)?,
+            created_at: row.get(6)?,
+        })
+    })?;
+
+    let alerts: Result<Vec<Alert>, SqliteError> = alerts_iter.collect();
+    Ok(alerts?)
 }
 
 pub fn delete_alert(alert_id: &String) -> Result<bool, AlertError> {
     if alert_id.is_empty() {
         return Err(AlertError::ValidationError("Alert ID cannot be empty".to_string()));
     }
-    let mut conn: SqliteConnection = db_conn();
-    let result = diesel::delete(alerts::table.find(alert_id)).execute(&mut conn)?;
-    Ok(result > 0)
+    
+    let conn = establish_connection()?;
+    let affected_rows = conn.execute(
+        "DELETE FROM alerts WHERE id = ?1",
+        params![alert_id],
+    )?;
+
+    Ok(affected_rows > 0)
 }
 
 pub fn acknowledge_alert(alert_id: &String) -> Result<bool, AlertError> {
     if alert_id.is_empty() {
         return Err(AlertError::ValidationError("Alert ID cannot be empty".to_string()));
     }
-    let mut conn: SqliteConnection = db_conn();
-    let updated_rows = diesel::update(alerts.find(alert_id))
-        .set(acknowledged.eq(true))
-        .execute(&mut conn)?;
+    
+    let conn = establish_connection()?;
+    let affected_rows = conn.execute(
+        "UPDATE alerts SET acknowledged = TRUE WHERE id = ?1",
+        params![alert_id],
+    )?;
 
-    Ok(updated_rows > 0)
+    Ok(affected_rows > 0)
 }
