@@ -41,11 +41,6 @@ impl LogCollector {
         line_number
     }
 
-    pub fn get_logs(&self) -> Vec<LogEntry> {
-        let logs = self.logs.lock().unwrap();
-        logs.clone()
-    }
-
     pub fn get_last_processed_id(&self) -> u16 {
         self.next_id.load(Ordering::SeqCst) - 1
     }
