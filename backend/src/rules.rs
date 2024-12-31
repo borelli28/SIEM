@@ -239,7 +239,7 @@ fn evaluate_detection(detection: &Detection, log: &LogEntry) -> bool {
     }
 
     // Evaluate the condition as a boolean expression using the context
-    match eval_boolean_with_context(detection, &context) {
+    match eval_boolean_with_context(&detection.condition, &context) {
         Ok(result) => result,
         Err(e) => {
             eprintln!("Failed to evaluate condition: {}. Error: {:?}", detection, e);
