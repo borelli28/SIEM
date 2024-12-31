@@ -35,13 +35,9 @@ pub async fn create_batches(file_path: &str) -> Result<(), io::Error> {
 
     for line in reader.lines() {
         let line = line?;
-        log::debug!("Batch: {:?}", line);
         current_batch.add_line(line);
 
         if current_batch.is_full() {
-            log::debug!("\n");
-            log::debug!("Current batch is full!!!!!!!!!! \n");
-            log::debug!("\n");
             let queue = GLOBAL_MESSAGE_QUEUE.lock().await;
             queue.enqueue(current_batch.clone()).await.map_err(|e| {
                 eprintln!("Error enqueuing batch: {}", e);
