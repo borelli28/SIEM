@@ -1,17 +1,15 @@
-use evalexpr::{
-    eval_boolean_with_context, 
-    ContextWithMutableVariables, 
-    HashMapContext, 
+use evalexpr::{eval_boolean_with_context, ContextWithMutableVariables, HashMapContext, 
     DefaultNumericTypes
 };
+use diesel::{deserialize::FromSqlRow, sql_types::Text, AsExpression, prelude::*};
 use crate::database::establish_connection;
 use crate::alert::{create_alert, Alert};
 use serde::{Serialize, Deserialize};
-use crate::schema::alert_rules;
 use crate::collector::LogEntry;
-use diesel::prelude::*;
-use chrono::Utc;
+use chrono::{DateTime, Utc};
+use crate::schema::rules;
 use uuid::Uuid;
+use serde_json;
 use std::fmt;
 
 #[derive(Debug)]
@@ -39,15 +37,52 @@ impl From<diesel::result::Error> for RuleError {
     }
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct LogSource {
+    pub category: String,
+    pub product: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Detection {
+    pub selection: std::collections::HashMap<String, serde_json::Value>,
+    pub condition: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, AsExpression, FromSqlRow)]
+#[diesel(sql_type = Text)]
+pub enum Levels {
+    Informational,
+    Low,
+    Medium,
+    High,
+    Critical,
+}
+
 #[derive(Debug, Queryable, Insertable, Clone, AsChangeset, Serialize, Deserialize)]
-#[diesel(table_name = alert_rules)]
+#[diesel(table_name = rules)]
 pub struct Rule {
     pub id: String,
     pub account_id: String,
-    pub name: String,
+    pub title: String,
+    pub status: String,
     pub description: String,
-    pub condition: String,
-    pub severity: String,
+    #[diesel(serialize_as = String, deserialize_as = String)]
+    pub references: Vec<String>,
+    #[diesel(serialize_as = String, deserialize_as = String)]
+    pub tags: Vec<String>,
+    pub author: String,
+    #[diesel(serialize_as = String, deserialize_as = String)]
+    pub date: DateTime<Utc>,
+    #[diesel(serialize_as = String, deserialize_as = String)]
+    pub logsource: LogSource,
+    #[diesel(serialize_as = String, deserialize_as = String)]
+    pub detection: Detection,
+    #[diesel(serialize_as = String, deserialize_as = String)]
+    pub fields: Vec<String>,
+    #[diesel(serialize_as = String, deserialize_as = String)]
+    pub falsepositives: Vec<String>,
+    pub level: Levels,
     pub enabled: bool,
     pub created_at: String,
     pub updated_at: String,
@@ -74,20 +109,28 @@ impl Rule {
 pub fn create_rule(rule: &Rule) -> Result<(), RuleError> {
     rule.validate()?;
     let mut conn = establish_connection();
-    let now = Utc::now().to_rfc3339();
+    let now = Utc::now();
     let new_rule = Rule {
         id: Uuid::new_v4().to_string(),
         account_id: rule.account_id.clone(),
-        name: rule.name.clone(),
+        title: rule.title.clone(),
+        status: rule.status.clone(),
         description: rule.description.clone(),
-        condition: rule.condition.clone(),
-        severity: rule.severity.clone(),
+        references: rule.references.clone(),
+        tags: rule.tags.clone(),
+        author: rule.author.clone(),
+        date: now,
+        logsource: rule.logsource.clone(),
+        detection: rule.detection.clone(),
+        fields: rule.fields.clone(),
+        falsepositives: rule.falsepositives.clone(),
+        level: rule.level.clone(),
         enabled: true,
-        created_at: now.clone(),
-        updated_at: now,
+        created_at: now.to_rfc3339(),
+        updated_at: now.to_rfc3339(),
     };
 
-    diesel::insert_into(alert_rules::table)
+    diesel::insert_into(rules::table)
         .values(&new_rule)
         .execute(&mut conn)?;
     Ok(())
@@ -98,14 +141,14 @@ pub fn get_rule(id: &String) -> Result<Option<Rule>, RuleError> {
         return Err(RuleError::ValidationError("Rule ID cannot be empty".to_string()));
     }
     let mut conn = establish_connection();
-    let result = alert_rules::table.find(id).first(&mut conn).optional()?;
+    let result = rules::table.find(id).first(&mut conn).optional()?;
     Ok(result)
 }
 
 pub fn update_rule(rule: &Rule) -> Result<(), RuleError> {
     rule.validate()?;
     let mut conn = establish_connection();
-    diesel::update(alert_rules::table.find(&rule.id))
+    diesel::update(rules::table.find(&rule.id))
         .set(rule)
         .execute(&mut conn)?;
     Ok(())
@@ -116,7 +159,7 @@ pub fn delete_rule(id: &String) -> Result<(), RuleError> {
         return Err(RuleError::ValidationError("Rule ID cannot be empty".to_string()));
     }
     let mut conn = establish_connection();
-    diesel::delete(alert_rules::table.find(id)).execute(&mut conn)?;
+    diesel::delete(rules::table.find(id)).execute(&mut conn)?;
     Ok(())
 }
 
@@ -125,8 +168,8 @@ pub fn list_rules(account_id: &String) -> Result<Vec<Rule>, RuleError> {
         return Err(RuleError::ValidationError("Account ID cannot be empty".to_string()));
     }
     let mut conn = establish_connection();
-    let results = alert_rules::table
-        .filter(alert_rules::account_id.eq(account_id))
+    let results = rules::table
+        .filter(rules::account_id.eq(account_id))
         .load::<Rule>(&mut conn)?;
     Ok(results)
 }
