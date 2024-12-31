@@ -81,7 +81,7 @@ impl fmt::Display for Levels {
     }
 }
 
-#[derive(Debug, Queryable, Insertable, Clone, AsChangeset, Serialize, Deserialize)]
+#[derive(Debug, Insertable, Clone, Serialize, Deserialize)]
 #[diesel(table_name = rules)]
 pub struct Rule {
     pub id: String,
