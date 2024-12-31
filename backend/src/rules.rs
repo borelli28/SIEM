@@ -193,7 +193,7 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
 
     for rule in rules {
         // Added "&" to rule.account_id so we can compare equals types(&String)
-        if (rule.enabled) && (&rule.account_id == account_id) && evaluate_condition(&rule.condition, log) {
+        if (rule.enabled) && (&rule.account_id == account_id) && evaluate_detection(&rule.detection, log) {
             let new_alert = Alert {
                 id: Uuid::new_v4().to_string(),
                 rule_id: rule.id.clone(),
@@ -212,7 +212,7 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
 }
 
 // Evaluate a condition string against a log entry
-fn evaluate_condition(condition: &String, log: &LogEntry) -> bool {
+fn evaluate_detection(detection: &Detection, log: &LogEntry) -> bool {
     let mut context: HashMapContext<DefaultNumericTypes> = HashMapContext::new();
 
     // Context = Key/Value pairs like Dictionaries
@@ -227,10 +227,10 @@ fn evaluate_condition(condition: &String, log: &LogEntry) -> bool {
     }
 
     // Evaluate the condition as a boolean expression using the context
-    match eval_boolean_with_context(condition, &context) {
+    match eval_boolean_with_context(detection, &context) {
         Ok(result) => result,
         Err(e) => {
-            eprintln!("Failed to evaluate condition: {}. Error: {:?}", condition, e);
+            eprintln!("Failed to evaluate condition: {}. Error: {:?}", detection, e);
             false  // Treat errors as a non-match
         }
     }
