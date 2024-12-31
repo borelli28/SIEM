@@ -3,7 +3,7 @@ use actix_web::{web, HttpResponse, HttpRequest, Responder, Error};
 use actix_session::Session;
 use serde_json::json;
 use crate::collector::{LogCollector, process_logs};
-use crate::batch_maker::create_batch;
+use crate::batch_maker::create_batches;
 use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert};
 use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delete_host};
 use crate::rules::{AlertRule, create_rule, get_rule, list_rules, update_rule, delete_rule};
@@ -50,7 +50,7 @@ pub async fn import_log_handler(
     let log_file_path = log_file.file.path();
     // log::debug!("Log file path: {:?}", log_file_path);
 
-    match create_batch(log_file_path.to_str().unwrap()).await {
+    match create_batches(log_file_path.to_str().unwrap()).await {
         Ok(_) => {
             match process_logs(&collector, account_id.to_string(), host_id.to_string()).await {
                 Ok(_) => Ok(HttpResponse::Ok().json(json!({ "status": "ok" }))),

@@ -28,7 +28,7 @@ impl Batch {
     }
 }
 
-pub async fn create_batch(file_path: &str) -> Result<(), io::Error> {
+pub async fn create_batches(file_path: &str) -> Result<(), io::Error> {
     let file = File::open(file_path)?;
     let reader = BufReader::new(file);
     let mut current_batch = Batch::new();
