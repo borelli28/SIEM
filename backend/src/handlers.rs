@@ -48,7 +48,6 @@ pub async fn import_log_handler(
 
     let UploadForm { log_file, account_id, host_id } = form.into_inner();
     let log_file_path = log_file.file.path();
-    // log::debug!("Log file path: {:?}", log_file_path);
 
     match create_batches(log_file_path.to_str().unwrap()).await {
         Ok(_) => {
