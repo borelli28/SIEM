@@ -12,6 +12,9 @@ use uuid::Uuid;
 use serde_json;
 use std::fmt;
 
+use diesel::{serialize, serialize::ToSql, serialize::Output};
+use diesel::{deserialize, deserialize::FromSql};
+
 impl ToSql<Text, diesel::sqlite::Sqlite> for Vec<String> {
     fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, diesel::sqlite::Sqlite>) -> serialize::Result {
         let json_string = serde_json::to_string(self)?;
@@ -21,7 +24,7 @@ impl ToSql<Text, diesel::sqlite::Sqlite> for Vec<String> {
 }
 
 impl FromSql<Text, diesel::sqlite::Sqlite> for Vec<String> {
-    fn from_sql(bytes: diesel::backend::RawValue<'_, diesel::sqlite::Sqlite>) -> deserialize::Result<Self> {
+    fn from_sql(bytes: <diesel::sqlite::Sqlite as diesel::backend::Backend>::RawValue) -> deserialize::Result<Self> {
         let s = String::from_utf8(bytes.as_bytes().to_vec())?;
         Ok(serde_json::from_str(&s)?)
     }
