@@ -2,7 +2,7 @@ use std::fs::File;
 use std::io::{self, BufReader, BufRead};
 use crate::global::GLOBAL_MESSAGE_QUEUE;
 
-// A Batch is <= 1000 log entries long
+// A Batch is <= 50 log entries long
 #[derive(Clone)]
 pub struct Batch {
     pub lines: Vec<String>,
@@ -20,7 +20,7 @@ impl Batch {
     }
 
     pub fn is_full(&self) -> bool {
-        self.lines.len() >= 1000
+        self.lines.len() >= 50
     }
 
     pub fn clear(&mut self) {
@@ -35,9 +35,13 @@ pub async fn create_batch(file_path: &str) -> Result<(), io::Error> {
 
     for line in reader.lines() {
         let line = line?;
+        log::debug!("Batch: {:?}", line);
         current_batch.add_line(line);
 
         if current_batch.is_full() {
+            log::debug!("\n");
+            log::debug!("Current batch is full!!!!!!!!!! \n");
+            log::debug!("\n");
             let queue = GLOBAL_MESSAGE_QUEUE.lock().await;
             queue.enqueue(current_batch.clone()).await.map_err(|e| {
                 eprintln!("Error enqueuing batch: {}", e);
