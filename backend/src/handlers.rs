@@ -6,7 +6,7 @@ use crate::collector::{LogCollector, process_logs};
 use crate::batch_maker::create_batches;
 use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert};
 use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delete_host};
-use crate::rules::{AlertRule, create_rule, get_rule, list_rules, update_rule, delete_rule};
+use crate::rules::{Rule, create_rule, get_rule, list_rules, update_rule, delete_rule};
 use crate::log::{get_all_logs};
 use crate::account::{Account, AccountError, create_account, get_account, update_account, delete_account, verify_login};
 use crate::auth_session::{verify_session, invalidate_session};
@@ -203,7 +203,7 @@ pub async fn delete_host_handler(
 //
 pub async fn create_rule_handler(
     req: HttpRequest,
-    rule: web::Json<AlertRule>,
+    rule: web::Json<Rule>,
     csrf: web::Data<CsrfMiddleware>
 ) -> Result<HttpResponse, Error> {
     csrf_validator(&req, &csrf).await?;
@@ -238,7 +238,7 @@ pub async fn get_all_rules_handler(account_id: web::Path<String>) -> impl Respon
 
 pub async fn edit_rule_handler(
     req: HttpRequest,
-    rule: web::Json<AlertRule>,
+    rule: web::Json<Rule>,
     csrf: web::Data<CsrfMiddleware>
 ) -> Result<HttpResponse, Error> {
     csrf_validator(&req, &csrf).await?;

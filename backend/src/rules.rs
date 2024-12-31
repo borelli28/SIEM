@@ -41,7 +41,7 @@ impl From<diesel::result::Error> for RuleError {
 
 #[derive(Debug, Queryable, Insertable, Clone, AsChangeset, Serialize, Deserialize)]
 #[diesel(table_name = alert_rules)]
-pub struct AlertRule {
+pub struct Rule {
     pub id: String,
     pub account_id: String,
     pub name: String,
@@ -53,7 +53,7 @@ pub struct AlertRule {
     pub updated_at: String,
 }
 
-impl AlertRule {
+impl Rule {
     fn validate(&self) -> Result<(), RuleError> {
         if self.account_id.is_empty() {
             return Err(RuleError::ValidationError("Account ID cannot be empty".to_string()));
@@ -71,11 +71,11 @@ impl AlertRule {
     }
 }
 
-pub fn create_rule(rule: &AlertRule) -> Result<(), RuleError> {
+pub fn create_rule(rule: &Rule) -> Result<(), RuleError> {
     rule.validate()?;
     let mut conn = establish_connection();
     let now = Utc::now().to_rfc3339();
-    let new_rule = AlertRule {
+    let new_rule = Rule {
         id: Uuid::new_v4().to_string(),
         account_id: rule.account_id.clone(),
         name: rule.name.clone(),
@@ -93,7 +93,7 @@ pub fn create_rule(rule: &AlertRule) -> Result<(), RuleError> {
     Ok(())
 }
 
-pub fn get_rule(id: &String) -> Result<Option<AlertRule>, RuleError> {
+pub fn get_rule(id: &String) -> Result<Option<Rule>, RuleError> {
     if id.is_empty() {
         return Err(RuleError::ValidationError("Rule ID cannot be empty".to_string()));
     }
@@ -102,7 +102,7 @@ pub fn get_rule(id: &String) -> Result<Option<AlertRule>, RuleError> {
     Ok(result)
 }
 
-pub fn update_rule(rule: &AlertRule) -> Result<(), RuleError> {
+pub fn update_rule(rule: &Rule) -> Result<(), RuleError> {
     rule.validate()?;
     let mut conn = establish_connection();
     diesel::update(alert_rules::table.find(&rule.id))
@@ -120,14 +120,14 @@ pub fn delete_rule(id: &String) -> Result<(), RuleError> {
     Ok(())
 }
 
-pub fn list_rules(account_id: &String) -> Result<Vec<AlertRule>, RuleError> {
+pub fn list_rules(account_id: &String) -> Result<Vec<Rule>, RuleError> {
     if account_id.is_empty() {
         return Err(RuleError::ValidationError("Account ID cannot be empty".to_string()));
     }
     let mut conn = establish_connection();
     let results = alert_rules::table
         .filter(alert_rules::account_id.eq(account_id))
-        .load::<AlertRule>(&mut conn)?;
+        .load::<Rule>(&mut conn)?;
     Ok(results)
 }
 
