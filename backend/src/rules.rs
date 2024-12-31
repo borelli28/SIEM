@@ -69,6 +69,18 @@ pub enum Levels {
     Critical,
 }
 
+impl fmt::Display for Levels {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Levels::Informational => write!(f, "Informational"),
+            Levels::Low => write!(f, "Low"),
+            Levels::Medium => write!(f, "Medium"),
+            Levels::High => write!(f, "High"),
+            Levels::Critical => write!(f, "Critical"),
+        }
+    }
+}
+
 #[derive(Debug, Queryable, Insertable, Clone, AsChangeset, Serialize, Deserialize)]
 #[diesel(table_name = rules)]
 pub struct Rule {
