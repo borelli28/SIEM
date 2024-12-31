@@ -10,20 +10,6 @@ diesel::table! {
 }
 
 diesel::table! {
-    alert_rules (id) {
-        id -> Text,
-        account_id -> Text,
-        name -> Text,
-        description -> Text,
-        condition -> Text,
-        severity -> Text,
-        enabled -> Bool,
-        created_at -> Text,
-        updated_at -> Text,
-    }
-}
-
-diesel::table! {
     alerts (id) {
         id -> Text,
         rule_id -> Text,
@@ -60,16 +46,30 @@ diesel::table! {
     }
 }
 
-diesel::joinable!(alert_rules -> accounts (account_id));
-diesel::joinable!(alerts -> alert_rules (rule_id));
+diesel::table! {
+    rules (id) {
+        id -> Text,
+        account_id -> Text,
+        name -> Text,
+        description -> Text,
+        condition -> Text,
+        severity -> Text,
+        enabled -> Bool,
+        created_at -> Text,
+        updated_at -> Text,
+    }
+}
+
+diesel::joinable!(alerts -> rules (rule_id));
 diesel::joinable!(host -> accounts (account_id));
 diesel::joinable!(logs -> accounts (account_id));
 diesel::joinable!(logs -> host (host_id));
+diesel::joinable!(rules -> accounts (account_id));
 
 diesel::allow_tables_to_appear_in_same_query!(
     accounts,
-    alert_rules,
     alerts,
     host,
     logs,
+    rules,
 );

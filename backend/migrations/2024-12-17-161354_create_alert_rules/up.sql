@@ -1,4 +1,4 @@
-CREATE TABLE alert_rules (
+CREATE TABLE rules (
     id TEXT PRIMARY KEY NOT NULL,
     account_id TEXT NOT NULL,
     name TEXT NOT NULL,

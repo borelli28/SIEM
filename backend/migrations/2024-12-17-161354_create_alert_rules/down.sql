@@ -1,1 +1,1 @@
-DROP TABLE alert_rules;
+DROP TABLE rules;
