@@ -1,13 +1,12 @@
 use crate::database::establish_connection;
 use serde::{Serialize, Deserialize};
-use crate::schema::logs;
-use diesel::prelude::*;
+use rusqlite::{Error as SqliteError, params};
 use uuid::Uuid;
 use std::fmt;
 
 #[derive(Debug)]
 pub enum LogError {
-    DatabaseError(diesel::result::Error),
+    DatabaseError(SqliteError),
     ValidationError(String),
 }
 
@@ -22,14 +21,13 @@ impl fmt::Display for LogError {
 
 impl std::error::Error for LogError {}
 
-impl From<diesel::result::Error> for LogError {
-    fn from(err: diesel::result::Error) -> Self {
+impl From<SqliteError> for LogError {
+    fn from(err: SqliteError) -> Self {
         LogError::DatabaseError(err)
     }
 }
 
-#[derive(Queryable, Insertable, AsChangeset, Debug, Serialize, Deserialize)]
-#[diesel(table_name = logs)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Log {
     pub id: String,
     pub account_id: String,
@@ -59,7 +57,7 @@ impl Log {
 pub fn create_log(log: &Log) -> Result<Log, LogError> {
     log.validate()?;
 
-    let mut conn = establish_connection();
+    let conn = establish_connection()?;
     let new_log = Log {
         id: Uuid::new_v4().to_string(),
         account_id: log.account_id.clone(),
@@ -74,9 +72,24 @@ pub fn create_log(log: &Log) -> Result<Log, LogError> {
         extensions: log.extensions.clone(),
     };
 
-    diesel::insert_into(logs::table)
-        .values(&new_log)
-        .execute(&mut conn)?;
+    conn.execute(
+        "INSERT INTO logs (id, account_id, host_id, version, device_vendor, device_product, 
+         device_version, signature_id, name, severity, extensions) 
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+        params![
+            new_log.id,
+            new_log.account_id,
+            new_log.host_id,
+            new_log.version,
+            new_log.device_vendor,
+            new_log.device_product,
+            new_log.device_version,
+            new_log.signature_id,
+            new_log.name,
+            new_log.severity,
+            new_log.extensions,
+        ],
+    )?;
 
     Ok(new_log)
 }
@@ -86,8 +99,30 @@ pub fn get_log(log_id: &String) -> Result<Option<Log>, LogError> {
         return Err(LogError::ValidationError("Log ID cannot be empty".to_string()));
     }
 
-    let mut conn = establish_connection();
-    Ok(logs::table.find(log_id).first(&mut conn).optional()?)
+    let conn = establish_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT id, account_id, host_id, version, device_vendor, device_product, 
+         device_version, signature_id, name, severity, extensions 
+         FROM logs WHERE id = ?1"
+    )?;
+
+    let log = stmt.query_row(params![log_id], |row| {
+        Ok(Log {
+            id: row.get(0)?,
+            account_id: row.get(1)?,
+            host_id: row.get(2)?,
+            version: row.get(3)?,
+            device_vendor: row.get(4)?,
+            device_product: row.get(5)?,
+            device_version: row.get(6)?,
+            signature_id: row.get(7)?,
+            name: row.get(8)?,
+            severity: row.get(9)?,
+            extensions: row.get(10)?,
+        })
+    }).optional()?;
+
+    Ok(log)
 }
 
 pub fn get_all_logs(account_id: &String) -> Result<Vec<Log>, LogError> {
@@ -95,10 +130,31 @@ pub fn get_all_logs(account_id: &String) -> Result<Vec<Log>, LogError> {
         return Err(LogError::ValidationError("Account ID cannot be empty".to_string()));
     }
 
-    let mut conn = establish_connection();
-    Ok(logs::table
-        .filter(logs::account_id.eq(account_id))
-        .load::<Log>(&mut conn)?)
+    let conn = establish_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT id, account_id, host_id, version, device_vendor, device_product, 
+         device_version, signature_id, name, severity, extensions 
+         FROM logs WHERE account_id = ?1"
+    )?;
+
+    let logs_iter = stmt.query_map(params![account_id], |row| {
+        Ok(Log {
+            id: row.get(0)?,
+            account_id: row.get(1)?,
+            host_id: row.get(2)?,
+            version: row.get(3)?,
+            device_vendor: row.get(4)?,
+            device_product: row.get(5)?,
+            device_version: row.get(6)?,
+            signature_id: row.get(7)?,
+            name: row.get(8)?,
+            severity: row.get(9)?,
+            extensions: row.get(10)?,
+        })
+    })?;
+
+    let logs: Result<Vec<Log>, SqliteError> = logs_iter.collect();
+    Ok(logs?)
 }
 
 pub fn update_log(log_id: &String, updated_log: &Log) -> Result<Log, LogError> {
@@ -107,12 +163,28 @@ pub fn update_log(log_id: &String, updated_log: &Log) -> Result<Log, LogError> {
     }
     updated_log.validate()?;
 
-    let mut conn = establish_connection();
-    diesel::update(logs::table.find(log_id))
-        .set(updated_log)
-        .execute(&mut conn)?;
+    let conn = establish_connection()?;
+    conn.execute(
+        "UPDATE logs SET account_id = ?1, host_id = ?2, version = ?3, device_vendor = ?4, 
+         device_product = ?5, device_version = ?6, signature_id = ?7, name = ?8, 
+         severity = ?9, extensions = ?10 
+         WHERE id = ?11",
+        params![
+            updated_log.account_id,
+            updated_log.host_id,
+            updated_log.version,
+            updated_log.device_vendor,
+            updated_log.device_product,
+            updated_log.device_version,
+            updated_log.signature_id,
+            updated_log.name,
+            updated_log.severity,
+            updated_log.extensions,
+            log_id,
+        ],
+    )?;
 
-    Ok(logs::table.find(log_id).first(&mut conn)?)
+    get_log(log_id)?.ok_or_else(|| LogError::ValidationError("Log not found after update".to_string()))
 }
 
 pub fn delete_log(log_id: &String) -> Result<bool, LogError> {
@@ -120,8 +192,11 @@ pub fn delete_log(log_id: &String) -> Result<bool, LogError> {
         return Err(LogError::ValidationError("Log ID cannot be empty".to_string()));
     }
 
-    let mut conn = establish_connection();
-    let affected_rows = diesel::delete(logs::table.find(log_id))
-        .execute(&mut conn)?;
+    let conn = establish_connection()?;
+    let affected_rows = conn.execute(
+        "DELETE FROM logs WHERE id = ?1",
+        params![log_id],
+    )?;
+
     Ok(affected_rows > 0)
 }
