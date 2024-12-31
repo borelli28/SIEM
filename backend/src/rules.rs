@@ -44,13 +44,13 @@ impl From<serde_json::Error> for RuleError {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct LogSource {
     pub category: String,
     pub product: String,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Default, Clone, Serialize, Deserialize)]
 pub struct Detection {
     pub selection: std::collections::HashMap<String, serde_json::Value>,
     pub condition: String,
