@@ -12,6 +12,21 @@ use uuid::Uuid;
 use serde_json;
 use std::fmt;
 
+impl ToSql<Text, diesel::sqlite::Sqlite> for Vec<String> {
+    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, diesel::sqlite::Sqlite>) -> serialize::Result {
+        let json_string = serde_json::to_string(self)?;
+        out.write_all(json_string.as_bytes())?;
+        Ok(serialize::IsNull::No)
+    }
+}
+
+impl FromSql<Text, diesel::sqlite::Sqlite> for Vec<String> {
+    fn from_sql(bytes: diesel::backend::RawValue<'_, diesel::sqlite::Sqlite>) -> deserialize::Result<Self> {
+        let s = String::from_utf8(bytes.as_bytes().to_vec())?;
+        Ok(serde_json::from_str(&s)?)
+    }
+}
+
 #[derive(Debug)]
 pub enum RuleError {
     DatabaseError(diesel::result::Error),
