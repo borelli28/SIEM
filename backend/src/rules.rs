@@ -1,40 +1,20 @@
-use evalexpr::{eval_boolean_with_context, ContextWithMutableVariables, HashMapContext, 
-    DefaultNumericTypes
-};
-use diesel::{deserialize::FromSqlRow, sql_types::Text, AsExpression, prelude::*};
+use evalexpr::{eval_boolean_with_context, ContextWithMutableVariables, HashMapContext, DefaultNumericTypes };
+use rusqlite::{Error as SqliteError, params};
 use crate::database::establish_connection;
 use crate::alert::{create_alert, Alert};
 use serde::{Serialize, Deserialize};
 use crate::collector::LogEntry;
 use chrono::{DateTime, Utc};
-use crate::schema::rules;
 use uuid::Uuid;
 use serde_json;
 use std::fmt;
 
-use diesel::{serialize, serialize::ToSql, serialize::Output};
-use diesel::{deserialize, deserialize::FromSql};
-
-impl ToSql<Text, diesel::sqlite::Sqlite> for Vec<String> {
-    fn to_sql<'b>(&'b self, out: &mut Output<'b, '_, diesel::sqlite::Sqlite>) -> serialize::Result {
-        let json_string = serde_json::to_string(self)?;
-        out.write_all(json_string.as_bytes())?;
-        Ok(serialize::IsNull::No)
-    }
-}
-
-impl FromSql<Text, diesel::sqlite::Sqlite> for Vec<String> {
-    fn from_sql(bytes: <diesel::sqlite::Sqlite as diesel::backend::Backend>::RawValue) -> deserialize::Result<Self> {
-        let s = String::from_utf8(bytes.as_bytes().to_vec())?;
-        Ok(serde_json::from_str(&s)?)
-    }
-}
-
 #[derive(Debug)]
 pub enum RuleError {
-    DatabaseError(diesel::result::Error),
+    DatabaseError(SqliteError),
     ValidationError(String),
     AlertCreationError(String),
+    SerializationError(String),
 }
 
 impl fmt::Display for RuleError {
@@ -43,15 +23,22 @@ impl fmt::Display for RuleError {
             RuleError::DatabaseError(err) => write!(f, "Database error: {}", err),
             RuleError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
             RuleError::AlertCreationError(msg) => write!(f, "Alert creation error: {}", msg),
+            RuleError::SerializationError(msg) => write!(f, "Serialization error: {}", msg),
         }
     }
 }
 
 impl std::error::Error for RuleError {}
 
-impl From<diesel::result::Error> for RuleError {
-    fn from(err: diesel::result::Error) -> Self {
+impl From<SqliteError> for RuleError {
+    fn from(err: SqliteError) -> Self {
         RuleError::DatabaseError(err)
+    }
+}
+
+impl From<serde_json::Error> for RuleError {
+    fn from(err: serde_json::Error) -> Self {
+        RuleError::SerializationError(err.to_string())
     }
 }
 
@@ -71,14 +58,13 @@ impl fmt::Display for Detection {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "Selection: {{\n")?;
         for (key, value) in &self.selection {
-            write!(f, "  {}: {},\n", key, value)?;
+            write!(f, " {}: {},\n", key, value)?;
         }
         write!(f, "}}\nCondition: {}", self.condition)
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, AsExpression, FromSqlRow)]
-#[diesel(sql_type = Text)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Levels {
     Informational,
     Low,
@@ -99,28 +85,20 @@ impl fmt::Display for Levels {
     }
 }
 
-#[derive(Debug, Insertable, Clone, Serialize, Deserialize)]
-#[diesel(table_name = rules)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Rule {
     pub id: String,
     pub account_id: String,
     pub title: String,
     pub status: String,
     pub description: String,
-    #[diesel(serialize_as = String, deserialize_as = String)]
     pub references: Vec<String>,
-    #[diesel(serialize_as = String, deserialize_as = String)]
     pub tags: Vec<String>,
     pub author: String,
-    #[diesel(serialize_as = String, deserialize_as = String)]
     pub date: DateTime<Utc>,
-    #[diesel(serialize_as = String, deserialize_as = String)]
     pub logsource: LogSource,
-    #[diesel(serialize_as = String, deserialize_as = String)]
     pub detection: Detection,
-    #[diesel(serialize_as = String, deserialize_as = String)]
     pub fields: Vec<String>,
-    #[diesel(serialize_as = String, deserialize_as = String)]
     pub falsepositives: Vec<String>,
     pub level: Levels,
     pub enabled: bool,
@@ -133,14 +111,11 @@ impl Rule {
         if self.account_id.is_empty() {
             return Err(RuleError::ValidationError("Account ID cannot be empty".to_string()));
         }
-        if self.name.is_empty() {
-            return Err(RuleError::ValidationError("Rule name cannot be empty".to_string()));
+        if self.title.is_empty() {
+            return Err(RuleError::ValidationError("Rule title cannot be empty".to_string()));
         }
-        if self.condition.is_empty() {
+        if self.detection.condition.is_empty() {
             return Err(RuleError::ValidationError("Rule condition cannot be empty".to_string()));
-        }
-        if !["Low", "Medium", "High"].contains(&self.severity.as_str()) {
-            return Err(RuleError::ValidationError("Invalid severity level".to_string()));
         }
         Ok(())
     }
@@ -148,8 +123,9 @@ impl Rule {
 
 pub fn create_rule(rule: &Rule) -> Result<(), RuleError> {
     rule.validate()?;
-    let mut conn = establish_connection();
+    let conn = establish_connection()?;
     let now = Utc::now();
+    
     let new_rule = Rule {
         id: Uuid::new_v4().to_string(),
         account_id: rule.account_id.clone(),
@@ -170,9 +146,32 @@ pub fn create_rule(rule: &Rule) -> Result<(), RuleError> {
         updated_at: now.to_rfc3339(),
     };
 
-    diesel::insert_into(rules::table)
-        .values(&new_rule)
-        .execute(&mut conn)?;
+    conn.execute(
+        "INSERT INTO rules (id, account_id, title, status, description, references, tags, 
+         author, date, logsource, detection, fields, falsepositives, level, enabled, 
+         created_at, updated_at) 
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
+        params![
+            new_rule.id,
+            new_rule.account_id,
+            new_rule.title,
+            new_rule.status,
+            new_rule.description,
+            serde_json::to_string(&new_rule.references)?,
+            serde_json::to_string(&new_rule.tags)?,
+            new_rule.author,
+            new_rule.date.to_rfc3339(),
+            serde_json::to_string(&new_rule.logsource)?,
+            serde_json::to_string(&new_rule.detection)?,
+            serde_json::to_string(&new_rule.fields)?,
+            serde_json::to_string(&new_rule.falsepositives)?,
+            serde_json::to_string(&new_rule.level)?,
+            new_rule.enabled,
+            new_rule.created_at,
+            new_rule.updated_at,
+        ],
+    )?;
+
     Ok(())
 }
 
@@ -180,17 +179,68 @@ pub fn get_rule(id: &String) -> Result<Option<Rule>, RuleError> {
     if id.is_empty() {
         return Err(RuleError::ValidationError("Rule ID cannot be empty".to_string()));
     }
-    let mut conn = establish_connection();
-    let result = rules::table.find(id).first(&mut conn).optional()?;
-    Ok(result)
+
+    let conn = establish_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT * FROM rules WHERE id = ?1"
+    )?;
+
+    let rule = stmt.query_row(params![id], |row| {
+        Ok(Rule {
+            id: row.get(0)?,
+            account_id: row.get(1)?,
+            title: row.get(2)?,
+            status: row.get(3)?,
+            description: row.get(4)?,
+            references: serde_json::from_str(&row.get::<_, String>(5)?)?,
+            tags: serde_json::from_str(&row.get::<_, String>(6)?)?,
+            author: row.get(7)?,
+            date: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?).unwrap().with_timezone(&Utc),
+            logsource: serde_json::from_str(&row.get::<_, String>(9)?)?,
+            detection: serde_json::from_str(&row.get::<_, String>(10)?)?,
+            fields: serde_json::from_str(&row.get::<_, String>(11)?)?,
+            falsepositives: serde_json::from_str(&row.get::<_, String>(12)?)?,
+            level: serde_json::from_str(&row.get::<_, String>(13)?)?,
+            enabled: row.get(14)?,
+            created_at: row.get(15)?,
+            updated_at: row.get(16)?,
+        })
+    }).optional()?;
+
+    Ok(rule)
 }
 
 pub fn update_rule(rule: &Rule) -> Result<(), RuleError> {
     rule.validate()?;
-    let mut conn = establish_connection();
-    diesel::update(rules::table.find(&rule.id))
-        .set(rule)
-        .execute(&mut conn)?;
+    let conn = establish_connection()?;
+    
+    conn.execute(
+        "UPDATE rules SET 
+         account_id = ?1, title = ?2, status = ?3, description = ?4, references = ?5,
+         tags = ?6, author = ?7, date = ?8, logsource = ?9, detection = ?10, 
+         fields = ?11, falsepositives = ?12, level = ?13, enabled = ?14,
+         updated_at = ?15 
+         WHERE id = ?16",
+        params![
+            rule.account_id,
+            rule.title,
+            rule.status,
+            rule.description,
+            serde_json::to_string(&rule.references)?,
+            serde_json::to_string(&rule.tags)?,
+            rule.author,
+            rule.date.to_rfc3339(),
+            serde_json::to_string(&rule.logsource)?,
+            serde_json::to_string(&rule.detection)?,
+            serde_json::to_string(&rule.fields)?,
+            serde_json::to_string(&rule.falsepositives)?,
+            serde_json::to_string(&rule.level)?,
+            rule.enabled,
+            Utc::now().to_rfc3339(),
+            rule.id,
+        ],
+    )?;
+
     Ok(())
 }
 
@@ -198,8 +248,9 @@ pub fn delete_rule(id: &String) -> Result<(), RuleError> {
     if id.is_empty() {
         return Err(RuleError::ValidationError("Rule ID cannot be empty".to_string()));
     }
-    let mut conn = establish_connection();
-    diesel::delete(rules::table.find(id)).execute(&mut conn)?;
+    
+    let conn = establish_connection()?;
+    conn.execute("DELETE FROM rules WHERE id = ?1", params![id])?;
     Ok(())
 }
 
@@ -207,17 +258,43 @@ pub fn list_rules(account_id: &String) -> Result<Vec<Rule>, RuleError> {
     if account_id.is_empty() {
         return Err(RuleError::ValidationError("Account ID cannot be empty".to_string()));
     }
-    let mut conn = establish_connection();
-    let results = rules::table
-        .filter(rules::account_id.eq(account_id))
-        .load::<Rule>(&mut conn)?;
-    Ok(results)
+
+    let conn = establish_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT * FROM rules WHERE account_id = ?1"
+    )?;
+
+    let rules_iter = stmt.query_map(params![account_id], |row| {
+        Ok(Rule {
+            id: row.get(0)?,
+            account_id: row.get(1)?,
+            title: row.get(2)?,
+            status: row.get(3)?,
+            description: row.get(4)?,
+            references: serde_json::from_str(&row.get::<_, String>(5)?)?,
+            tags: serde_json::from_str(&row.get::<_, String>(6)?)?,
+            author: row.get(7)?,
+            date: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?).unwrap().with_timezone(&Utc),
+            logsource: serde_json::from_str(&row.get::<_, String>(9)?)?,
+            detection: serde_json::from_str(&row.get::<_, String>(10)?)?,
+            fields: serde_json::from_str(&row.get::<_, String>(11)?)?,
+            falsepositives: serde_json::from_str(&row.get::<_, String>(12)?)?,
+            level: serde_json::from_str(&row.get::<_, String>(13)?)?,
+            enabled: row.get(14)?,
+            created_at: row.get(15)?,
+            updated_at: row.get(16)?,
+        })
+    })?;
+
+    let rules: Result<Vec<Rule>, SqliteError> = rules_iter.collect();
+    Ok(rules?)
 }
 
 pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> Result<Vec<Alert>, RuleError> {
     if account_id.is_empty() {
         return Err(RuleError::ValidationError("Account ID cannot be empty".to_string()));
     }
+
     let rules = list_rules(&account_id)?;
     let mut triggered_alerts = Vec::new();
 
@@ -228,11 +305,12 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
                 id: Uuid::new_v4().to_string(),
                 rule_id: rule.id.clone(),
                 account_id: rule.account_id.clone(),
-                severity: rule.level.clone().to_string(),
+                severity: rule.level.to_string(),
                 message: format!("Alert triggered: {} - {}", rule.title, rule.description),
                 acknowledged: false,
                 created_at: Utc::now().to_rfc3339(),
             };
+
             create_alert(&new_alert).map_err(|e| RuleError::AlertCreationError(e.to_string()))?;
             triggered_alerts.push(new_alert);
         }
@@ -244,7 +322,7 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
 // Evaluate a condition string against a log entry
 fn evaluate_detection(detection: &Detection, log: &LogEntry) -> bool {
     let mut context: HashMapContext<DefaultNumericTypes> = HashMapContext::new();
-
+    
     // Context = Key/Value pairs like Dictionaries
     context.set_value("severity".to_string(), log.severity.clone().into()).unwrap();
     context.set_value("name".to_string(), log.name.clone().into()).unwrap();
@@ -261,7 +339,7 @@ fn evaluate_detection(detection: &Detection, log: &LogEntry) -> bool {
         Ok(result) => result,
         Err(e) => {
             eprintln!("Failed to evaluate condition: {}. Error: {:?}", detection, e);
-            false  // Treat errors as a non-match
+            false // Treat errors as a non-match
         }
     }
 }
