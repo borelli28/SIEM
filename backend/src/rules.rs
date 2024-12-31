@@ -210,7 +210,7 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
                 id: Uuid::new_v4().to_string(),
                 rule_id: rule.id.clone(),
                 account_id: rule.account_id.clone(),
-                severity: rule.severity.clone(),
+                severity: rule.level.clone().to_string(),
                 message: format!("Alert triggered: {} - {}", rule.title, rule.description),
                 acknowledged: false,
                 created_at: Utc::now().to_rfc3339(),
