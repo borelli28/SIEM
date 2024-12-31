@@ -49,6 +49,16 @@ pub struct Detection {
     pub condition: String,
 }
 
+impl fmt::Display for Detection {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        write!(f, "Selection: {{\n")?;
+        for (key, value) in &self.selection {
+            write!(f, "  {}: {},\n", key, value)?;
+        }
+        write!(f, "}}\nCondition: {}", self.condition)
+    }
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, AsExpression, FromSqlRow)]
 #[diesel(sql_type = Text)]
 pub enum Levels {
