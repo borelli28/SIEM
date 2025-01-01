@@ -49,7 +49,7 @@ impl Schema {
                 title TEXT NOT NULL,
                 status TEXT NOT NULL,
                 description TEXT NOT NULL,
-                rule_references TEXT NOT NULL,  -- Changed from 'references'
+                `references` TEXT NOT NULL,  -- Changed from 'references'
                 tags TEXT NOT NULL,
                 author TEXT NOT NULL,
                 date TEXT NOT NULL,
