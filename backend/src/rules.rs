@@ -93,7 +93,8 @@ pub struct Rule {
     pub title: String,
     pub status: String,
     pub description: String,
-    pub references: Vec<String>,
+    #[serde(rename = "references")]
+    pub ref_list: Vec<String>,
     pub tags: Vec<String>,
     pub author: String,
     pub date: String,
@@ -140,7 +141,7 @@ pub fn create_rule(rule: &Rule) -> Result<(), RuleError> {
         title: rule.title.clone(),
         status: rule.status.clone(),
         description: rule.description.clone(),
-        references: rule.references.clone(),
+        ref_list: rule.ref_list.clone(),
         tags: rule.tags.clone(),
         author: rule.author.clone(),
         date: formatted_date,
@@ -155,9 +156,7 @@ pub fn create_rule(rule: &Rule) -> Result<(), RuleError> {
     };
 
     conn.execute(
-        "INSERT INTO rules (id, account_id, title, status, description, references, tags, 
-         author, date, logsource, detection, fields, falsepositives, level, enabled, 
-         created_at, updated_at) 
+        "INSERT INTO rules (id, account_id, title, status, description, ref_list, tags, author, date, logsource, detection, fields, falsepositives, level, enabled, created_at, updated_at) 
          VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, ?16, ?17)",
         params![
             new_rule.id,
@@ -165,7 +164,7 @@ pub fn create_rule(rule: &Rule) -> Result<(), RuleError> {
             new_rule.title,
             new_rule.status,
             new_rule.description,
-            serde_json::to_string(&new_rule.references)?,
+            serde_json::to_string(&new_rule.ref_list)?,
             serde_json::to_string(&new_rule.tags)?,
             new_rule.author,
             new_rule.date,
@@ -200,10 +199,10 @@ pub fn get_rule(id: &String) -> Result<Option<Rule>, RuleError> {
             title: row.get(2)?,
             status: row.get(3)?,
             description: row.get(4)?,
-            references: serde_json::from_str(&row.get::<_, String>(5)?).unwrap_or_default(),
+            ref_list: serde_json::from_str(&row.get::<_, String>(5)?).unwrap_or_default(),
             tags: serde_json::from_str(&row.get::<_, String>(6)?).unwrap_or_default(),
             author: row.get(7)?,
-            date: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?).unwrap().with_timezone(&Utc).to_string(),
+            date: row.get(8)?,
             logsource: serde_json::from_str(&row.get::<_, String>(9)?).unwrap_or_default(),
             detection: serde_json::from_str(&row.get::<_, String>(10)?).unwrap_or_default(),
             fields: serde_json::from_str(&row.get::<_, String>(11)?).unwrap_or_default(),
@@ -224,7 +223,7 @@ pub fn update_rule(rule: &Rule) -> Result<(), RuleError> {
     
     conn.execute(
         "UPDATE rules SET 
-         account_id = ?1, title = ?2, status = ?3, description = ?4, references = ?5,
+         account_id = ?1, title = ?2, status = ?3, description = ?4, ref_list = ?5,
          tags = ?6, author = ?7, date = ?8, logsource = ?9, detection = ?10, 
          fields = ?11, falsepositives = ?12, level = ?13, enabled = ?14,
          updated_at = ?15 
@@ -234,9 +233,10 @@ pub fn update_rule(rule: &Rule) -> Result<(), RuleError> {
             rule.title,
             rule.status,
             rule.description,
-            serde_json::to_string(&rule.references)?,
+            serde_json::to_string(&rule.ref_list)?,
             serde_json::to_string(&rule.tags)?,
             rule.author,
+            rule.date,
             serde_json::to_string(&rule.logsource)?,
             serde_json::to_string(&rule.detection)?,
             serde_json::to_string(&rule.fields)?,
@@ -255,9 +255,10 @@ pub fn delete_rule(id: &String) -> Result<(), RuleError> {
     if id.is_empty() {
         return Err(RuleError::ValidationError("Rule ID cannot be empty".to_string()));
     }
-    
+
     let conn = establish_connection()?;
     conn.execute("DELETE FROM rules WHERE id = ?1", params![id])?;
+
     Ok(())
 }
 
@@ -278,10 +279,10 @@ pub fn list_rules(account_id: &String) -> Result<Vec<Rule>, RuleError> {
             title: row.get(2)?,
             status: row.get(3)?,
             description: row.get(4)?,
-            references: serde_json::from_str(&row.get::<_, String>(5)?).unwrap_or_default(),
+            ref_list: serde_json::from_str(&row.get::<_, String>(5)?).unwrap_or_default(),
             tags: serde_json::from_str(&row.get::<_, String>(6)?).unwrap_or_default(),
             author: row.get(7)?,
-            date: DateTime::parse_from_rfc3339(&row.get::<_, String>(8)?).unwrap().with_timezone(&Utc).to_string(),
+            date: row.get(8)?,
             logsource: serde_json::from_str(&row.get::<_, String>(9)?).unwrap_or_default(),
             detection: serde_json::from_str(&row.get::<_, String>(10)?).unwrap_or_default(),
             fields: serde_json::from_str(&row.get::<_, String>(11)?).unwrap_or_default(),
@@ -306,7 +307,6 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
     let mut triggered_alerts = Vec::new();
 
     for rule in rules {
-        // Added "&" to rule.account_id so we can compare equals types(&String)
         if (rule.enabled) && (&rule.account_id == account_id) && evaluate_detection(&rule.detection, log) {
             let new_alert = Alert {
                 id: Uuid::new_v4().to_string(),
