@@ -12,6 +12,8 @@ use crate::csrf::{CsrfMiddleware, csrf_validator};
 use crate::batch_maker::create_batches;
 use crate::log::{get_all_logs};
 
+use log::{info, error};
+
 pub async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
 }
@@ -207,6 +209,10 @@ pub async fn create_rule_handler(
     csrf: web::Data<CsrfMiddleware>
 ) -> Result<HttpResponse, Error> {
     csrf_validator(&req, &csrf).await?;
+    info!("create_rule_handler()");
+    info!("Rule date: {:?}", rule.date);
+    info!("created date: {:?}", rule.created_at);
+    info!("updated date: {:?}", rule.updated_at);
     match create_rule(&rule) {
         Ok(ok) => Ok(HttpResponse::Ok().json(ok)),
         Err(err) => Ok(HttpResponse::InternalServerError().json(json!({
@@ -289,10 +295,13 @@ pub async fn create_account_handler(
                 "status": "error",
                 "message": format!("Missing required field: {}", field)
             }))),
-            _ => Ok(HttpResponse::InternalServerError().json(json!({
-                "status": "error",
-                "message": "An internal error occurred"
-            })))
+            _ => {
+                error!("Internal server error: {:?}", err);
+                Ok(HttpResponse::InternalServerError().json(json!({
+                    "status": "error",
+                    "message": "An internal error occurred"
+                })))
+            }
         }
     }
 }
