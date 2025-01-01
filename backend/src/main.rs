@@ -5,7 +5,6 @@ mod batch_maker;
 mod message_queue;
 mod rules;
 mod alert;
-mod schema;
 mod handlers;
 mod host;
 mod log;
