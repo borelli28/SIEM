@@ -3,13 +3,12 @@ use rusqlite::{Error as SqliteError, params};
 use crate::database::establish_connection;
 use crate::alert::{create_alert, Alert};
 use serde::{Serialize, Deserialize};
+use rusqlite::OptionalExtension;
 use crate::collector::LogEntry;
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 use serde_json;
 use std::fmt;
-
-use rusqlite::OptionalExtension;
 
 #[derive(Debug)]
 pub enum RuleError {

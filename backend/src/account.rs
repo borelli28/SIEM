@@ -1,11 +1,3 @@
-use crate::database::establish_connection;
-use rusqlite::{Error as SqliteError, params};
-use serde::{Serialize, Deserialize};
-use actix_session::Session;
-use actix_web::HttpRequest;
-use regex::Regex;
-use uuid::Uuid;
-use std::fmt;
 use argon2::{
     password_hash::{
         rand_core::OsRng,
@@ -13,8 +5,15 @@ use argon2::{
     },
     Argon2
 };
-
+use rusqlite::{Error as SqliteError, params};
+use crate::database::establish_connection;
+use serde::{Serialize, Deserialize};
 use rusqlite::OptionalExtension;
+use actix_session::Session;
+use actix_web::HttpRequest;
+use regex::Regex;
+use uuid::Uuid;
+use std::fmt;
 
 #[derive(Debug)]
 pub enum AccountError {

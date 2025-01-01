@@ -1,9 +1,9 @@
-use crate::rules::evaluate_log_against_rules;
-use crate::log::{Log, create_log};
-use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, atomic::{AtomicU16, Ordering}};
-use std::collections::HashMap;
+use crate::rules::evaluate_log_against_rules;
 use crate::global::GLOBAL_MESSAGE_QUEUE;
+use serde::{Deserialize, Serialize};
+use crate::log::{Log, create_log};
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogEntry {

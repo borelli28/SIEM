@@ -1,7 +1,7 @@
-use tokio::sync::Mutex;
 use std::collections::VecDeque;
-use std::sync::Arc;
 use crate::batch_maker::Batch;
+use tokio::sync::Mutex;
+use std::sync::Arc;
 
 #[derive(Clone)]
 pub struct MessageQueue {

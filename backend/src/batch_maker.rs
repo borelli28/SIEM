@@ -1,6 +1,6 @@
-use std::fs::File;
 use std::io::{self, BufReader, BufRead};
 use crate::global::GLOBAL_MESSAGE_QUEUE;
+use std::fs::File;
 
 // A Batch is <= 50 log entries long
 #[derive(Clone)]

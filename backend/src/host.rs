@@ -1,10 +1,9 @@
+use rusqlite::{Error as SqliteError, params};
 use crate::database::establish_connection;
 use std::{fmt, net::IpAddr, str::FromStr};
 use serde::{Serialize, Deserialize};
-use rusqlite::{Error as SqliteError, params};
-use uuid::Uuid;
-
 use rusqlite::OptionalExtension;
+use uuid::Uuid;
 
 #[derive(Debug)]
 pub enum HostError {

@@ -1,11 +1,10 @@
-use rusqlite::{Connection, Error as SqliteError, params};
-use serde::{Deserialize, Serialize};
-use chrono::{Utc, DateTime, ParseError};
-use uuid::Uuid;
+use rusqlite::{Error as SqliteError, params};
 use crate::database::establish_connection;
-use std::fmt;
-
+use chrono::{Utc, DateTime, ParseError};
+use serde::{Deserialize, Serialize};
 use rusqlite::OptionalExtension;
+use uuid::Uuid;
+use std::fmt;
 
 #[derive(Debug, Serialize, Deserialize, PartialEq)]
 pub enum AlertSeverity {
