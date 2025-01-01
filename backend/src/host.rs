@@ -72,7 +72,7 @@ pub fn create_host(host: &Host, account_id: &String) -> Result<(), HostError> {
     };
 
     conn.execute(
-        "INSERT INTO host (id, account_id, ip_address, hostname) VALUES (?1, ?2, ?3, ?4)",
+        "INSERT INTO hosts (id, account_id, ip_address, hostname) VALUES (?1, ?2, ?3, ?4)",
         params![
             new_host.id,
             new_host.account_id,
@@ -91,7 +91,7 @@ pub fn get_host(host_id: &String) -> Result<Option<Host>, HostError> {
 
     let conn = establish_connection()?;
     let mut stmt = conn.prepare(
-        "SELECT id, account_id, ip_address, hostname FROM host WHERE id = ?1"
+        "SELECT id, account_id, ip_address, hostname FROM hosts WHERE id = ?1"
     )?;
 
     let host = stmt.query_row(params![host_id], |row| {
@@ -113,7 +113,7 @@ pub fn get_all_hosts(account_id: &String) -> Result<Vec<Host>, HostError> {
 
     let conn = establish_connection()?;
     let mut stmt = conn.prepare(
-        "SELECT id, account_id, ip_address, hostname FROM host WHERE account_id = ?1"
+        "SELECT id, account_id, ip_address, hostname FROM hosts WHERE account_id = ?1"
     )?;
 
     let hosts_iter = stmt.query_map(params![account_id], |row| {
@@ -134,7 +134,7 @@ pub fn update_host(host: &Host) -> Result<(), HostError> {
 
     let conn = establish_connection()?;
     conn.execute(
-        "UPDATE host SET account_id = ?1, ip_address = ?2, hostname = ?3 WHERE id = ?4",
+        "UPDATE hosts SET account_id = ?1, ip_address = ?2, hostname = ?3 WHERE id = ?4",
         params![
             host.account_id,
             host.ip_address,
@@ -153,7 +153,7 @@ pub fn delete_host(host_id: &String) -> Result<bool, HostError> {
 
     let conn = establish_connection()?;
     let affected_rows = conn.execute(
-        "DELETE FROM host WHERE id = ?1",
+        "DELETE FROM hosts WHERE id = ?1",
         params![host_id],
     )?;
 
@@ -167,7 +167,7 @@ fn hostname_exists(account_id: &String, hostname: &String) -> Result<bool, HostE
 
     let conn = establish_connection()?;
     let mut stmt = conn.prepare(
-        "SELECT COUNT(*) FROM host WHERE account_id = ?1 AND hostname = ?2"
+        "SELECT COUNT(*) FROM hosts WHERE account_id = ?1 AND hostname = ?2"
     )?;
 
     let count: i64 = stmt.query_row(params![account_id, hostname], |row| row.get(0))?;
