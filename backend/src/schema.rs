@@ -1,14 +1,28 @@
 use rusqlite::{Connection, Result};
+use log::{debug, info};
 
 pub struct Schema;
 
 impl Schema {
     pub fn create_all(conn: &Connection) -> Result<()> {
+        debug!("Starting schema creation");
+
+        info!("Creating accounts table");
         Self::create_accounts_table(conn)?;
-        Self::create_alerts_table(conn)?;
-        Self::create_hosts_table(conn)?;
+
+        info!("Creating rules table");
         Self::create_rules_table(conn)?;
+
+        info!("Creating hosts table");
+        Self::create_hosts_table(conn)?;
+
+        info!("Creating alerts table");
+        Self::create_alerts_table(conn)?;
+
+        info!("Creating logs table");
         Self::create_logs_table(conn)?;
+
+        info!("All tables created successfully");
         Ok(())
     }
 
@@ -16,9 +30,9 @@ impl Schema {
         conn.execute(
             "CREATE TABLE IF NOT EXISTS accounts (
                 id TEXT PRIMARY KEY,
-                username TEXT UNIQUE NOT NULL,
+                name TEXT UNIQUE NOT NULL,
                 password TEXT NOT NULL,
-                email TEXT UNIQUE NOT NULL,
+                role TEXT NOT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
             )",
@@ -27,17 +41,26 @@ impl Schema {
         Ok(())
     }
 
-    fn create_alerts_table(conn: &Connection) -> Result<()> {
+    fn create_rules_table(conn: &Connection) -> Result<()> {
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS alerts (
+            "CREATE TABLE IF NOT EXISTS rules (
                 id TEXT PRIMARY KEY,
-                rule_id TEXT NOT NULL,
                 account_id TEXT NOT NULL,
-                severity TEXT NOT NULL,
-                message TEXT NOT NULL,
-                acknowledged BOOLEAN NOT NULL DEFAULT false,
+                title TEXT NOT NULL,
+                status TEXT NOT NULL,
+                description TEXT NOT NULL,
+                rule_references TEXT NOT NULL,  -- Changed from 'references'
+                tags TEXT NOT NULL,
+                author TEXT NOT NULL,
+                date TEXT NOT NULL,
+                logsource TEXT NOT NULL,
+                detection TEXT NOT NULL,
+                fields TEXT NOT NULL,
+                falsepositives TEXT NOT NULL,
+                level TEXT NOT NULL,
+                enabled BOOLEAN NOT NULL DEFAULT true,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY(rule_id) REFERENCES rules(id),
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(account_id) REFERENCES accounts(id)
             )",
             [],
@@ -63,26 +86,17 @@ impl Schema {
         Ok(())
     }
 
-    fn create_rules_table(conn: &Connection) -> Result<()> {
+    fn create_alerts_table(conn: &Connection) -> Result<()> {
         conn.execute(
-            "CREATE TABLE IF NOT EXISTS rules (
+            "CREATE TABLE IF NOT EXISTS alerts (
                 id TEXT PRIMARY KEY,
+                rule_id TEXT NOT NULL,
                 account_id TEXT NOT NULL,
-                title TEXT NOT NULL,
-                status TEXT NOT NULL,
-                description TEXT NOT NULL,
-                references TEXT NOT NULL,
-                tags TEXT NOT NULL,
-                author TEXT NOT NULL,
-                date TEXT NOT NULL,
-                logsource TEXT NOT NULL,
-                detection TEXT NOT NULL,
-                fields TEXT NOT NULL,
-                falsepositives TEXT NOT NULL,
-                level TEXT NOT NULL,
-                enabled BOOLEAN NOT NULL DEFAULT true,
+                severity TEXT NOT NULL,
+                message TEXT NOT NULL,
+                acknowledged BOOLEAN NOT NULL DEFAULT false,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(rule_id) REFERENCES rules(id),
                 FOREIGN KEY(account_id) REFERENCES accounts(id)
             )",
             [],
