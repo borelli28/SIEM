@@ -216,7 +216,7 @@ async function createRule(event) {
             return;
         }
 
-        const response = await fetch('http://localhost:4200/backend/rules', {
+        const response = await fetch(`http://localhost:4200/backend/rule/${user}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
