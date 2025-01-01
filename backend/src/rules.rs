@@ -5,7 +5,7 @@ use crate::alert::{create_alert, Alert};
 use serde::{Serialize, Deserialize};
 use rusqlite::OptionalExtension;
 use crate::collector::LogEntry;
-use chrono::{DateTime, Utc};
+use chrono::{DateTime, Utc, NaiveDateTime};
 use uuid::Uuid;
 use serde_json;
 use std::fmt;
@@ -96,7 +96,7 @@ pub struct Rule {
     pub references: Vec<String>,
     pub tags: Vec<String>,
     pub author: String,
-    pub date: DateTime<Utc>,
+    pub date: String,
     pub logsource: LogSource,
     pub detection: Detection,
     pub fields: Vec<String>,
@@ -120,13 +120,20 @@ impl Rule {
         }
         Ok(())
     }
+
+    fn format_sigma_date(&self) -> Result<String, RuleError> {
+        let parsed_date = NaiveDateTime::parse_from_str(&self.date, "%Y-%m-%d %H:%M:%S")
+            .map_err(|e| RuleError::ValidationError(format!("Invalid date format: {}", e)))?;
+        Ok(parsed_date.format("%Y/%m/%d").to_string())
+    }
 }
 
 pub fn create_rule(rule: &Rule) -> Result<(), RuleError> {
     rule.validate()?;
     let conn = establish_connection()?;
     let now = Utc::now();
-    
+    let formatted_date = rule.format_sigma_date()?;
+
     let new_rule = Rule {
         id: Uuid::new_v4().to_string(),
         account_id: rule.account_id.clone(),
@@ -136,7 +143,7 @@ pub fn create_rule(rule: &Rule) -> Result<(), RuleError> {
         references: rule.references.clone(),
         tags: rule.tags.clone(),
         author: rule.author.clone(),
-        date: now,
+        date: formatted_date,
         logsource: rule.logsource.clone(),
         detection: rule.detection.clone(),
         fields: rule.fields.clone(),
@@ -161,7 +168,7 @@ pub fn create_rule(rule: &Rule) -> Result<(), RuleError> {
             serde_json::to_string(&new_rule.references)?,
             serde_json::to_string(&new_rule.tags)?,
             new_rule.author,
-            new_rule.date.to_rfc3339(),
+            new_rule.date,
             serde_json::to_string(&new_rule.logsource)?,
             serde_json::to_string(&new_rule.detection)?,
             serde_json::to_string(&new_rule.fields)?,
