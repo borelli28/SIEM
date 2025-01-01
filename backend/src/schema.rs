@@ -108,10 +108,16 @@ impl Schema {
         conn.execute(
             "CREATE TABLE IF NOT EXISTS logs (
                 id TEXT PRIMARY KEY,
-                host_id TEXT NOT NULL,
                 account_id TEXT NOT NULL,
-                content TEXT NOT NULL,
-                timestamp DATETIME NOT NULL,
+                host_id TEXT NOT NULL,
+                version TEXT,
+                device_vendor TEXT,
+                device_product TEXT,
+                device_version TEXT,
+                signature_id TEXT,
+                name TEXT,
+                severity TEXT,
+                extensions TEXT,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(host_id) REFERENCES hosts(id),
                 FOREIGN KEY(account_id) REFERENCES accounts(id)
