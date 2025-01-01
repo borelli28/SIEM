@@ -184,6 +184,12 @@ async function createRule(event) {
     event.preventDefault();
 
     try {
+        const currentDate = new Date();
+        // (Sigma rule format: YYYY/MM/DD)
+        const sigmaDate = currentDate.toISOString().replace('T', ' ').split('.')[0];
+        // (Database DATETIME format)
+        const dbTimestamp = currentDate.toISOString().replace('T', ' ').split('.')[0];
+
         const formData = {
             id: crypto.randomUUID(),
             account_id: user,
@@ -193,25 +199,31 @@ async function createRule(event) {
             references: document.getElementById('references').value.split(',').map(s => s.trim()).filter(Boolean),
             tags: document.getElementById('tags').value.split(',').map(s => s.trim()).filter(Boolean),
             author: document.getElementById('author').value,
-            date: new Date().toISOString(),
+            date: sigmaDate,
             logsource: {
                 category: document.getElementById('logsource_category').value,
                 product: document.getElementById('logsource_product').value,
                 service: document.getElementById('logsource_service').value
             },
             detection: {
+                selection: {
+                    [document.getElementById('detection_selection_field').value]: 
+                        document.getElementById('detection_selection_value').value
+                },
                 condition: document.getElementById('detection_condition').value
             },
             fields: document.getElementById('fields').value.split(',').map(s => s.trim()).filter(Boolean),
             falsepositives: document.getElementById('falsepositives').value.split(',').map(s => s.trim()).filter(Boolean),
             level: document.getElementById('level').value,
             enabled: document.getElementById('enabled').checked,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
+            created_at: dbTimestamp,
+            updated_at: dbTimestamp
         };
 
         // Validate required fields
-        if (!formData.title || !formData.description || !formData.detection.condition) {
+        if (!formData.title || !formData.description || 
+            !document.getElementById('detection_selection_field').value || 
+            !document.getElementById('detection_selection_value').value) {
             showAlert('Please fill in all required fields', 'error');
             return;
         }
