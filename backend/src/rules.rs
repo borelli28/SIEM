@@ -1,4 +1,4 @@
-use evalexpr::{eval_boolean_with_context, ContextWithMutableVariables, HashMapContext, DefaultNumericTypes };
+use evalexpr::{eval_boolean_with_context, eval_boolean, ContextWithMutableVariables, HashMapContext, DefaultNumericTypes };
 use rusqlite::{Error as SqliteError, params};
 use chrono::{DateTime, Utc, NaiveDateTime};
 use crate::database::establish_connection;
@@ -9,6 +9,8 @@ use crate::collector::LogEntry;
 use uuid::Uuid;
 use serde_json;
 use std::fmt;
+
+use log::{info, error};
 
 #[derive(Debug)]
 pub enum RuleError {
@@ -299,14 +301,15 @@ pub fn list_rules(account_id: &String) -> Result<Vec<Rule>, RuleError> {
 }
 
 pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> Result<Vec<Alert>, RuleError> {
+    info!("evaluate_log_against_rules()");
     if account_id.is_empty() {
         return Err(RuleError::ValidationError("Account ID cannot be empty".to_string()));
     }
-
     let rules = list_rules(&account_id)?;
     let mut triggered_alerts = Vec::new();
 
     for rule in rules {
+        info!("rule: {:?}", rule);
         if (rule.enabled) && (&rule.account_id == account_id) && evaluate_detection(&rule.detection, log) {
             let new_alert = Alert {
                 id: Uuid::new_v4().to_string(),
@@ -317,7 +320,7 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
                 acknowledged: false,
                 created_at: Utc::now().to_rfc3339(),
             };
-
+            info!("New Alert: {:?}", new_alert);
             create_alert(&new_alert).map_err(|e| RuleError::AlertCreationError(e.to_string()))?;
             triggered_alerts.push(new_alert);
         }
@@ -326,27 +329,79 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
     Ok(triggered_alerts)
 }
 
-// Evaluate a condition string against a log entry
 fn evaluate_detection(detection: &Detection, log: &LogEntry) -> bool {
+    info!("evaluate_detection()");
+    info!("Evaluating log: {:?}", log);  // Add this
+    info!("Against detection: {:?}", detection);  // Add this
+    
     let mut context: HashMapContext<DefaultNumericTypes> = HashMapContext::new();
     
-    // Context = Key/Value pairs like Dictionaries
-    context.set_value("severity".to_string(), log.severity.clone().into()).unwrap();
-    context.set_value("name".to_string(), log.name.clone().into()).unwrap();
-    context.set_value("device_vendor".to_string(), log.device_vendor.clone().into()).unwrap();
-    context.set_value("device_product".to_string(), log.device_product.clone().into()).unwrap();
+    // First, evaluate all selections
+    let mut selection_matches = true;
+    for (field, expected_value) in &detection.selection {
+        // Get the actual value from log entry
+        let actual_value = match field.as_str() {
+            "severity" => &log.severity,
+            "name" => &log.name,
+            "device_vendor" => &log.device_vendor,
+            "device_product" => &log.device_product,
+            _ => {
+                // Check extensions for other fields
+                if let Some(value) = log.extensions.get(field) {
+                    info!("Found extension field {}: {}", field, value);  // Add this
+                    value
+                } else {
+                    info!("Field {} not found in log", field);  // Add this
+                    selection_matches = false;
+                    break;
+                }
+            }
+        };
 
-    // Insert extensions
-    for (key, value) in &log.extensions {
-        context.set_value(key.to_string(), value.clone().into()).unwrap();
+        // Compare values
+        if let Some(expected_str) = expected_value.as_str() {
+            info!("Comparing {} with expected {}", actual_value, expected_str);  // Add this
+            if actual_value != expected_str {
+                info!("Value mismatch for field {}", field);  // Add this
+                selection_matches = false;
+                break;
+            }
+        }
     }
 
-    // Evaluate the condition as a boolean expression using the context
-    match eval_boolean_with_context(&detection.condition, &context) {
-        Ok(result) => result,
+    info!("Selection matches: {}", selection_matches);  // Add this
+    
+    // Set the selection result in context
+    context.set_value("selection".to_string(), selection_matches.into()).unwrap();
+
+    // Add other log fields to context as string comparisons
+    for (key, value) in &log.extensions {
+        let comparison = format!("{}==\"{}\"", key, value);
+        info!("Adding extension comparison: {}", comparison);  // Add this
+        context.set_value(key.to_string(), eval_boolean(&comparison).unwrap_or(false).into()).unwrap();
+    }
+
+    // Convert condition from Sigma format to evalexpr format
+    let condition = detection.condition
+        .replace(" AND ", " && ")
+        .replace(" OR ", " || ")
+        .replace(" NOT ", " !");
+
+    // Add string comparisons to condition
+    let modified_condition = condition
+        .replace("level=\"info\"", &format!("level==\"{}\"", log.extensions.get("level").unwrap_or(&"".to_string())));
+
+    info!("Modified condition: {}", modified_condition);  // Add this
+
+    // Evaluate the modified condition
+    match eval_boolean_with_context(&modified_condition, &context) {
+        Ok(result) => {
+            info!("Condition evaluation result: {}", result);
+            result
+        },
         Err(e) => {
-            eprintln!("Failed to evaluate condition: {}. Error: {:?}", detection, e);
-            false // Treat errors as a non-match
+            error!("Failed to evaluate condition: {}. Error: {:?}", detection, e);
+            false
         }
     }
 }
