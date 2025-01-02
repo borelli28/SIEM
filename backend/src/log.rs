@@ -1,10 +1,9 @@
 use rusqlite::{Error as SqliteError, params};
 use crate::database::establish_connection;
 use serde::{Serialize, Deserialize};
+use rusqlite::OptionalExtension;
 use uuid::Uuid;
 use std::fmt;
-
-use rusqlite::OptionalExtension;
 
 #[derive(Debug)]
 pub enum LogError {
