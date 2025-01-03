@@ -5,13 +5,13 @@ mod batch_maker;
 mod message_queue;
 mod rules;
 mod alert;
-mod schema;
 mod handlers;
 mod host;
 mod log;
 mod account;
 mod auth_session;
 mod csrf;
+mod schema;
 
 use crate::collector::LogCollector;
 use crate::handlers::{

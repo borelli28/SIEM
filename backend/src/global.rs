@@ -1,7 +1,7 @@
-use std::sync::{Arc};
-use tokio::sync::Mutex;
-use lazy_static::lazy_static;
 use crate::message_queue::MessageQueue;
+use lazy_static::lazy_static;
+use tokio::sync::Mutex;
+use std::sync::{Arc};
 
 // Single global message queue instance
 lazy_static! {

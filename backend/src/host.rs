@@ -1,13 +1,13 @@
+use rusqlite::{Error as SqliteError, params};
 use crate::database::establish_connection;
 use std::{fmt, net::IpAddr, str::FromStr};
 use serde::{Serialize, Deserialize};
-use crate::schema::host;
-use diesel::prelude::*;
+use rusqlite::OptionalExtension;
 use uuid::Uuid;
 
 #[derive(Debug)]
 pub enum HostError {
-    DatabaseError(diesel::result::Error),
+    DatabaseError(SqliteError),
     ValidationError(String),
 }
 
@@ -20,14 +20,13 @@ impl fmt::Display for HostError {
     }
 }
 
-impl From<diesel::result::Error> for HostError {
-    fn from(err: diesel::result::Error) -> Self {
+impl From<SqliteError> for HostError {
+    fn from(err: SqliteError) -> Self {
         HostError::DatabaseError(err)
     }
 }
 
-#[derive(Queryable, Insertable, AsChangeset, Debug, Serialize, Deserialize)]
-#[diesel(table_name = host)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Host {
     pub id: String,
     pub account_id: String,
@@ -54,7 +53,7 @@ impl Host {
 pub fn create_host(host: &Host, account_id: &String) -> Result<(), HostError> {
     host.validate()?;
 
-    let mut conn = establish_connection();
+    let conn = establish_connection()?;
     let id = Uuid::new_v4().to_string();
 
     if let Some(ref hostname) = host.hostname {
@@ -72,9 +71,16 @@ pub fn create_host(host: &Host, account_id: &String) -> Result<(), HostError> {
         hostname: host.hostname.clone(),
     };
 
-    diesel::insert_into(host::table)
-        .values(new_host)
-        .execute(&mut conn)?;
+    conn.execute(
+        "INSERT INTO hosts (id, account_id, ip_address, hostname) VALUES (?1, ?2, ?3, ?4)",
+        params![
+            new_host.id,
+            new_host.account_id,
+            new_host.ip_address,
+            new_host.hostname,
+        ],
+    )?;
+    
     Ok(())
 }
 
@@ -83,8 +89,21 @@ pub fn get_host(host_id: &String) -> Result<Option<Host>, HostError> {
         return Err(HostError::ValidationError("Host ID cannot be empty".to_string()));
     }
 
-    let mut conn = establish_connection();
-    Ok(host::table.find(host_id).first(&mut conn).optional()?)
+    let conn = establish_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT id, account_id, ip_address, hostname FROM hosts WHERE id = ?1"
+    )?;
+
+    let host = stmt.query_row(params![host_id], |row| {
+        Ok(Host {
+            id: row.get(0)?,
+            account_id: row.get(1)?,
+            ip_address: row.get(2)?,
+            hostname: row.get(3)?,
+        })
+    }).optional()?;
+
+    Ok(host)
 }
 
 pub fn get_all_hosts(account_id: &String) -> Result<Vec<Host>, HostError> {
@@ -92,19 +111,38 @@ pub fn get_all_hosts(account_id: &String) -> Result<Vec<Host>, HostError> {
         return Err(HostError::ValidationError("Account ID cannot be empty".to_string()));
     }
 
-    let mut conn = establish_connection();
-    Ok(host::table
-        .filter(host::account_id.eq(account_id))
-        .load::<Host>(&mut conn)?)
+    let conn = establish_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT id, account_id, ip_address, hostname FROM hosts WHERE account_id = ?1"
+    )?;
+
+    let hosts_iter = stmt.query_map(params![account_id], |row| {
+        Ok(Host {
+            id: row.get(0)?,
+            account_id: row.get(1)?,
+            ip_address: row.get(2)?,
+            hostname: row.get(3)?,
+        })
+    })?;
+
+    let hosts: Result<Vec<Host>, SqliteError> = hosts_iter.collect();
+    Ok(hosts?)
 }
 
 pub fn update_host(host: &Host) -> Result<(), HostError> {
     host.validate()?;
 
-    let mut conn = establish_connection();
-    diesel::update(host::table.find(&host.id))
-        .set(host)
-        .execute(&mut conn)?;
+    let conn = establish_connection()?;
+    conn.execute(
+        "UPDATE hosts SET account_id = ?1, ip_address = ?2, hostname = ?3 WHERE id = ?4",
+        params![
+            host.account_id,
+            host.ip_address,
+            host.hostname,
+            host.id,
+        ],
+    )?;
+
     Ok(())
 }
 
@@ -113,10 +151,13 @@ pub fn delete_host(host_id: &String) -> Result<bool, HostError> {
         return Err(HostError::ValidationError("Host ID cannot be empty".to_string()));
     }
 
-    let mut conn = establish_connection();
-    let num_deleted = diesel::delete(host::table.find(host_id))
-        .execute(&mut conn)?;
-    Ok(num_deleted > 0)
+    let conn = establish_connection()?;
+    let affected_rows = conn.execute(
+        "DELETE FROM hosts WHERE id = ?1",
+        params![host_id],
+    )?;
+
+    Ok(affected_rows > 0)
 }
 
 fn hostname_exists(account_id: &String, hostname: &String) -> Result<bool, HostError> {
@@ -124,11 +165,11 @@ fn hostname_exists(account_id: &String, hostname: &String) -> Result<bool, HostE
         return Err(HostError::ValidationError("Account ID and/or hostname cannot be empty".to_string()));
     }
 
-    let mut conn = establish_connection();
-    let count: i64 = host::table
-        .filter(host::account_id.eq(account_id))
-        .filter(host::hostname.eq(hostname))
-        .count()
-        .get_result(&mut conn)?;
+    let conn = establish_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT COUNT(*) FROM hosts WHERE account_id = ?1 AND hostname = ?2"
+    )?;
+
+    let count: i64 = stmt.query_row(params![account_id, hostname], |row| row.get(0))?;
     Ok(count > 0)
 }

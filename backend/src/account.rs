@@ -1,13 +1,3 @@
-use crate::database::establish_connection;
-use diesel::result::Error as DieselError;
-use serde::{Serialize, Deserialize};
-use crate::schema::accounts;
-use actix_session::Session;
-use actix_web::HttpRequest;
-use diesel::prelude::*;
-use regex::Regex;
-use uuid::Uuid;
-use std::fmt;
 use argon2::{
     password_hash::{
         rand_core::OsRng,
@@ -15,20 +5,29 @@ use argon2::{
     },
     Argon2
 };
+use rusqlite::{Error as SqliteError, params};
+use crate::database::establish_connection;
+use serde::{Serialize, Deserialize};
+use rusqlite::OptionalExtension;
+use actix_session::Session;
+use actix_web::HttpRequest;
+use regex::Regex;
+use uuid::Uuid;
+use std::fmt;
 
 #[derive(Debug)]
 pub enum AccountError {
     InvalidRole,
-    DieselError(DieselError),
+    DatabaseError(SqliteError),
     PasswordHashError(String),
     ExpectedField(String),
     SessionError(String),
     ValidationError(String),
 }
 
-impl From<DieselError> for AccountError {
-    fn from(error: DieselError) -> Self {
-        AccountError::DieselError(error)
+impl From<SqliteError> for AccountError {
+    fn from(error: SqliteError) -> Self {
+        AccountError::DatabaseError(error)
     }
 }
 
@@ -36,7 +35,7 @@ impl fmt::Display for AccountError {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             AccountError::InvalidRole => write!(f, "Invalid role provided"),
-            AccountError::DieselError(err) => write!(f, "Database error: {}", err),
+            AccountError::DatabaseError(err) => write!(f, "Database error: {}", err),
             AccountError::PasswordHashError(err) => write!(f, "Password hash error: {}", err),
             AccountError::ExpectedField(field) => write!(f, "Missing required field: {}", field),
             AccountError::SessionError(err) => write!(f, "Session Error: {}", err),
@@ -45,8 +44,7 @@ impl fmt::Display for AccountError {
     }
 }
 
-#[derive(Queryable, Insertable, AsChangeset, Debug, Serialize, Deserialize)]
-#[diesel(table_name = accounts)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Account {
     pub id: String,
     pub name: String,
@@ -101,7 +99,7 @@ impl Account {
 }
 
 pub fn create_account(name: String, password: String, role: String) -> Result<usize, AccountError> {
-    let mut conn = establish_connection();
+    let conn = establish_connection()?;
     let id = Uuid::new_v4().to_string();
 
     Account::validate_name(&name)?;
@@ -117,28 +115,30 @@ pub fn create_account(name: String, password: String, role: String) -> Result<us
 
     let hashed_password = Account::hash_password(&password)?;
 
-    let new_account = Account {
-        id,
-        name,
-        password: hashed_password,
-        role,
-    };
-
-    diesel::insert_into(accounts::table)
-        .values(&new_account)
-        .execute(&mut conn)
-        .map_err(AccountError::from)
+    conn.execute(
+        "INSERT INTO accounts (id, name, password, role) VALUES (?1, ?2, ?3, ?4)",
+        params![id, name, hashed_password, role],
+    ).map_err(AccountError::from)
 }
 
 pub fn get_account(id: &String) -> Result<Option<Account>, AccountError> {
     if id.is_empty() {
         return Err(AccountError::ValidationError("Account ID cannot be empty".to_string()));
     }
-    let mut conn = establish_connection();
-    accounts::table.filter(accounts::id.eq(id))
-        .first(&mut conn)
-        .optional()
-        .map_err(AccountError::from)
+    
+    let conn = establish_connection()?;
+    let mut stmt = conn.prepare("SELECT id, name, password, role FROM accounts WHERE id = ?1")?;
+    
+    let account = stmt.query_row(params![id], |row| {
+        Ok(Account {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            password: row.get(2)?,
+            role: row.get(3)?,
+        })
+    }).optional()?;
+
+    Ok(account)
 }
 
 pub fn update_account(account: &Account) -> Result<bool, AccountError> {
@@ -151,10 +151,12 @@ pub fn update_account(account: &Account) -> Result<bool, AccountError> {
         return Err(AccountError::InvalidRole);
     }
 
-    let mut conn = establish_connection();
-    let affected_rows = diesel::update(accounts::table.find(&account.id))
-        .set(account)
-        .execute(&mut conn)?;
+    let conn = establish_connection()?;
+    let affected_rows = conn.execute(
+        "UPDATE accounts SET name = ?1, password = ?2, role = ?3 WHERE id = ?4",
+        params![account.name, account.password, account.role, account.id],
+    )?;
+
     Ok(affected_rows > 0)
 }
 
@@ -162,9 +164,13 @@ pub fn delete_account(id: &String) -> Result<bool, AccountError> {
     if id.is_empty() {
         return Err(AccountError::ValidationError("Account ID cannot be empty".to_string()));
     }
-    let mut conn = establish_connection();
-    let affected_rows = diesel::delete(accounts::table.filter(accounts::id.eq(id)))
-        .execute(&mut conn)?;
+    
+    let conn = establish_connection()?;
+    let affected_rows = conn.execute(
+        "DELETE FROM accounts WHERE id = ?1",
+        params![id],
+    )?;
+
     Ok(affected_rows > 0)
 }
 
@@ -172,11 +178,17 @@ pub fn verify_login(session: &Session, name: &String, password: &String, req: &H
     Account::validate_name(name)?;
     Account::validate_password(password)?;
 
-    let mut conn = establish_connection();
-    let account: Option<Account> = accounts::table
-        .filter(accounts::name.eq(name))
-        .first(&mut conn)
-        .optional()?;
+    let conn = establish_connection()?;
+    let mut stmt = conn.prepare("SELECT id, name, password, role FROM accounts WHERE name = ?1")?;
+    
+    let account = stmt.query_row(params![name], |row| {
+        Ok(Account {
+            id: row.get(0)?,
+            name: row.get(1)?,
+            password: row.get(2)?,
+            role: row.get(3)?,
+        })
+    }).optional()?;
 
     if let Some(account) = account {
         if account.verify_password(password) {
@@ -206,12 +218,10 @@ pub fn verify_login(session: &Session, name: &String, password: &String, req: &H
 
 fn account_exists(name: &String) -> Result<bool, AccountError> {
     Account::validate_name(name)?;
-    let mut conn = establish_connection();
-
-    let count: i64 = accounts::table
-        .filter(accounts::name.eq(name))
-        .count()
-        .get_result(&mut conn)?;
+    let conn = establish_connection()?;
+    
+    let mut stmt = conn.prepare("SELECT COUNT(*) FROM accounts WHERE name = ?1")?;
+    let count: i64 = stmt.query_row(params![name], |row| row.get(0))?;
 
     Ok(count > 0)
 }

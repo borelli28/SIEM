@@ -46,6 +46,109 @@
                 </form>
             </section>
 
+            <section class="rule-form-container">
+                <h2>Add New Rule</h2>
+                <form id="ruleForm">
+                    <!-- Basic Information -->
+                    <div class="form-group">
+                        <label for="title">Title:</label>
+                        <input type="text" id="title" name="title" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="description">Description:</label>
+                        <textarea id="description" name="description" required></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status">Status:</label>
+                        <select id="status" name="status" required>
+                            <option value="experimental">Experimental</option>
+                            <option value="stable">Stable</option>
+                            <option value="deprecated">Deprecated</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="author">Author:</label>
+                        <input type="text" id="author" name="author" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="tags">Tags (comma-separated):</label>
+                        <input type="text" id="tags" name="tags" placeholder="attack.t1234, windows, persistence">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="references">References (comma-separated):</label>
+                        <input type="text" id="references" name="references" placeholder="https://example.com, CVE-2023-1234">
+                    </div>
+
+                    <!-- Log Source -->
+                    <div class="form-group">
+                        <label for="logsource_category">Log Source Category:</label>
+                        <input type="text" id="logsource_category" name="logsource_category">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="logsource_product">Log Source Product:</label>
+                        <input type="text" id="logsource_product" name="logsource_product">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="logsource_service">Log Source Service:</label>
+                        <input type="text" id="logsource_service" name="logsource_service">
+                    </div>
+
+                    <!-- Detection -->
+                    <div class="form-group">
+                        <label for="detection_selection_field">Selection Field:</label>
+                        <input type="text" id="detection_selection_field" name="detection_selection_field" required 
+                               placeholder="field name (e.g., msg, level)">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="detection_selection_value">Selection Value:</label>
+                        <input type="text" id="detection_selection_value" name="detection_selection_value" required 
+                               placeholder="field value (e.g., 'No token provided')">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="detection_condition">Detection Condition:</label>
+                        <input type="text" id="detection_condition" name="detection_condition" required 
+                               placeholder="condition (e.g., selection)" value="selection">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="fields">Fields (comma-separated):</label>
+                        <input type="text" id="fields" name="fields" placeholder="EventID, CommandLine, ProcessName">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="falsepositives">False Positives (comma-separated):</label>
+                        <input type="text" id="falsepositives" name="falsepositives">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="level">Level:</label>
+                        <select id="level" name="level" required>
+                            <option value="Informational">Informational</option>
+                            <option value="Low">Low</option>
+                            <option value="Medium">Medium</option>
+                            <option value="High">High</option>
+                            <option value="Critical">Critical</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="enabled">Enabled:</label>
+                        <input type="checkbox" id="enabled" name="enabled" checked>
+                    </div>
+
+                    <button type="submit">Create Rule</button>
+                </form>
+            </section>
+
             <nav>
                 <a href="/">Back to Dashboard</a>
                 <button id="logout-btn">Logout</button>

@@ -2,15 +2,17 @@ use actix_multipart::form::{tempfile::TempFile, MultipartForm, text::Text};
 use actix_web::{web, HttpResponse, HttpRequest, Responder, Error};
 use actix_session::Session;
 use serde_json::json;
-use crate::collector::{LogCollector, process_logs};
-use crate::batch_maker::create_batches;
-use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert};
-use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delete_host};
-use crate::rules::{AlertRule, create_rule, get_rule, list_rules, update_rule, delete_rule};
-use crate::log::{get_all_logs};
 use crate::account::{Account, AccountError, create_account, get_account, update_account, delete_account, verify_login};
+use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delete_host};
+use crate::rules::{Rule, create_rule, get_rule, list_rules, update_rule, delete_rule};
+use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert};
 use crate::auth_session::{verify_session, invalidate_session};
+use crate::collector::{LogCollector, process_logs};
 use crate::csrf::{CsrfMiddleware, csrf_validator};
+use crate::batch_maker::create_batches;
+use crate::log::{get_all_logs};
+
+use log::{info, error};
 
 pub async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
@@ -203,10 +205,14 @@ pub async fn delete_host_handler(
 //
 pub async fn create_rule_handler(
     req: HttpRequest,
-    rule: web::Json<AlertRule>,
+    rule: web::Json<Rule>,
     csrf: web::Data<CsrfMiddleware>
 ) -> Result<HttpResponse, Error> {
     csrf_validator(&req, &csrf).await?;
+    info!("create_rule_handler()");
+    info!("Rule date: {:?}", rule.date);
+    info!("created date: {:?}", rule.created_at);
+    info!("updated date: {:?}", rule.updated_at);
     match create_rule(&rule) {
         Ok(ok) => Ok(HttpResponse::Ok().json(ok)),
         Err(err) => Ok(HttpResponse::InternalServerError().json(json!({
@@ -238,7 +244,7 @@ pub async fn get_all_rules_handler(account_id: web::Path<String>) -> impl Respon
 
 pub async fn edit_rule_handler(
     req: HttpRequest,
-    rule: web::Json<AlertRule>,
+    rule: web::Json<Rule>,
     csrf: web::Data<CsrfMiddleware>
 ) -> Result<HttpResponse, Error> {
     csrf_validator(&req, &csrf).await?;
@@ -289,10 +295,13 @@ pub async fn create_account_handler(
                 "status": "error",
                 "message": format!("Missing required field: {}", field)
             }))),
-            _ => Ok(HttpResponse::InternalServerError().json(json!({
-                "status": "error",
-                "message": "An internal error occurred"
-            })))
+            _ => {
+                error!("Internal server error: {:?}", err);
+                Ok(HttpResponse::InternalServerError().json(json!({
+                    "status": "error",
+                    "message": "An internal error occurred"
+                })))
+            }
         }
     }
 }

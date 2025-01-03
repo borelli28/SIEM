@@ -1,9 +1,9 @@
-use crate::rules::evaluate_log_against_rules;
-use crate::log::{Log, create_log};
-use serde::{Deserialize, Serialize};
 use std::sync::{Mutex, atomic::{AtomicU16, Ordering}};
-use std::collections::HashMap;
+use crate::rules::evaluate_log_against_rules;
 use crate::global::GLOBAL_MESSAGE_QUEUE;
+use serde::{Deserialize, Serialize};
+use crate::log::{Log, create_log};
+use std::collections::HashMap;
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct LogEntry {
@@ -64,23 +64,61 @@ impl std::fmt::Display for ParseLogError {
 
 impl std::error::Error for ParseLogError {}
 
-pub fn log_parser(cef_str: &str, account_id: &String, host_id_param: &String) -> Result<LogEntry, ParseLogError> {
+/// Parses a CEF (Common Event Format) log string into a LogEntry struct
+/// Example CEF format:
+/// CEF:0|Borelli28|Blog|1.0|3007|Authentication failed|Medium|rt=2024-12-20T00:23:57.409-05:00 level=info msg="No token provided"
+pub fn log_parser(cef_str: &str, account_id: &String, host_id_param: &String) 
+-> Result<LogEntry, ParseLogError> {
+    // Split the CEF string by pipe character into its main components
+    // CEF format has 8 parts: CEF:Version|Vendor|Product|Version|SignatureID|Name|Severity|Extensions
     let parts: Vec<&str> = cef_str.split('|').collect();
-    // Validate CEF format
+
+    // Validate basic CEF format requirements
     if parts.len() != 8 || !parts[0].starts_with("CEF:") {
         return Err(ParseLogError::InvalidCEFFormat);
     }
-    let extension_part = parts[7];
 
+    // Get the extensions part (last part after the 7th pipe)
+    // Contains key-value pairs like: rt=timestamp level=info msg="value with spaces"
+    let extension_part = parts[7];
     let mut extensions = HashMap::new();
-    for pair in extension_part.split_whitespace() {
-        // Split each pair into key and value
-        let kv: Vec<&str> = pair.splitn(2, '=').collect();
-        // If we have both a key & value
-        if kv.len() == 2 {
-            // Insert the key-value pair into the extensions HashMap
-            // We trim quotes from the value and convert both key and value to owned Strings
-            extensions.insert(kv[0].to_string(), kv[1].trim_matches('"').to_string());
+    let mut current_pair = String::new();
+
+    // Track whether we're inside quoted values
+    // This allows handling values that contain spaces
+    let mut in_quotes = false;
+
+    // Process each character in the extensions part
+    for c in extension_part.chars() {
+        match c {
+            // Handle quotes - toggle quote state and include quote in pair
+            '"' => {
+                in_quotes = !in_quotes;  // Toggle between in/out of quotes
+                current_pair.push(c);    // Keep quotes in the string for later trimming
+            }
+            // Handle spaces - only split pairs on spaces outside quotes
+            ' ' if !in_quotes => {
+                // Process the completed key=value pair
+                if !current_pair.is_empty() {
+                    if let Some((key, value)) = current_pair.split_once('=') {
+                        // Remove surrounding quotes from value if present
+                        let value = value.trim_matches('"');
+                        extensions.insert(key.to_string(), value.to_string());
+                    }
+                    current_pair.clear();  // Reset for next pair
+                }
+            }
+            // Collect all other characters into the current pair
+            _ => current_pair.push(c),
+        }
+    }
+
+    // Process the final key-value pair if one exists
+    // Needed because there's no trailing space after the last pair
+    if !current_pair.is_empty() {
+        if let Some((key, value)) = current_pair.split_once('=') {
+            let value = value.trim_matches('"');
+            extensions.insert(key.to_string(), value.to_string());
         }
     }
 
@@ -88,7 +126,7 @@ pub fn log_parser(cef_str: &str, account_id: &String, host_id_param: &String) ->
         host_id: host_id_param.to_string(),
         account_id: account_id.to_string(),
         line_number: 0,
-        version: parts[0].replace("CEF:", ""),
+        version: parts[0].replace("CEF:", ""),     // Remove "CEF:" prefix from version
         device_vendor: parts[1].to_string(),
         device_product: parts[2].to_string(),
         device_version: parts[3].to_string(),
