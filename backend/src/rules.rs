@@ -1,16 +1,15 @@
-use evalexpr::{eval_boolean_with_context, eval_boolean, ContextWithMutableVariables, HashMapContext, DefaultNumericTypes };
 use rusqlite::{Error as SqliteError, params};
-use chrono::{DateTime, Utc, NaiveDateTime};
 use crate::database::establish_connection;
 use crate::alert::{create_alert, Alert};
 use serde::{Serialize, Deserialize};
+use chrono::{Utc, NaiveDateTime};
 use rusqlite::OptionalExtension;
 use crate::collector::LogEntry;
 use uuid::Uuid;
 use serde_json;
 use std::fmt;
 
-use log::{info, error};
+use log::info;
 
 #[derive(Debug)]
 pub enum RuleError {
@@ -222,7 +221,7 @@ pub fn get_rule(id: &String) -> Result<Option<Rule>, RuleError> {
 pub fn update_rule(rule: &Rule) -> Result<(), RuleError> {
     rule.validate()?;
     let conn = establish_connection()?;
-    
+
     conn.execute(
         "UPDATE rules SET 
          account_id = ?1, title = ?2, status = ?3, description = ?4, ref_list = ?5,
@@ -301,16 +300,15 @@ pub fn list_rules(account_id: &String) -> Result<Vec<Rule>, RuleError> {
 }
 
 pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> Result<Vec<Alert>, RuleError> {
-    info!("evaluate_log_against_rules()");
-    if account_id.is_empty() {
-        return Err(RuleError::ValidationError("Account ID cannot be empty".to_string()));
-    }
     let rules = list_rules(&account_id)?;
     let mut triggered_alerts = Vec::new();
 
     for rule in rules {
-        info!("rule: {:?}", rule);
-        if (rule.enabled) && (&rule.account_id == account_id) && evaluate_detection(&rule.detection, log) {
+        if !rule.enabled || &rule.account_id != account_id {
+            continue;
+        }
+
+        if matches_detection(&rule.detection, log) {
             let new_alert = Alert {
                 id: Uuid::new_v4().to_string(),
                 rule_id: rule.id.clone(),
@@ -320,8 +318,9 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
                 acknowledged: false,
                 created_at: Utc::now().to_rfc3339(),
             };
-            info!("New Alert: {:?}", new_alert);
-            create_alert(&new_alert).map_err(|e| RuleError::AlertCreationError(e.to_string()))?;
+            create_alert(&new_alert)
+                .map_err(|e| RuleError::AlertCreationError(e.to_string()))?;
+            info!("Alert created: {:?}", new_alert.message);
             triggered_alerts.push(new_alert);
         }
     }
@@ -329,79 +328,26 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
     Ok(triggered_alerts)
 }
 
-fn evaluate_detection(detection: &Detection, log: &LogEntry) -> bool {
-    info!("evaluate_detection()");
-    info!("Evaluating log: {:?}", log);  // Add this
-    info!("Against detection: {:?}", detection);  // Add this
-    
-    let mut context: HashMapContext<DefaultNumericTypes> = HashMapContext::new();
-    
-    // First, evaluate all selections
-    let mut selection_matches = true;
+fn matches_detection(detection: &Detection, log: &LogEntry) -> bool {
+    info!("Detection: {:?}", detection);
     for (field, expected_value) in &detection.selection {
-        // Get the actual value from log entry
         let actual_value = match field.as_str() {
             "severity" => &log.severity,
             "name" => &log.name,
             "device_vendor" => &log.device_vendor,
             "device_product" => &log.device_product,
-            _ => {
-                // Check extensions for other fields
-                if let Some(value) = log.extensions.get(field) {
-                    info!("Found extension field {}: {}", field, value);  // Add this
-                    value
-                } else {
-                    info!("Field {} not found in log", field);  // Add this
-                    selection_matches = false;
-                    break;
-                }
+            _ => match log.extensions.get(field) {
+                Some(value) => value,
+                None => return false
             }
         };
 
-        // Compare values
-        if let Some(expected_str) = expected_value.as_str() {
-            info!("Comparing {} with expected {}", actual_value, expected_str);  // Add this
-            if actual_value != expected_str {
-                info!("Value mismatch for field {}", field);  // Add this
-                selection_matches = false;
-                break;
-            }
+        if actual_value != expected_value.as_str().unwrap_or("") {
+            info!("Detection values don't match");
+            info!("values don't match: {:?} != {:?}", actual_value, expected_value);
+            return false;
         }
     }
-
-    info!("Selection matches: {}", selection_matches);  // Add this
-    
-    // Set the selection result in context
-    context.set_value("selection".to_string(), selection_matches.into()).unwrap();
-
-    // Add other log fields to context as string comparisons
-    for (key, value) in &log.extensions {
-        let comparison = format!("{}==\"{}\"", key, value);
-        info!("Adding extension comparison: {}", comparison);  // Add this
-        context.set_value(key.to_string(), eval_boolean(&comparison).unwrap_or(false).into()).unwrap();
-    }
-
-    // Convert condition from Sigma format to evalexpr format
-    let condition = detection.condition
-        .replace(" AND ", " && ")
-        .replace(" OR ", " || ")
-        .replace(" NOT ", " !");
-
-    // Add string comparisons to condition
-    let modified_condition = condition
-        .replace("level=\"info\"", &format!("level==\"{}\"", log.extensions.get("level").unwrap_or(&"".to_string())));
-
-    info!("Modified condition: {}", modified_condition);  // Add this
-
-    // Evaluate the modified condition
-    match eval_boolean_with_context(&modified_condition, &context) {
-        Ok(result) => {
-            info!("Condition evaluation result: {}", result);
-            result
-        },
-        Err(e) => {
-            error!("Failed to evaluate condition: {}. Error: {:?}", detection, e);
-            false
-        }
-    }
+    info!("Detection match found!!!!!!!!!!!");
+    return true
 }
