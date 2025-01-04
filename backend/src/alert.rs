@@ -125,13 +125,13 @@ pub fn get_alert(alert_id: &String) -> Result<Option<Alert>, AlertError> {
     if alert_id.is_empty() {
         return Err(AlertError::ValidationError("Alert ID cannot be empty".to_string()));
     }
-    
+
     let conn = establish_connection()?;
     let mut stmt = conn.prepare(
         "SELECT id, rule_id, account_id, severity, message, acknowledged, created_at 
          FROM alerts WHERE id = ?1"
     )?;
-    
+
     let alert = stmt.query_row(params![alert_id], |row| {
         Ok(Alert {
             id: row.get(0)?,
@@ -151,14 +151,14 @@ pub fn list_alerts(acct_id: &String) -> Result<Vec<Alert>, AlertError> {
     if acct_id.is_empty() {
         return Err(AlertError::ValidationError("Account ID cannot be empty".to_string()));
     }
-    
+
     let conn = establish_connection()?;
     let mut stmt = conn.prepare(
         "SELECT id, rule_id, account_id, severity, message, acknowledged, created_at 
          FROM alerts WHERE account_id = ?1 
          ORDER BY created_at DESC"
     )?;
-    
+
     let alerts_iter = stmt.query_map(params![acct_id], |row| {
         Ok(Alert {
             id: row.get(0)?,
@@ -179,7 +179,7 @@ pub fn delete_alert(alert_id: &String) -> Result<bool, AlertError> {
     if alert_id.is_empty() {
         return Err(AlertError::ValidationError("Alert ID cannot be empty".to_string()));
     }
-    
+
     let conn = establish_connection()?;
     let affected_rows = conn.execute(
         "DELETE FROM alerts WHERE id = ?1",
@@ -193,7 +193,7 @@ pub fn acknowledge_alert(alert_id: &String) -> Result<bool, AlertError> {
     if alert_id.is_empty() {
         return Err(AlertError::ValidationError("Alert ID cannot be empty".to_string()));
     }
-    
+
     let conn = establish_connection()?;
     let affected_rows = conn.execute(
         "UPDATE alerts SET acknowledged = TRUE WHERE id = ?1",
