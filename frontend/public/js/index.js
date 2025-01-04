@@ -1,28 +1,13 @@
 import { getAuthenticationStatus, checkAuth, logout } from '../../services/authService.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
-    const alertContainer = document.getElementById('alert-container');
-    const alertsBody = document.getElementById('alerts-body');
     const ctx = document.getElementById('logsChart').getContext('2d');
-
-    let alerts = [
-        { id: 1, ruleName: 'Suspicious Login', host: '192.168.1.100', severity: 'High' },
-        { id: 2, ruleName: 'Failed SSH Attempts', host: '192.168.1.101', severity: 'Medium' },
-        { id: 3, ruleName: 'Unusual Network Traffic', host: '192.168.1.102', severity: 'Low' },
-    ];
 
     await checkAuth();
     if (!getAuthenticationStatus()) {
         window.location.href = '/login';
         return;
     }
-
-    // Load Alerts
-    alerts.forEach(alert => {
-        const row = document.createElement('tr');
-        row.innerHTML = `<td>${alert.ruleName}</td><td>${alert.host}</td><td>${alert.severity}</td>`;
-        alertsBody.appendChild(row);
-    });
 
     // Chart
     new Chart(ctx, {
