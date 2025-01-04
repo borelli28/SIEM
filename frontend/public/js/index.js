@@ -127,7 +127,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Log Analysis - Severity and Time Distribution'
+                    text: 'Severity and Time Distribution'
                 },
                 legend: {
                     display: false
