@@ -48,6 +48,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 async function fetchFilteredLogs(filterParams) {
     try {
+        filterParams.id = "dummy-id";
+        filterParams.host_id = "dummy-host";
+
         const queryString = new URLSearchParams(filterParams).toString();
         const response = await fetch(`http://localhost:4200/backend/log/filter?${queryString}`, {
             method: 'GET',
