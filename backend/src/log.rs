@@ -158,36 +158,6 @@ pub fn get_all_logs(account_id: &String) -> Result<Vec<Log>, LogError> {
     Ok(logs?)
 }
 
-pub fn update_log(log_id: &String, updated_log: &Log) -> Result<Log, LogError> {
-    if log_id.is_empty() {
-        return Err(LogError::ValidationError("Log ID cannot be empty".to_string()));
-    }
-    updated_log.validate()?;
-
-    let conn = establish_connection()?;
-    conn.execute(
-        "UPDATE logs SET account_id = ?1, host_id = ?2, version = ?3, device_vendor = ?4, 
-         device_product = ?5, device_version = ?6, signature_id = ?7, name = ?8, 
-         severity = ?9, extensions = ?10 
-         WHERE id = ?11",
-        params![
-            updated_log.account_id,
-            updated_log.host_id,
-            updated_log.version,
-            updated_log.device_vendor,
-            updated_log.device_product,
-            updated_log.device_version,
-            updated_log.signature_id,
-            updated_log.name,
-            updated_log.severity,
-            updated_log.extensions,
-            log_id,
-        ],
-    )?;
-
-    get_log(log_id)?.ok_or_else(|| LogError::ValidationError("Log not found after update".to_string()))
-}
-
 pub fn delete_log(log_id: &String) -> Result<bool, LogError> {
     if log_id.is_empty() {
         return Err(LogError::ValidationError("Log ID cannot be empty".to_string()));
