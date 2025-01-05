@@ -75,17 +75,24 @@ function displayLogs(logs) {
     logsBody.innerHTML = '';
     
     if (!logs || logs.length === 0) {
-        logsBody.innerHTML = '<tr><td colspan="4">No logs found based on your criteria</td></tr>';
+        logsBody.innerHTML = '<tr><td colspan="11">No logs found based on your criteria</td></tr>';
         return;
     }
 
     logs.forEach(log => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td>${new Date(log.created_at).toLocaleString()}</td>
+            <td>${log.id}</td>
+            <td>${log.host_id}</td>
+            <td>${log.version || 'N/A'}</td>
+            <td>${log.device_vendor || 'N/A'}</td>
             <td>${log.device_product || 'N/A'}</td>
+            <td>${log.device_version || 'N/A'}</td>
+            <td>${log.signature_id || 'N/A'}</td>
             <td>${log.name || 'N/A'}</td>
             <td>${log.severity || 'N/A'}</td>
+            <td>${log.extensions || 'N/A'}</td>
+            <td>${new Date(log.created_at).toLocaleString()}</td>
         `;
         logsBody.appendChild(row);
     });
