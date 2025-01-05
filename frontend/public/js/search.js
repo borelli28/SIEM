@@ -1,31 +1,111 @@
-import { logout } from '../../services/authService.js';
+import { getAuthenticationStatus, logout, checkAuth, user } from '../../services/authService.js';
+import { getCsrfToken } from '../../services/csrfService.js';
 
-document.addEventListener('DOMContentLoaded', () => {
+let csrfToken;
+const formId = 'search-log-form';
+
+function showAlert(message, type = 'error') {
     const alertContainer = document.getElementById('alert-container');
+    alertContainer.innerHTML = `<div class="alert ${type}">${message}</div>`;
+    setTimeout(() => {
+        alertContainer.innerHTML = '';
+    }, 5000);
+}
 
-    // Listen for logout button click
+async function fetchCsrfToken() {
+    try {
+        csrfToken = await getCsrfToken(formId);
+    } catch (error) {
+        console.error('Error fetching CSRF token:', error);
+        showAlert('Error fetching CSRF token', 'error');
+    }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+    await checkAuth();
+    if (!getAuthenticationStatus()) {
+        window.location.href = '/login';
+        return;
+    }
+    await fetchCsrfToken();
+
+    // Initial load of all logs
+    await fetchFilteredLogs({
+        account_id: user,
+        severity: 'all',
+        device_product: 'all'
+    });
+
     document.getElementById('logout-btn').addEventListener('click', async () => {
         const result = await logout();
         if (result.success) {
-            window.location.href = '/login.html';
+            window.location.href = '/login';
         } else {
-            alertContainer.innerHTML = `<div class="alert error">${result.message}</div>`;
+            showAlert(result.message, 'error');
         }
     });
 });
 
-// Function to handle search form submission
-async function handleSearch(event) {
-    event.preventDefault();
-    const searchQuery = document.getElementById('searchQuery').value;
-    const startDate = document.getElementById('startDate').value;
-    const endDate = document.getElementById('endDate').value;
-    const logType = document.getElementById('logType').value;
-    const severity = document.getElementById('severity').value;
-    const logsBody = document.getElementById('logs-body');
+async function fetchFilteredLogs(filterParams) {
+    try {
+        const queryString = new URLSearchParams(filterParams).toString();
+        const response = await fetch(`http://localhost:4200/backend/log/filter?${queryString}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include'
+        });
 
-    // Here you would typically fetch the logs from the backend based on the search criteria
-    logsBody.innerHTML = '<tr><td>No logs found based on your criteria</td></tr>'; // Mock implementation
+        if (!response.ok) {
+            throw new Error('Failed to fetch logs');
+        }
+
+        const logs = await response.json();
+        displayLogs(logs);
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('Failed to fetch logs', 'error');
+    }
+}
+
+function displayLogs(logs) {
+    const logsBody = document.getElementById('logs-body');
+    logsBody.innerHTML = '';
     
-    console.log('Searching with criteria:', { searchQuery, startDate, endDate, logType, severity });
+    if (!logs || logs.length === 0) {
+        logsBody.innerHTML = '<tr><td colspan="4">No logs found based on your criteria</td></tr>';
+        return;
+    }
+
+    logs.forEach(log => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${new Date(log.created_at).toLocaleString()}</td>
+            <td>${log.device_product || 'N/A'}</td>
+            <td>${log.name || 'N/A'}</td>
+            <td>${log.severity || 'N/A'}</td>
+        `;
+        logsBody.appendChild(row);
+    });
+}
+
+window.handleSearch = async function(event) {
+    event.preventDefault();
+    
+    const filterParams = {
+        account_id: user,
+        created_after: document.getElementById('startDate').value || undefined,
+        created_before: document.getElementById('endDate').value || undefined,
+        severity: document.getElementById('severity').value,
+        device_product: document.getElementById('logType').value
+    };
+
+    // Remove undefined values
+    Object.keys(filterParams).forEach(key => 
+        filterParams[key] === undefined && delete filterParams[key]
+    );
+
+    await fetchFilteredLogs(filterParams);
 }
