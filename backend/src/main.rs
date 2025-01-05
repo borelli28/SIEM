@@ -12,6 +12,7 @@ mod account;
 mod auth_session;
 mod csrf;
 mod schema;
+mod eql;
 
 use crate::collector::LogCollector;
 use crate::handlers::{
