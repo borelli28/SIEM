@@ -1,7 +1,7 @@
-use rusqlite::{Error as SqliteError, params};
+use rusqlite::{Error as SqliteError, ToSql, params, params_from_iter};
+use crate::eql::{EqlParser, QueryBuilder};
 use crate::database::establish_connection;
 use serde::{Serialize, Deserialize};
-use rusqlite::OptionalExtension;
 use uuid::Uuid;
 use std::fmt;
 
@@ -95,19 +95,22 @@ pub fn create_log(log: &Log) -> Result<Log, LogError> {
     Ok(new_log)
 }
 
-pub fn get_log(log_id: &String) -> Result<Option<Log>, LogError> {
-    if log_id.is_empty() {
-        return Err(LogError::ValidationError("Log ID cannot be empty".to_string()));
-    }
+pub fn get_query_logs(eql_query: &str) -> Result<Vec<Log>, LogError> {
+    let tokens = EqlParser::parse(eql_query)
+        .map_err(|e| LogError::ValidationError(e.to_string()))?;
+
+    let (query, params) = QueryBuilder::build_query(tokens)
+        .map_err(|e| LogError::ValidationError(e.to_string()))?;
 
     let conn = establish_connection()?;
-    let mut stmt = conn.prepare(
-        "SELECT id, account_id, host_id, version, device_vendor, device_product, 
-         device_version, signature_id, name, severity, extensions 
-         FROM logs WHERE id = ?1"
-    )?;
+    let mut stmt = conn.prepare(&query)?;
 
-    let log = stmt.query_row(params![log_id], |row| {
+    // Convert parameters to &dyn ToSql
+    let sql_params: Vec<&dyn ToSql> = params.iter()
+        .map(|p| p as &dyn ToSql)
+        .collect();
+
+    let log_iter = stmt.query_map(params_from_iter(sql_params.iter().copied()), |row| {
         Ok(Log {
             id: row.get(0)?,
             account_id: row.get(1)?,
@@ -121,9 +124,14 @@ pub fn get_log(log_id: &String) -> Result<Option<Log>, LogError> {
             severity: row.get(9)?,
             extensions: row.get(10)?,
         })
-    }).optional()?;
+    })?;
 
-    Ok(log)
+    let mut logs = Vec::new();
+    for log in log_iter {
+        logs.push(log?);
+    }
+
+    Ok(logs)
 }
 
 pub fn get_all_logs(account_id: &String) -> Result<Vec<Log>, LogError> {
