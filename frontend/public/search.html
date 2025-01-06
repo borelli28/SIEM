@@ -13,26 +13,21 @@
             <div id="alert-container"></div>
             <form onsubmit="handleSearch(event)">
                 <div class="search-controls">
-                    <input type="text" id="searchQuery" placeholder="Search logs...">
-                    <input type="date" id="startDate">
-                    <input type="date" id="endDate">
-                    <select id="logType">
-                        <option value="all">All Log Types</option>
-                        <option value="system">System</option>
-                        <option value="security">Security</option>
-                        <option value="application">Application</option>
-                        <option value="network">Network</option>
-                    </select>
-                    <select id="severity">
-                        <option value="all">All Severities</option>
-                        <option value="info">Info</option>
-                        <option value="warning">Warning</option>
-                        <option value="error">Error</option>
-                        <option value="critical">Critical</option>
-                    </select>
-                    <input type="text" id="signatureId" placeholder="Signature ID">
-                    <input type="text" id="deviceVendor" placeholder="Device Vendor">
-                    <input type="text" id="hostId" placeholder="Host ID">
+                    <div class="eql-input-container">
+                        <textarea 
+                            id="eqlQuery" 
+                            placeholder="Enter EQL query (e.g., severity = &quot;high&quot; AND device_vendor = &quot;cisco&quot;)"
+                            rows="3"
+                        ></textarea>
+                        <div class="eql-help">
+                            <h4>EQL Query Examples:</h4>
+                            <ul>
+                                <li>severity = "high" AND device_vendor = "cisco"</li>
+                                <li>device_product = "firewall" AND @timestamp[>2023-01-01]</li>
+                                <li>signature_id = "500" OR severity = "critical"</li>
+                            </ul>
+                        </div>
+                    </div>
                     <button type="submit">Search</button>
                 </div>
             </form>

@@ -29,13 +29,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     await fetchCsrfToken();
 
-    // Initial load of all logs
-    await fetchFilteredLogs({
-        account_id: user,
-        severity: 'all',
-        device_product: 'all'
-    });
-
     document.getElementById('logout-btn').addEventListener('click', async () => {
         const result = await logout();
         if (result.success) {
@@ -46,13 +39,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-async function fetchFilteredLogs(filterParams) {
+async function fetchFilteredLogs(query) {
     try {
-        filterParams.id = "dummy-id";
-        filterParams.host_id = "dummy-host";
+        const params = new URLSearchParams({
+            query: query,
+            account_id: user
+        });
 
-        const queryString = new URLSearchParams(filterParams).toString();
-        const response = await fetch(`http://localhost:4200/backend/log/filter?${queryString}`, {
+        const response = await fetch(`http://localhost:4200/backend/log/filter?${params}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -62,14 +56,15 @@ async function fetchFilteredLogs(filterParams) {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to fetch logs');
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to fetch logs');
         }
 
         const logs = await response.json();
         displayLogs(logs);
     } catch (error) {
         console.error('Error:', error);
-        showAlert('Failed to fetch logs', 'error');
+        showAlert(error.message, 'error');
     }
 }
 
@@ -104,18 +99,12 @@ function displayLogs(logs) {
 window.handleSearch = async function(event) {
     event.preventDefault();
     
-    const filterParams = {
-        account_id: user,
-        created_after: document.getElementById('startDate').value || undefined,
-        created_before: document.getElementById('endDate').value || undefined,
-        severity: document.getElementById('severity').value,
-        device_product: document.getElementById('logType').value
-    };
+    const eqlQuery = document.getElementById('eqlQuery').value.trim();
+    
+    if (!eqlQuery) {
+        showAlert('Please enter a search query', 'error');
+        return;
+    }
 
-    // Remove undefined values
-    Object.keys(filterParams).forEach(key => 
-        filterParams[key] === undefined && delete filterParams[key]
-    );
-
-    await fetchFilteredLogs(filterParams);
+    await fetchFilteredLogs(eqlQuery);
 }
