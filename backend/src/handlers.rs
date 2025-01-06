@@ -1,6 +1,7 @@
 use actix_multipart::form::{tempfile::TempFile, MultipartForm, text::Text};
 use actix_web::{web, HttpResponse, HttpRequest, Responder, Error};
 use actix_session::Session;
+use serde::Deserialize;
 use serde_json::json;
 use crate::account::{Account, AccountError, create_account, get_account, update_account, delete_account, verify_login};
 use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delete_host};
@@ -10,7 +11,7 @@ use crate::auth_session::{verify_session, invalidate_session};
 use crate::collector::{LogCollector, process_logs};
 use crate::csrf::{CsrfMiddleware, csrf_validator};
 use crate::batch_maker::create_batches;
-use crate::log::{get_all_logs};
+use crate::log::{get_all_logs, get_query_logs};
 
 use log::{info, error};
 
@@ -38,6 +39,12 @@ pub struct UploadForm {
     log_file: TempFile,
     account_id: Text<String>,
     host_id: Text<String>,
+}
+
+#[derive(Deserialize)]
+pub struct QueryParams {
+    query: String,
+    account_id: String,
 }
 
 pub async fn import_log_handler(
@@ -78,6 +85,29 @@ pub async fn get_logs_handler(account_id: web::Path<String>) -> impl Responder {
             "status": "error",
             "message": err.to_string()
         }))
+    }
+}
+
+pub async fn get_query_logs_handler(
+    query_params: web::Query<QueryParams>,
+    _req: HttpRequest,
+) -> Result<HttpResponse, Error> {
+    if query_params.account_id.is_empty() {
+        return Ok(HttpResponse::BadRequest().json(json!({
+            "error": "Account ID is required"
+        })));
+    }
+
+    let query = format!("account_id = \"{}\" AND ({})", 
+        query_params.account_id,
+        query_params.query
+    );
+
+    match get_query_logs(&query) {
+        Ok(logs) => Ok(HttpResponse::Ok().json(logs)),
+        Err(e) => Ok(HttpResponse::InternalServerError().json(json!({
+            "error": e.to_string()
+        })))
     }
 }
 
