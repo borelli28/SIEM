@@ -6,41 +6,35 @@ body {
 }
 
 #container {
-    max-width: 800px;
+    max-width: 1200px;
     margin: auto;
     padding: 20px;
 }
 
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
-}
-
 .alert {
-  margin: 16px 0;
-  padding: 10px;
-  border-radius: 5px;
-  font-weight: bold;
+    margin: 16px 0;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
 }
 
 .success {
-  background-color: #d4edda;
-  color: #155724;
+    background-color: #d4edda;
+    color: #155724;
 }
 
 .error {
-  background-color: #f8d7da;
-  color: #721c24;
+    background-color: #f8d7da;
+    color: #721c24;
 }
 
 #logout-btn {
-  background-color: #CC0000;
+    background-color: #CC0000;
+    color: white;
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .eql-input-container {
@@ -79,4 +73,52 @@ th, td {
 
 .eql-help li {
     margin-bottom: 0.25rem;
+}
+
+.logs-container {
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 20px;
+    margin: 20px 0;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.logs-container pre {
+    margin: 0;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #333;
+}
+
+button[type="submit"] {
+    background-color: #007bff;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button[type="submit"]:hover {
+    background-color: #0056b3;
+}
+
+nav {
+    margin-top: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+nav a {
+    color: #007bff;
+    text-decoration: none;
+}
+
+nav a:hover {
+    text-decoration: underline;
 }
