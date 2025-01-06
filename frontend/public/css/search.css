@@ -42,3 +42,41 @@ th, td {
 #logout-btn {
   background-color: #CC0000;
 }
+
+.eql-input-container {
+    width: 100%;
+    margin-bottom: 1rem;
+}
+
+.eql-input-container textarea {
+    width: 100%;
+    padding: 10px;
+    font-family: monospace;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    resize: vertical;
+}
+
+.eql-help {
+    margin-top: 0.5rem;
+    padding: 10px;
+    background-color: #f8f9fa;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.eql-help h4 {
+    margin: 0 0 0.5rem 0;
+    color: #666;
+}
+
+.eql-help ul {
+    margin: 0;
+    padding-left: 20px;
+    color: #666;
+}
+
+.eql-help li {
+    margin-bottom: 0.25rem;
+}

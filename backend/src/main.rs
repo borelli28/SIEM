@@ -12,11 +12,13 @@ mod account;
 mod auth_session;
 mod csrf;
 mod schema;
+mod eql;
 
 use crate::collector::LogCollector;
 use crate::handlers::{
     index,
     import_log_handler,
+    get_query_logs_handler,
     get_alert_handler,
     get_all_alerts_handler,
     delete_alert_handler,
@@ -111,6 +113,7 @@ async fn main() -> std::io::Result<()> {
                         web::scope("/log")
                             .route("/import", web::post().to(import_log_handler))
                             .route("/all/{account_id}", web::get().to(get_logs_handler))
+                            .route("/filter", web::get().to(get_query_logs_handler))
                     )
                     .service(
                         web::scope("/alert")

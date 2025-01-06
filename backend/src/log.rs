@@ -1,7 +1,7 @@
-use rusqlite::{Error as SqliteError, params};
+use rusqlite::{Error as SqliteError, ToSql, params, params_from_iter};
+use crate::eql::{EqlParser, QueryBuilder};
 use crate::database::establish_connection;
 use serde::{Serialize, Deserialize};
-use rusqlite::OptionalExtension;
 use uuid::Uuid;
 use std::fmt;
 
@@ -95,19 +95,22 @@ pub fn create_log(log: &Log) -> Result<Log, LogError> {
     Ok(new_log)
 }
 
-pub fn get_log(log_id: &String) -> Result<Option<Log>, LogError> {
-    if log_id.is_empty() {
-        return Err(LogError::ValidationError("Log ID cannot be empty".to_string()));
-    }
+pub fn get_query_logs(eql_query: &str) -> Result<Vec<Log>, LogError> {
+    let tokens = EqlParser::parse(eql_query)
+        .map_err(|e| LogError::ValidationError(e.to_string()))?;
+
+    let (query, params) = QueryBuilder::build_query(tokens)
+        .map_err(|e| LogError::ValidationError(e.to_string()))?;
 
     let conn = establish_connection()?;
-    let mut stmt = conn.prepare(
-        "SELECT id, account_id, host_id, version, device_vendor, device_product, 
-         device_version, signature_id, name, severity, extensions 
-         FROM logs WHERE id = ?1"
-    )?;
+    let mut stmt = conn.prepare(&query)?;
 
-    let log = stmt.query_row(params![log_id], |row| {
+    // Convert parameters to &dyn ToSql
+    let sql_params: Vec<&dyn ToSql> = params.iter()
+        .map(|p| p as &dyn ToSql)
+        .collect();
+
+    let log_iter = stmt.query_map(params_from_iter(sql_params.iter().copied()), |row| {
         Ok(Log {
             id: row.get(0)?,
             account_id: row.get(1)?,
@@ -121,9 +124,14 @@ pub fn get_log(log_id: &String) -> Result<Option<Log>, LogError> {
             severity: row.get(9)?,
             extensions: row.get(10)?,
         })
-    }).optional()?;
+    })?;
 
-    Ok(log)
+    let mut logs = Vec::new();
+    for log in log_iter {
+        logs.push(log?);
+    }
+
+    Ok(logs)
 }
 
 pub fn get_all_logs(account_id: &String) -> Result<Vec<Log>, LogError> {
@@ -156,36 +164,6 @@ pub fn get_all_logs(account_id: &String) -> Result<Vec<Log>, LogError> {
 
     let logs: Result<Vec<Log>, SqliteError> = logs_iter.collect();
     Ok(logs?)
-}
-
-pub fn update_log(log_id: &String, updated_log: &Log) -> Result<Log, LogError> {
-    if log_id.is_empty() {
-        return Err(LogError::ValidationError("Log ID cannot be empty".to_string()));
-    }
-    updated_log.validate()?;
-
-    let conn = establish_connection()?;
-    conn.execute(
-        "UPDATE logs SET account_id = ?1, host_id = ?2, version = ?3, device_vendor = ?4, 
-         device_product = ?5, device_version = ?6, signature_id = ?7, name = ?8, 
-         severity = ?9, extensions = ?10 
-         WHERE id = ?11",
-        params![
-            updated_log.account_id,
-            updated_log.host_id,
-            updated_log.version,
-            updated_log.device_vendor,
-            updated_log.device_product,
-            updated_log.device_version,
-            updated_log.signature_id,
-            updated_log.name,
-            updated_log.severity,
-            updated_log.extensions,
-            log_id,
-        ],
-    )?;
-
-    get_log(log_id)?.ok_or_else(|| LogError::ValidationError("Log not found after update".to_string()))
 }
 
 pub fn delete_log(log_id: &String) -> Result<bool, LogError> {
