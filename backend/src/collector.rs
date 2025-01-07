@@ -153,6 +153,7 @@ pub async fn process_logs(collector: &LogCollector, account_id: String, host_id:
             .map_err(|e| ParseLogError::DatabaseError(format!("Failed to serialize extensions: {}", e)))?;
         let new_log = Log {
             id: String::new(),
+            hash: String::from("Temp hash"),
             account_id: log_entry.account_id.clone(),
             host_id: log_entry.host_id.clone(),
             version: Some(log_entry.version.clone()),
