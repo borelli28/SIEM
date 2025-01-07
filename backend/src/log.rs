@@ -31,6 +31,7 @@ impl From<SqliteError> for LogError {
 #[derive(Debug, Serialize, Deserialize)]
 pub struct Log {
     pub id: String,
+    pub hash: String,
     pub account_id: String,
     pub host_id: String,
     pub version: Option<String>,

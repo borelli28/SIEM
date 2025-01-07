@@ -115,6 +115,7 @@ impl Schema {
         conn.execute(
             "CREATE TABLE IF NOT EXISTS logs (
                 id TEXT PRIMARY KEY,
+                hash TEXT NOT NULL UNIQUE,
                 account_id TEXT NOT NULL,
                 host_id TEXT NOT NULL,
                 version TEXT,
