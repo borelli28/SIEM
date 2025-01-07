@@ -77,7 +77,7 @@ impl Log {
     }
 }
 
-pub fn create_log(log: &Log) -> Result<Log, LogError> {
+pub fn create_log(log: &Log) -> Result<Option<Log>, LogError> {
     log.validate()?;
     let hash = log.calculate_hash();
     let conn = establish_connection()?;
@@ -86,8 +86,9 @@ pub fn create_log(log: &Log) -> Result<Log, LogError> {
     let mut stmt = conn.prepare("SELECT COUNT(*) FROM logs WHERE hash = ?1")?;
     let count: i64 = stmt.query_row(params![&hash], |row| row.get(0))?;
 
+    // If a duplicate, skip the log
     if count > 0 {
-        return Err(LogError::ValidationError("Duplicate log entry detected".to_string()));
+        return Ok(None);
     }
 
     let new_log = Log {
@@ -125,7 +126,7 @@ pub fn create_log(log: &Log) -> Result<Log, LogError> {
         ],
     )?;
 
-    Ok(new_log)
+    Ok(Some(new_log))
 }
 
 pub fn get_query_logs(eql_query: &str) -> Result<Vec<Log>, LogError> {
