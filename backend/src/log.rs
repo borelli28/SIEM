@@ -2,6 +2,7 @@ use rusqlite::{Error as SqliteError, ToSql, params, params_from_iter};
 use crate::eql::{EqlParser, QueryBuilder};
 use crate::database::establish_connection;
 use serde::{Serialize, Deserialize};
+use sha2::{Sha256, Digest};
 use uuid::Uuid;
 use std::fmt;
 
@@ -28,7 +29,7 @@ impl From<SqliteError> for LogError {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Log {
     pub id: String,
     pub hash: String,
@@ -54,14 +55,44 @@ impl Log {
         }
         Ok(())
     }
+
+    pub fn calculate_hash(&self) -> String {
+        let mut hasher = Sha256::new();
+        
+        let content = format!("{}{}{}{}{}{}{}{}{}{}", 
+            self.account_id,
+            self.host_id,
+            self.version.as_deref().unwrap_or(""),
+            self.device_vendor.as_deref().unwrap_or(""),
+            self.device_product.as_deref().unwrap_or(""),
+            self.device_version.as_deref().unwrap_or(""),
+            self.signature_id.as_deref().unwrap_or(""),
+            self.name.as_deref().unwrap_or(""),
+            self.severity.as_deref().unwrap_or(""),
+            self.extensions.as_deref().unwrap_or("")
+        );
+
+        hasher.update(content.as_bytes());
+        format!("{:x}", hasher.finalize())
+    }
 }
 
 pub fn create_log(log: &Log) -> Result<Log, LogError> {
     log.validate()?;
-
+    let hash = log.calculate_hash();
     let conn = establish_connection()?;
+
+    // Check for existing log with the same hash
+    let mut stmt = conn.prepare("SELECT COUNT(*) FROM logs WHERE hash = ?1")?;
+    let count: i64 = stmt.query_row(params![&hash], |row| row.get(0))?;
+
+    if count > 0 {
+        return Err(LogError::ValidationError("Duplicate log entry detected".to_string()));
+    }
+
     let new_log = Log {
         id: Uuid::new_v4().to_string(),
+        hash: hash.clone(),
         account_id: log.account_id.clone(),
         host_id: log.host_id.clone(),
         version: log.version.clone(),
@@ -75,11 +106,12 @@ pub fn create_log(log: &Log) -> Result<Log, LogError> {
     };
 
     conn.execute(
-        "INSERT INTO logs (id, account_id, host_id, version, device_vendor, device_product, 
+        "INSERT INTO logs (id, hash, account_id, host_id, version, device_vendor, device_product, 
          device_version, signature_id, name, severity, extensions) 
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
         params![
             new_log.id,
+            new_log.hash,
             new_log.account_id,
             new_log.host_id,
             new_log.version,
@@ -114,16 +146,17 @@ pub fn get_query_logs(eql_query: &str) -> Result<Vec<Log>, LogError> {
     let log_iter = stmt.query_map(params_from_iter(sql_params.iter().copied()), |row| {
         Ok(Log {
             id: row.get(0)?,
-            account_id: row.get(1)?,
-            host_id: row.get(2)?,
-            version: row.get(3)?,
-            device_vendor: row.get(4)?,
-            device_product: row.get(5)?,
-            device_version: row.get(6)?,
-            signature_id: row.get(7)?,
-            name: row.get(8)?,
-            severity: row.get(9)?,
-            extensions: row.get(10)?,
+            hash: row.get(1)?,
+            account_id: row.get(2)?,
+            host_id: row.get(3)?,
+            version: row.get(4)?,
+            device_vendor: row.get(5)?,
+            device_product: row.get(6)?,
+            device_version: row.get(7)?,
+            signature_id: row.get(8)?,
+            name: row.get(9)?,
+            severity: row.get(10)?,
+            extensions: row.get(11)?,
         })
     })?;
 
@@ -142,7 +175,7 @@ pub fn get_all_logs(account_id: &String) -> Result<Vec<Log>, LogError> {
 
     let conn = establish_connection()?;
     let mut stmt = conn.prepare(
-        "SELECT id, account_id, host_id, version, device_vendor, device_product, 
+        "SELECT id, hash, account_id, host_id, version, device_vendor, device_product, 
          device_version, signature_id, name, severity, extensions 
          FROM logs WHERE account_id = ?1"
     )?;
@@ -150,16 +183,17 @@ pub fn get_all_logs(account_id: &String) -> Result<Vec<Log>, LogError> {
     let logs_iter = stmt.query_map(params![account_id], |row| {
         Ok(Log {
             id: row.get(0)?,
-            account_id: row.get(1)?,
-            host_id: row.get(2)?,
-            version: row.get(3)?,
-            device_vendor: row.get(4)?,
-            device_product: row.get(5)?,
-            device_version: row.get(6)?,
-            signature_id: row.get(7)?,
-            name: row.get(8)?,
-            severity: row.get(9)?,
-            extensions: row.get(10)?,
+            hash: row.get(1)?,
+            account_id: row.get(2)?,
+            host_id: row.get(3)?,
+            version: row.get(4)?,
+            device_vendor: row.get(5)?,
+            device_product: row.get(6)?,
+            device_version: row.get(7)?,
+            signature_id: row.get(8)?,
+            name: row.get(9)?,
+            severity: row.get(10)?,
+            extensions: row.get(11)?,
         })
     })?;
 
