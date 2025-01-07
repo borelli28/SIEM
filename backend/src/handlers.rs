@@ -2,6 +2,7 @@ use actix_multipart::form::{tempfile::TempFile, MultipartForm, text::Text};
 use actix_web::{web, HttpResponse, HttpRequest, Responder, Error};
 use actix_session::Session;
 use serde::Deserialize;
+use log::{info, error};
 use serde_json::json;
 use crate::account::{Account, AccountError, create_account, get_account, update_account, delete_account, verify_login};
 use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delete_host};
@@ -10,10 +11,8 @@ use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert};
 use crate::auth_session::{verify_session, invalidate_session};
 use crate::collector::{LogCollector, process_logs};
 use crate::csrf::{CsrfMiddleware, csrf_validator};
-use crate::batch_maker::create_batches;
 use crate::log::{get_all_logs, get_query_logs};
-
-use log::{info, error};
+use crate::batch_maker::create_batches;
 
 pub async fn index() -> impl Responder {
     HttpResponse::Ok().body("Hello world!")
