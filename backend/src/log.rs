@@ -58,7 +58,6 @@ impl Log {
 
     pub fn calculate_hash(&self) -> String {
         let mut hasher = Sha256::new();
-        
         let content = format!("{}{}{}{}{}{}{}{}{}{}", 
             self.account_id,
             self.host_id,
@@ -71,7 +70,6 @@ impl Log {
             self.severity.as_deref().unwrap_or(""),
             self.extensions.as_deref().unwrap_or("")
         );
-
         hasher.update(content.as_bytes());
         format!("{:x}", hasher.finalize())
     }
@@ -202,16 +200,16 @@ pub fn get_all_logs(account_id: &String) -> Result<Vec<Log>, LogError> {
     Ok(logs?)
 }
 
-pub fn delete_log(log_id: &String) -> Result<bool, LogError> {
-    if log_id.is_empty() {
-        return Err(LogError::ValidationError("Log ID cannot be empty".to_string()));
-    }
+// pub fn delete_log(log_id: &String) -> Result<bool, LogError> {
+//     if log_id.is_empty() {
+//         return Err(LogError::ValidationError("Log ID cannot be empty".to_string()));
+//     }
 
-    let conn = establish_connection()?;
-    let affected_rows = conn.execute(
-        "DELETE FROM logs WHERE id = ?1",
-        params![log_id],
-    )?;
+//     let conn = establish_connection()?;
+//     let affected_rows = conn.execute(
+//         "DELETE FROM logs WHERE id = ?1",
+//         params![log_id],
+//     )?;
 
-    Ok(affected_rows > 0)
-}
+//     Ok(affected_rows > 0)
+// }
