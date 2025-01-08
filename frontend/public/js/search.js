@@ -70,9 +70,13 @@ async function fetchFilteredLogs(query) {
 
 function displayLogs(logs) {
     const logsContainer = document.getElementById('logs-container');
+    const logsCountElement = document.getElementById('logs-count');
     logsContainer.innerHTML = '';
-    
-    if (!logs || logs.length === 0) {
+    const logsLength = logs.length;
+
+    logsCountElement.textContent = `Found ${logsLength} log${logsLength !== 1 ? 's' : ''}`;
+
+    if (!logs || logsLength === 0) {
         logsContainer.innerHTML = 'No logs found';
         return;
     }
@@ -84,9 +88,8 @@ function displayLogs(logs) {
 
 window.handleSearch = async function(event) {
     event.preventDefault();
-    
     const eqlQuery = document.getElementById('eqlQuery').value.trim();
-    
+
     if (!eqlQuery) {
         showAlert('Please enter a search query', 'error');
         return;
