@@ -8,7 +8,7 @@ use chrono::Utc;
 use crate::account::{Account, AccountError, create_account, get_account, update_account, delete_account, verify_login};
 use crate::host::{Host, create_host, get_host, get_all_hosts, update_host, delete_host};
 use crate::rules::{Rule, create_rule, get_rule, list_rules, update_rule, delete_rule};
-use crate::agent::{Agent, register_agent, verify_agent, update_agent_last_seen};
+use crate::agent::{Agent, register_agent, verify_agent_api_key, update_agent_last_seen};
 use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert};
 use crate::auth_session::{verify_session, invalidate_session};
 use crate::collector::{LogCollector, process_logs};
@@ -448,7 +448,7 @@ pub async fn csrf_validator_handler(req: HttpRequest, csrf: web::Data<CsrfMiddle
 pub struct AgentUploadForm {
     #[multipart(rename = "file")]
     log_file: TempFile,
-    agent_id: Text<String>,
+    api_key: Text<String>,
     account_id: Text<String>,
     host_id: Text<String>,
 }
@@ -458,9 +458,10 @@ pub async fn register_agent_handler(
     collector: web::Data<LogCollector>,
 ) -> Result<HttpResponse, Error> {
     match register_agent(&agent) {
-        Ok(agent_id) => Ok(HttpResponse::Ok().json(json!({
+        Ok((id, api_key)) => Ok(HttpResponse::Ok().json(json!({
             "status": "success",
-            "agent_id": agent_id
+            "agent_id": id,
+            "api_key": api_key
         }))),
         Err(err) => Ok(HttpResponse::InternalServerError().json(json!({
             "status": "error",
@@ -470,13 +471,25 @@ pub async fn register_agent_handler(
 }
 
 pub async fn agent_heartbeat_handler(
-    agent_id: web::Path<String>,
+    api_key: web::Path<String>,
     collector: web::Data<LogCollector>,
 ) -> Result<HttpResponse, Error> {
-    match update_agent_last_seen(&agent_id) {
-        Ok(_) => Ok(HttpResponse::Ok().json(json!({
-            "status": "success",
-            "timestamp": Utc::now()
+    match verify_agent_api_key(&api_key) {
+        Ok(true) => {
+            match update_agent_last_seen(&api_key) {
+                Ok(_) => Ok(HttpResponse::Ok().json(json!({
+                    "status": "success",
+                    "timestamp": Utc::now()
+                }))),
+                Err(err) => Ok(HttpResponse::InternalServerError().json(json!({
+                    "status": "error",
+                    "message": err.to_string()
+                })))
+            }
+        },
+        Ok(false) => Ok(HttpResponse::Unauthorized().json(json!({
+            "status": "error",
+            "message": "Invalid API key"
         }))),
         Err(err) => Ok(HttpResponse::InternalServerError().json(json!({
             "status": "error",
@@ -489,10 +502,10 @@ pub async fn agent_upload_handler(
     form: MultipartForm<AgentUploadForm>,
     collector: web::Data<LogCollector>,
 ) -> Result<HttpResponse, Error> {
-    let AgentUploadForm { log_file, agent_id, account_id, host_id } = form.into_inner();
+    let AgentUploadForm { log_file, api_key, account_id, host_id } = form.into_inner();
     let log_file_path = log_file.file.path();
 
-    match verify_agent(&agent_id) {
+    match verify_agent_api_key(&api_key) {
         Ok(true) => {
             match create_batches(log_file_path.to_str().unwrap()).await {
                 Ok(_) => {
@@ -515,7 +528,7 @@ pub async fn agent_upload_handler(
         },
         Ok(false) => Ok(HttpResponse::Unauthorized().json(json!({
             "status": "error",
-            "message": "Invalid or inactive agent"
+            "message": "Invalid API key"
         }))),
         Err(err) => Ok(HttpResponse::InternalServerError().json(json!({
             "status": "error",
