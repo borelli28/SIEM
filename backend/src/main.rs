@@ -146,6 +146,12 @@ async fn main() -> std::io::Result<()> {
                             .route("/{account_id}", web::put().to(edit_account_handler))
                             .route("/{account_id}", web::delete().to(delete_account_handler))
                     )
+                    .service(
+                        web::scope("/agent")
+                            .route("/register", web::post().to(register_agent_handler))
+                            .route("/upload", web::post().to(agent_upload_handler))
+                            .route("/heartbeat", web::post().to(agent_heartbeat_handler))
+                    )
             )
     })
     .bind(("127.0.0.1", 4200))?
