@@ -100,10 +100,10 @@ pub fn register_agent(agent: &Agent) -> Result<(String, String), AgentError> {
             new_agent.ip_address,
             new_agent.hostname,
             "Active",
-            new_agent.last_seen,
+            new_agent.last_seen.map(|dt| dt.to_rfc3339()),
         ],
     )?;
-    
+
     Ok((id, api_key))
 }
 
@@ -139,7 +139,7 @@ pub fn update_agent_last_seen(agent_id: &str) -> Result<(), AgentError> {
     let conn = establish_connection()?;
     conn.execute(
         "UPDATE agents SET last_seen = ?1 WHERE id = ?2",
-        params![Utc::now(), agent_id],
+        params![Utc::now().to_rfc3339(), agent_id],
     )?;
     Ok(())
 }
