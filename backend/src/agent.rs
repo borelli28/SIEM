@@ -143,17 +143,3 @@ pub fn update_agent_last_seen(agent_id: &str) -> Result<(), AgentError> {
     )?;
     Ok(())
 }
-
-pub fn verify_agent(agent_id: &str) -> Result<bool, AgentError> {
-    let conn = establish_connection()?;
-    let mut stmt = conn.prepare(
-        "SELECT status FROM agents WHERE id = ?1"
-    )?;
-
-    let status: Option<String> = stmt.query_row(
-        params![agent_id],
-        |row| row.get(0)
-    ).optional()?;
-
-    Ok(status.map_or(false, |s| s == "Active"))
-}
