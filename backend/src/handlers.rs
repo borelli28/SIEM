@@ -454,8 +454,7 @@ pub struct AgentUploadForm {
 }
 
 pub async fn register_agent_handler(
-    agent: web::Json<Agent>,
-    collector: web::Data<LogCollector>,
+    agent: web::Json<Agent>
 ) -> Result<HttpResponse, Error> {
     match register_agent(&agent) {
         Ok((id, api_key)) => Ok(HttpResponse::Ok().json(json!({
@@ -471,8 +470,7 @@ pub async fn register_agent_handler(
 }
 
 pub async fn agent_heartbeat_handler(
-    api_key: web::Path<String>,
-    collector: web::Data<LogCollector>,
+    api_key: web::Path<String>
 ) -> Result<HttpResponse, Error> {
     match verify_agent_api_key(&api_key) {
         Ok(true) => {
