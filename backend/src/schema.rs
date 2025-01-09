@@ -134,4 +134,22 @@ impl Schema {
         )?;
         Ok(())
     }
+
+    fn create_agents_table(conn: &Connection) -> Result<()> {
+        conn.execute(
+            " CREATE TABLE IF NOT EXISTS agents (
+                id TEXT PRIMARY KEY,
+                host_id TEXT NOT NULL UNIQUE,
+                account_id TEXT NOT NULL,
+                ip_address TEXT,
+                hostname TEXT,
+                status TEXT NOT NULL,
+                last_seen DATETIME,
+                FOREIGN KEY(host_id) REFERENCES hosts(id),
+                FOREIGN KEY(account_id) REFERENCES accounts(id)
+            );",
+            [],
+        )?;
+        Ok(())
+    }
 }
