@@ -22,6 +22,9 @@ impl Schema {
         info!("Creating logs table");
         Self::create_logs_table(conn)?;
 
+        info!("Creating agents table");
+        Self::create_agents_table(conn)?;
+
         info!("All tables created successfully");
         Ok(())
     }
