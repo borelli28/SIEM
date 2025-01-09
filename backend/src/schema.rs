@@ -139,6 +139,7 @@ impl Schema {
         conn.execute(
             " CREATE TABLE IF NOT EXISTS agents (
                 id TEXT PRIMARY KEY,
+                api_key TEXT NOT NULL UNIQUE,
                 host_id TEXT NOT NULL UNIQUE,
                 account_id TEXT NOT NULL,
                 ip_address TEXT,
