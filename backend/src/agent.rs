@@ -157,7 +157,3 @@ pub fn verify_agent(agent_id: &str) -> Result<bool, AgentError> {
 
     Ok(status.map_or(false, |s| s == "Active"))
 }
-
-// pub fn process_agent_logs(agent_id: &str, log_data: web::Bytes) -> Result<(), AgentError> {
-//     Ok(())
-// }
