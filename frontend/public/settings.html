@@ -11,6 +11,45 @@
         <div id="container">
             <h1>SIEM Settings</h1>
             <div id="alert-container"></div>
+
+            <section>
+                <h2>Agent Setup Information</h2>
+                <div class="agent-info">
+                    <div class="info-group">
+                        <label>Account ID:</label>
+                        <div class="copy-container">
+                            <span id="accountId"></span>
+                            <button class="copy-btn" data-copy="accountId">Copy</button>
+                        </div>
+                    </div>
+                    <div class="info-group">
+                        <h3>Available Hosts</h3>
+                        <table id="hostsTable">
+                            <thead>
+                                <tr>
+                                    <th>Host Name</th>
+                                    <th>Host ID</th>
+                                    <th>IP Address</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="hostsTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="setup-instructions">
+                        <h3>Agent Setup Instructions</h3>
+                        <ol>
+                            <li>Copy your Account ID</li>
+                            <li>Create a new host or select an existing one</li>
+                            <li>Copy the Host ID</li>
+                            <li>Install the agent on your target system</li>
+                            <li>Run the agent and provide these IDs when prompted</li>
+                        </ol>
+                    </div>
+                </div>
+            </section>
+
             <section>
                 <h2>Upload Logs</h2>
                 <form id="logForm">
