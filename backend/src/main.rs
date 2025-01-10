@@ -13,6 +13,7 @@ mod auth_session;
 mod csrf;
 mod schema;
 mod eql;
+mod agent;
 
 use crate::collector::LogCollector;
 use crate::handlers::{
@@ -42,7 +43,10 @@ use crate::handlers::{
     verify_session_handler,
     logout_handler,
     get_csrf_handler,
-    csrf_validator_handler
+    csrf_validator_handler,
+    register_agent_handler, 
+    agent_upload_handler,
+    agent_heartbeat_handler
 };
 use actix_session::{SessionMiddleware, storage::CookieSessionStore, config::PersistentSession};
 use actix_web::{web, cookie::time::Duration, cookie::Key, App, HttpServer};
@@ -145,6 +149,12 @@ async fn main() -> std::io::Result<()> {
                             .route("/{account_id}", web::get().to(get_account_handler))
                             .route("/{account_id}", web::put().to(edit_account_handler))
                             .route("/{account_id}", web::delete().to(delete_account_handler))
+                    )
+                    .service(
+                        web::scope("/agent")
+                            .route("/register", web::post().to(register_agent_handler))
+                            .route("/upload", web::post().to(agent_upload_handler))
+                            .route("/heartbeat", web::post().to(agent_heartbeat_handler))
                     )
             )
     })

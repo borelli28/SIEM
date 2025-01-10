@@ -22,6 +22,9 @@ impl Schema {
         info!("Creating logs table");
         Self::create_logs_table(conn)?;
 
+        info!("Creating agents table");
+        Self::create_agents_table(conn)?;
+
         info!("All tables created successfully");
         Ok(())
     }
@@ -62,7 +65,7 @@ impl Schema {
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(account_id) REFERENCES accounts(id)
         )";
-        
+
         match conn.execute(sql, []) {
             Ok(_) => {
                 info!("Rules table created successfully");
@@ -130,6 +133,25 @@ impl Schema {
                 FOREIGN KEY(host_id) REFERENCES hosts(id),
                 FOREIGN KEY(account_id) REFERENCES accounts(id)
             )",
+            [],
+        )?;
+        Ok(())
+    }
+
+    fn create_agents_table(conn: &Connection) -> Result<()> {
+        conn.execute(
+            " CREATE TABLE IF NOT EXISTS agents (
+                id TEXT PRIMARY KEY,
+                api_key TEXT NOT NULL UNIQUE,
+                host_id TEXT NOT NULL,
+                account_id TEXT NOT NULL,
+                ip_address TEXT,
+                hostname TEXT,
+                status TEXT NOT NULL,
+                last_seen DATETIME,
+                FOREIGN KEY(host_id) REFERENCES hosts(id),
+                FOREIGN KEY(account_id) REFERENCES accounts(id)
+            );",
             [],
         )?;
         Ok(())

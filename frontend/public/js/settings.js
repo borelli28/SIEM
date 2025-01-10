@@ -28,6 +28,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('logForm').addEventListener('submit', uploadLogs);
     document.getElementById('hostForm').addEventListener('submit', addHost);
     document.getElementById('ruleForm').addEventListener('submit', createRule);
+
+    // Set up Account ID copy button
+    document.getElementById('accountIdCopyBtn').addEventListener('click', () => {
+        const accountId = document.getElementById('accountId').textContent;
+        navigator.clipboard.writeText(accountId)
+            .then(() => showAlert('Account ID copied to clipboard!', 'success'))
+            .catch(err => showAlert('Failed to copy', 'error'));
+    });
 });
 
 let csrfToken;
@@ -53,32 +61,55 @@ async function populateHostList() {
 
         if (response.ok) {
             const hosts = await response.json();
+
+            // Populate host select dropdown
             const hostSelect = document.getElementById('hostSelect');
             hostSelect.innerHTML = '';
 
-            // No hosts
-            if (hosts.length === 0) {
-                const option = document.createElement('option');
-                option.value = "";
-                option.textContent = "Add a new host below";
-                option.disabled = true;
-                option.selected = true;
-                hostSelect.appendChild(option);
-            } else {
-                const defaultOption = document.createElement('option');
-                defaultOption.value = "";
-                defaultOption.textContent = "Select a host";
-                defaultOption.disabled = true;
-                defaultOption.selected = true;
-                hostSelect.appendChild(defaultOption);
+            // Update Account ID display
+            document.getElementById('accountId').textContent = user;
 
+            // Populate hosts table in agent setup section
+            const hostsTableBody = document.getElementById('hostsTableBody');
+            hostsTableBody.innerHTML = '';
+
+            if (hosts.length === 0) {
+                // Handle empty hosts case
+                hostSelect.innerHTML = `<option value="" disabled selected>Add a new host below</option>`;
+                hostsTableBody.innerHTML = '<tr><td colspan="4">No hosts available</td></tr>';
+            } else {
+                // Add default option to select
+                hostSelect.innerHTML = '<option value="" disabled selected>Select a host</option>';
+
+                // Populate both select and table
                 hosts.forEach(host => {
+                    // Add to select dropdown
                     const option = document.createElement('option');
                     option.value = host.id;
                     option.textContent = `${host.hostname} (${host.ip_address})`;
                     hostSelect.appendChild(option);
+
+                    // Add to hosts table
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${host.hostname}</td>
+                        <td>${host.id}</td>
+                        <td>${host.ip_address}</td>
+                        <td><button class="copy-btn" data-copy="${host.id}">Copy ID</button></td>
+                    `;
+                    hostsTableBody.appendChild(row);
                 });
             }
+
+            // Add click handlers for host ID copy buttons
+            document.querySelectorAll('.copy-btn').forEach(button => {
+                button.addEventListener('click', () => {
+                    const textToCopy = button.getAttribute('data-copy');
+                    navigator.clipboard.writeText(textToCopy)
+                        .then(() => showAlert('Host ID copied to clipboard!', 'success'))
+                        .catch(err => showAlert('Failed to copy', 'error'));
+                });
+            });
         } else {
             showAlert('Failed to fetch hosts', 'error');
         }
