@@ -65,7 +65,7 @@ impl Schema {
             updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(account_id) REFERENCES accounts(id)
         )";
-        
+
         match conn.execute(sql, []) {
             Ok(_) => {
                 info!("Rules table created successfully");

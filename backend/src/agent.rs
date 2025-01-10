@@ -112,7 +112,7 @@ pub fn verify_agent_api_key(api_key: &str) -> Result<bool, AgentError> {
     let mut stmt = conn.prepare(
         "SELECT status FROM agents WHERE api_key = ?1 AND status = 'Active'"
     )?;
-    
+
     let result = stmt.query_row(
         params![api_key],
         |_| Ok(true)
