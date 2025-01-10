@@ -1,5 +1,5 @@
+use actix_web::{web, HttpResponse, HttpRequest, Responder, Error, http::header::HeaderMap};
 use actix_multipart::form::{tempfile::TempFile, MultipartForm, text::Text};
-use actix_web::{web, HttpResponse, HttpRequest, Responder, Error};
 use actix_session::Session;
 use serde::Deserialize;
 use log::{info, error};
@@ -469,12 +469,17 @@ pub async fn register_agent_handler(
     }
 }
 
+#[derive(Deserialize)]
+pub struct HeartbeatRequest {
+    api_key: String,
+}
+
 pub async fn agent_heartbeat_handler(
-    api_key: web::Path<String>
+    payload: web::Json<HeartbeatRequest>,
 ) -> Result<HttpResponse, Error> {
-    match verify_agent_api_key(&api_key) {
+    match verify_agent_api_key(&payload.api_key) {
         Ok(true) => {
-            match update_agent_last_seen(&api_key) {
+            match update_agent_last_seen(&payload.api_key) {
                 Ok(_) => Ok(HttpResponse::Ok().json(json!({
                     "status": "success",
                     "timestamp": Utc::now()
