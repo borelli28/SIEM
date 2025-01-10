@@ -28,6 +28,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     document.getElementById('logForm').addEventListener('submit', uploadLogs);
     document.getElementById('hostForm').addEventListener('submit', addHost);
     document.getElementById('ruleForm').addEventListener('submit', createRule);
+
+    // Set up Account ID copy button
+    document.getElementById('accountIdCopyBtn').addEventListener('click', () => {
+        const accountId = document.getElementById('accountId').textContent;
+        navigator.clipboard.writeText(accountId)
+            .then(() => showAlert('Account ID copied to clipboard!', 'success'))
+            .catch(err => showAlert('Failed to copy', 'error'));
+    });
 });
 
 let csrfToken;
@@ -58,7 +66,7 @@ async function populateHostList() {
             const hostSelect = document.getElementById('hostSelect');
             hostSelect.innerHTML = '';
 
-            // Populate Account ID in agent setup section
+            // Update Account ID display
             document.getElementById('accountId').textContent = user;
 
             // Populate hosts table in agent setup section
@@ -93,12 +101,12 @@ async function populateHostList() {
                 });
             }
 
-            // Add click handlers for copy buttons
+            // Add click handlers for host ID copy buttons
             document.querySelectorAll('.copy-btn').forEach(button => {
                 button.addEventListener('click', () => {
                     const textToCopy = button.getAttribute('data-copy');
                     navigator.clipboard.writeText(textToCopy)
-                        .then(() => showAlert('Copied to clipboard!', 'success'))
+                        .then(() => showAlert('Host ID copied to clipboard!', 'success'))
                         .catch(err => showAlert('Failed to copy', 'error'));
                 });
             });
