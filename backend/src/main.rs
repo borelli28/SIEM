@@ -5,7 +5,6 @@ mod batch_maker;
 mod message_queue;
 mod rules;
 mod alert;
-mod handlers;
 mod host;
 mod log;
 mod account;
@@ -14,6 +13,7 @@ mod csrf;
 mod schema;
 mod eql;
 mod agent;
+mod handlers;
 
 use crate::collector::LogCollector;
 use crate::handlers::{
