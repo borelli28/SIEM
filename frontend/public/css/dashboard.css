@@ -31,7 +31,7 @@ table {
 
 #logout-btn {
     padding: 5px 10px;
-    background-color: #f44336;
+    background-color: #CC0000;
     color: white;
     border: none;
     cursor: pointer;
@@ -52,8 +52,4 @@ table {
 .error {
   background-color: #f8d7da;
   color: #721c24;
-}
-
-#logout-btn {
-  background-color: #CC0000;
 }
