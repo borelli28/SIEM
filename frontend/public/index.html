@@ -7,21 +7,19 @@
     <title>Dashboard</title>
 </head>
 <body>
+    <h1>SIEM Dashboard</h1>
+    <nav>
+        <a href="/settings">Settings</a>
+        <a href="/alerts">All Alerts</a>
+        <a href="/search">Search</a>
+        <button id="logout-btn">Logout</button>
+    </nav>
     <main>
-        <div id="container">
-            <h1>SIEM Dashboard</h1>
-            <div id="alert-container"></div>
-            <section id="graphs">
-                <h2>Log Analysis</h2>
-                <canvas id="logsChart"></canvas>
-            </section>
-            <nav>
-                <a href="/settings">Settings</a>
-                <a href="/alerts">All Alerts</a>
-                <a href="/search">Search</a>
-                <button id="logout-btn">Logout</button>
-            </nav>
-        </div>
+        <div id="alert-container"></div>
+        <section id="graphs">
+            <h2>Log Analysis</h2>
+            <canvas id="logsChart"></canvas>
+        </section>
     </main>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="/js/index.js"></script>

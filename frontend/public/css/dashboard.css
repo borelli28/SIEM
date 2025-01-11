@@ -1,25 +1,32 @@
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
+    background-color: #22232b;
+    color: white;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
 }
 
-#container {
-    max-width: 800px;
-    margin: auto;
-    padding: 20px;
+nav {
+    width: 90%;
+}
+
+main {
+    width: 100%;
+}
+
+a {
+    color: white;
+}
+
+a:hover {
+    color: grey;
 }
 
 table {
     width: 100%;
-    border-collapse: collapse;
-}
-
-th, td {
-    padding: 10px;
-    text-align: left;
-    border-bottom: 1px solid #ddd;
 }
 
 #logout-btn {
