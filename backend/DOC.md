@@ -19,16 +19,16 @@
   * Agents
 
 ### 3. Log Collection System
+- **Batch Maker** (`batch_maker.rs`)
+  * Handles log file processing
+  * Creates batches of up to 50 log entries
+  * Manages queue integration
+
 - **Collector** (`collector.rs`)
   * Processes incoming log entries
   * Manages log batch processing
   * Validates CEF (Common Event Format) logs
   * Triggers rule evaluation
-
-- **Batch Maker** (`batch_maker.rs`)
-  * Handles log file processing
-  * Creates batches of up to 50 log entries
-  * Manages queue integration
 
 - **Message Queue** (`message_queue.rs`)
   * Implements asynchronous log processing
@@ -39,6 +39,7 @@
 - **Authentication** (`account.rs`, `auth_session.rs`)
   * User account management
   * Session handling
+  * Session timeout at 20 minutes if no activity
   * Password hashing with Argon2
   * Role-based access control
 
@@ -57,7 +58,6 @@
 - Agent registration and authentication
 - API key management
 - Heartbeat monitoring
-- File upload handling
 
 ## Basic Workflow
 
