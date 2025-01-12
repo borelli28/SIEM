@@ -10,6 +10,13 @@
     <main>
         <div class="container">
             <h1>SIEM Alerts</h1>
+            <nav>
+                <a href="/">Dashboard</a>
+                <a href="/alerts">All Alerts</a>
+                <a href="/search">Search</a>
+                <button id="logout-btn">Logout</button>
+            </nav>
+
             <div class="filter-container">
                 <label for="severity-filter">Filter by Severity:</label>
                 <select id="severity-filter">
@@ -32,10 +39,6 @@
                 </thead>
                 <tbody id="alerts-body"></tbody>
             </table>
-            <nav>
-                <a href="/">Back to Dashboard</a>
-                <button id="logout-btn">Logout</button>
-            </nav>
         </div>
     </main>
     <script type="module" src="/js/alerts.js"></script>
