@@ -68,7 +68,6 @@
 
 2. **Log Ingestion**:
    - Logs are received via agent or direct upload
-   - Parser validates CEF format
    - Logs are batched (50 entries per batch)
    - Batches are queued for processing
 
@@ -76,11 +75,10 @@
    - Queued batches are processed asynchronously
    - Each log entry is validated and normalized
    - Logs are stored in the database
-   - Rules are evaluated against new logs
+   - Sigma rules are evaluated against new logs
 
 4. **Alert Generation**:
    - Matching rules trigger alert creation
-   - Alert severity is based on rule configuration
 
 ## API Structure
 
