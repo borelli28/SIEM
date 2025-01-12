@@ -1,24 +1,35 @@
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
-    background-color: #f4f4f4;
-}
-
-#container {
-    max-width: 400px;
-    margin: auto;
-    padding: 20px;
-}
-
-form {
+    background-color: #22232b;
+    color: white;
+    text-align: center;
     display: flex;
-    flex-direction: column;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-items: center;
+    width: 100%;
 }
 
-input {
-    margin-bottom: 15px;
-    padding: 10px;
+.form-inputs {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+form .form-inputs input {
+    width: 100%;
+    margin-bottom: 3%;
+}
+
+form button {
+    width: 50%;
+}
+
+a {
+    color: white;
+}
+
+a:hover {
+    color: grey;
 }
 
 .alert {
