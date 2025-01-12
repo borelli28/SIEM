@@ -10,7 +10,15 @@
     <main>
         <div id="container">
             <h1>SIEM Log Search</h1>
+            <nav>
+                <a href="/">Dashboard</a>
+                <a href="/alerts">All Alerts</a>
+                <a href="/search">Search</a>
+                <button id="logout-btn">Logout</button>
+            </nav>
+
             <div id="alert-container"></div>
+
             <form onsubmit="handleSearch(event)">
                 <div class="search-controls">
                     <div class="eql-input-container">
@@ -31,14 +39,9 @@
                     <button type="submit">Search</button>
                 </div>
             </form>
-            </br>
+
             <div id="logs-count" class="logs-count"></div>
-            </br>
             <div id="logs-container" class="logs-container"></div>
-            <nav>
-                <a href="/">Back to Dashboard</a>
-                <button id="logout-btn">Logout</button>
-            </nav>
         </div>
     </main>
     <script type="module" src="/js/search.js"></script>
