@@ -14,6 +14,7 @@ mod schema;
 mod eql;
 mod agent;
 mod handlers;
+mod cases;
 
 use crate::collector::LogCollector;
 use crate::handlers::{
@@ -155,6 +156,16 @@ async fn main() -> std::io::Result<()> {
                             .route("/register", web::post().to(register_agent_handler))
                             .route("/upload", web::post().to(agent_upload_handler))
                             .route("/heartbeat", web::post().to(agent_heartbeat_handler))
+                    )
+                    .service(
+                        web::scope("/case")
+                            .route("/{account_id}", web::post().to(create_case_handler))
+                            .route("/{case_id}", web::get().to(get_case_handler))
+                            .route("/all/{account_id}", web::get().to(get_cases_by_account_handler))
+                            .route("/{case_id}", web::put().to(update_case_handler))
+                            .route("/{case_id}", web::delete().to(delete_case_handler))
+                            .route("/{case_id}/observable", web::post().to(add_observable_handler))
+                            .route("/{case_id}/comment", web::post().to(add_comment_handler))
                     )
             )
     })
