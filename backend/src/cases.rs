@@ -195,26 +195,44 @@ pub fn get_case(case_id: &str) -> Result<Option<Case>, CaseError> {
     let case = stmt.query_row(params![case_id], |row| {
         let observables_json: String = row.get(8)?;
         let comments_json: String = row.get(9)?;
-        let observables: Vec<Observable> = serde_json::from_str(&observables_json)?;
-        let comments: Vec<String> = serde_json::from_str(&comments_json)?;
-
-        Ok(Case {
-            id: row.get(0)?,
-            account_id: row.get(1)?,
-            title: row.get(2)?,
-            description: row.get(3)?,
-            severity: row.get(4)?,
-            status: row.get(5)?,
-            category: row.get(6)?,
-            analyst_assigned: row.get(7)?,
-            observables,
-            comments,
-            created_at: row.get(10)?,
-            updated_at: row.get(11)?,
-        })
+        Ok((
+            row.get(0)?,
+            row.get(1)?,
+            row.get(2)?,
+            row.get(3)?,
+            row.get(4)?,
+            row.get(5)?,
+            row.get(6)?,
+            row.get(7)?,
+            observables_json,
+            comments_json,
+            row.get(10)?,
+            row.get(11)?
+        ))
     }).optional()?;
 
-    Ok(case)
+    match case {
+        Some((id, account_id, title, description, severity, status, category, 
+              analyst_assigned, observables_json, comments_json, created_at, updated_at)) => {
+            let observables = serde_json::from_str(&observables_json)?;
+            let comments = serde_json::from_str(&comments_json)?;
+            Ok(Some(Case {
+                id,
+                account_id,
+                title,
+                description,
+                severity,
+                status,
+                category,
+                analyst_assigned,
+                observables,
+                comments,
+                created_at,
+                updated_at,
+            }))
+        }
+        None => Ok(None)
+    }
 }
 
 pub fn get_cases_by_account(account_id: &str) -> Result<Vec<Case>, CaseError> {
@@ -227,28 +245,47 @@ pub fn get_cases_by_account(account_id: &str) -> Result<Vec<Case>, CaseError> {
     )?;
 
     let cases_iter = stmt.query_map(params![account_id], |row| {
-        let observables_json: String = row.get(8)?;
-        let comments_json: String = row.get(9)?;
-        let observables: Vec<Observable> = serde_json::from_str(&observables_json)?;
-        let comments: Vec<String> = serde_json::from_str(&comments_json)?;
-
-        Ok(Case {
-            id: row.get(0)?,
-            account_id: row.get(1)?,
-            title: row.get(2)?,
-            description: row.get(3)?,
-            severity: row.get(4)?,
-            status: row.get(5)?,
-            category: row.get(6)?,
-            analyst_assigned: row.get(7)?,
-            observables,
-            comments,
-            created_at: row.get(10)?,
-            updated_at: row.get(11)?,
-        })
+        Ok((
+            row.get::<_, String>(0)?,
+            row.get::<_, String>(1)?,
+            row.get::<_, String>(2)?,
+            row.get::<_, String>(3)?,
+            row.get::<_, String>(4)?,
+            row.get::<_, String>(5)?,
+            row.get::<_, String>(6)?,
+            row.get::<_, String>(7)?,
+            row.get::<_, String>(8)?,
+            row.get::<_, String>(9)?,
+            row.get::<_, String>(10)?,
+            row.get::<_, String>(11)?,
+        ))
     })?;
 
-    let cases = cases_iter.collect::<Result<Vec<_>, _>>()?;
+    let cases_data: Result<Vec<_>, _> = cases_iter.collect();
+    let cases_data = cases_data?;
+
+    let mut cases = Vec::new();
+    for (id, account_id, title, description, severity, status, category, 
+         analyst_assigned, observables_json, comments_json, created_at, updated_at) in cases_data {
+        let observables: Vec<Observable> = serde_json::from_str(&observables_json)?;
+        let comments: Vec<String> = serde_json::from_str(&comments_json)?;
+        
+        cases.push(Case {
+            id,
+            account_id,
+            title,
+            description,
+            severity,
+            status,
+            category,
+            analyst_assigned,
+            observables,
+            comments,
+            created_at,
+            updated_at,
+        });
+    }
+
     Ok(cases)
 }
 
