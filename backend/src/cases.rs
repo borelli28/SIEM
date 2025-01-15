@@ -144,17 +144,12 @@ impl Case {
         let _ = CaseStatus::from(self.status.clone());
         Ok(())
     }
-
-    pub fn new(account_id: String, analyst_assigned: String) -> Self {
-        let mut default_case = Case::default();
-        default_case.account_id = account_id;
-        default_case.analyst_assigned = analyst_assigned;
-        default_case
-    }
 }
 
-pub fn create_case(account_id: &str, analyst_assigned: &str) -> Result<Case, CaseError> {
-    let new_case = Case::new(account_id.to_string(), analyst_assigned.to_string());
+pub fn create_case(account_id: &str) -> Result<Case, CaseError> {
+    let mut new_case = Case::default();
+    new_case.account_id = account_id.to_string();
+    new_case.analyst_assigned = "Unassigned".to_string();
     new_case.validate()?;
 
     let observables_json = serde_json::to_string(&new_case.observables)?;
