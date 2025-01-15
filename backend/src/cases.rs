@@ -1,4 +1,4 @@
-use rusqlite::{Error as SqliteError, params};
+use rusqlite::{Error as SqliteError, OptionalExtension, params};
 use crate::database::establish_connection;
 use serde::{Deserialize, Serialize};
 use chrono::Utc;
@@ -10,14 +10,56 @@ use std::fmt;
 pub enum CaseSeverity {
     Low,
     Medium,
-    High
+    High,
+}
+
+impl fmt::Display for CaseSeverity {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            CaseSeverity::Low => write!(f, "Low"),
+            CaseSeverity::Medium => write!(f, "Medium"),
+            CaseSeverity::High => write!(f, "High"),
+        }
+    }
+}
+
+impl From<String> for CaseSeverity {
+    fn from(s: String) -> Self {
+        match s.to_lowercase().as_str() {
+            "low" => CaseSeverity::Low,
+            "medium" => CaseSeverity::Medium,
+            "high" => CaseSeverity::High,
+            _ => CaseSeverity::Low,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, PartialEq, Clone)]
 pub enum CaseStatus {
     InProgress,
     Closed,
-    Hold
+    Hold,
+}
+
+impl fmt::Display for CaseStatus {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        match self {
+            CaseStatus::InProgress => write!(f, "InProgress"),
+            CaseStatus::Closed => write!(f, "Closed"),
+            CaseStatus::Hold => write!(f, "Hold"),
+        }
+    }
+}
+
+impl From<String> for CaseStatus {
+    fn from(s: String) -> Self {
+        match s.to_lowercase().as_str() {
+            "inprogress" => CaseStatus::InProgress,
+            "closed" => CaseStatus::Closed,
+            "hold" => CaseStatus::Hold,
+            _ => CaseStatus::InProgress,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -49,8 +91,8 @@ impl Default for Case {
             account_id: String::new(),
             title: "New Investigation".to_string(),
             description: "New security investigation case".to_string(),
-            severity: CaseSeverity.Low,
-            status: CaseStatus.InProgress,
+            severity: "Low".to_string(),
+            status: "InProgress".to_string(),
             category: "Security Investigation".to_string(),
             analyst_assigned: String::new(),
             observables: Vec::new(),
@@ -98,6 +140,8 @@ impl Case {
         if self.analyst_assigned.is_empty() {
             return Err(CaseError::ValidationError("Analyst must be assigned".to_string()));
         }
+        let _ = CaseSeverity::from(self.severity.clone());
+        let _ = CaseStatus::from(self.status.clone());
         Ok(())
     }
 
