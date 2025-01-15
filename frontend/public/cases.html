@@ -3,24 +3,75 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="/css/dashboard.css">
+    <link rel="stylesheet" href="/css/cases.css">
     <title>Cases</title>
 </head>
 <body>
-    <h1>Cases</h1>
-    <nav>
-        <a href="/">Dashboard</a>
-        <a href="/settings">Settings</a>
-        <a href="/alerts">All Alerts</a>
-        <a href="/search">Search</a>
-        <button id="logout-btn">Logout</button>
-    </nav>
     <main>
-        <div id="cases-container"></div>
-<!--         <section id="graphs">
-            <h2>Log Analysis</h2>
-        </section> -->
+        <div id="container">
+            <h1>Cases</h1>
+            <nav>
+                <a href="/">Dashboard</a>
+                <a href="/settings">Settings</a>
+                <a href="/alerts">All Alerts</a>
+                <a href="/search">Search</a>
+                <a href="/cases" class="active">Cases</a>
+                <button id="logout-btn">Logout</button>
+            </nav>
+
+            <div id="alert-container"></div>
+
+            <div class="case-header">
+                <button id="new-case-btn" class="primary-btn">+</button>
+                <button id="refresh-btn">⟳</button>
+            </div>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="comments">COMMENTS</button>
+                <button class="tab-btn" data-tab="observables">OBSERVABLES</button>
+                <button class="tab-btn" data-tab="events">EVENTS</button>
+            </div>
+
+            <div id="cases-container">
+            </div>
+
+            <div class="case-details-sidebar">
+                <div class="summary-section">
+                    <div class="section-header">
+                        <h3>Summary</h3>
+                        <span class="collapse-icon">^</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="detail-row">
+                            <span class="label">Assignee:</span>
+                            <span class="value" id="case-assignee"></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Status:</span>
+                            <span class="value" id="case-status"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <div class="section-header">
+                        <h3>Details</h3>
+                        <span class="collapse-icon">^</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="detail-row">
+                            <span class="label">Severity:</span>
+                            <span class="value" id="case-severity"></span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Category:</span>
+                            <span class="value" id="case-category"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </main>
-    <script type="module" src="/js/index.js"></script>
+    <script type="module" src="/js/cases.js"></script>
 </body>
 </html>
