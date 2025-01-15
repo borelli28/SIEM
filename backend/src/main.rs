@@ -47,7 +47,14 @@ use crate::handlers::{
     csrf_validator_handler,
     register_agent_handler, 
     agent_upload_handler,
-    agent_heartbeat_handler
+    agent_heartbeat_handler,
+    create_case_handler,
+    get_case_handler,
+    get_cases_by_account_handler,
+    update_case_handler,
+    delete_case_handler,
+    add_observable_handler,
+    add_comment_handler
 };
 use actix_session::{SessionMiddleware, storage::CookieSessionStore, config::PersistentSession};
 use actix_web::{web, cookie::time::Duration, cookie::Key, App, HttpServer};
