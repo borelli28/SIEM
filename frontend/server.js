@@ -9,6 +9,7 @@ const server = Bun.serve({
         if (path === "/settings") return new Response(Bun.file("public/settings.html"));
         if (path === "/search") return new Response(Bun.file("public/search.html"));
         if (path === "/alerts") return new Response(Bun.file("public/alerts.html"));
+        if (path === "/cases") return new Response(Bun.file("public/cases.html"));
 
         // Serve static CSS and JS files
         if (path.startsWith("/css/")) return new Response(Bun.file(`public${path}`));
