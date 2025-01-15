@@ -1,8 +1,8 @@
 use actix_web::{web, HttpResponse, HttpRequest, Error};
 use serde_json::json;
 use log::error;
-use crate::cases::{Case, CaseError, create_case, get_case, get_cases_by_account, 
-                   update_case, delete_case, add_observable, add_comment, Observable};
+use crate::cases::{Case, CaseError, Observable, create_case, get_case, get_cases_by_account, 
+                   update_case, delete_case, add_observable, add_comment};
 use crate::csrf::{CsrfMiddleware, csrf_validator};
 
 pub async fn create_case_handler(
