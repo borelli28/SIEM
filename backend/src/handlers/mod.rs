@@ -6,6 +6,7 @@ mod csrf;
 mod host;
 mod log;
 mod rule;
+mod cases;
 
 pub use account::*;
 pub use agent::*;
@@ -15,3 +16,4 @@ pub use csrf::*;
 pub use host::*;
 pub use log::*;
 pub use rule::*;
+pub use cases::*;
