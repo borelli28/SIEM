@@ -25,6 +25,9 @@ impl Schema {
         info!("Creating agents table");
         Self::create_agents_table(conn)?;
 
+        info!("Creating cases table");
+        Self::create_cases_table(conn)?;    
+
         info!("All tables created successfully");
         Ok(())
     }
@@ -152,6 +155,28 @@ impl Schema {
                 FOREIGN KEY(host_id) REFERENCES hosts(id),
                 FOREIGN KEY(account_id) REFERENCES accounts(id)
             );",
+            [],
+        )?;
+        Ok(())
+    }
+
+    fn create_cases_table(conn: &Connection) -> Result<()> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS cases (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                status TEXT NOT NULL,
+                category TEXT NOT NULL,
+                analyst_assigned TEXT NOT NULL,
+                observables TEXT NOT NULL,
+                comments TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(account_id) REFERENCES accounts(id)
+            )",
             [],
         )?;
         Ok(())
