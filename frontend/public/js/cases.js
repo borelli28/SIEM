@@ -7,6 +7,7 @@ let activeTab = 'comments';
 
 function showAlert(message, type = 'error') {
     const alertContainer = document.getElementById('alert-container');
+    if (!alertContainer) return;
     alertContainer.innerHTML = `<div class="alert ${type}">${message}</div>`;
     setTimeout(() => {
         alertContainer.innerHTML = '';
@@ -20,59 +21,6 @@ async function fetchCsrfToken() {
         console.error('Error fetching CSRF token:', error);
         showAlert('Error fetching CSRF token', 'error');
     }
-}
-
-async function fetchCases() {
-    try {
-        const response = await fetch(`http://localhost:4200/backend/case/all/${user}`, {
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Form-ID': formId
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to fetch cases');
-        }
-
-        const cases = await response.json();
-        displayCases(cases);
-    } catch (error) {
-        console.error('Error:', error);
-        showAlert(error.message, 'error');
-    }
-}
-
-function displayCases(cases) {
-    const casesContainer = document.getElementById('cases-container');
-    casesContainer.innerHTML = '';
-
-    if (!cases || cases.length === 0) {
-        casesContainer.innerHTML = 'No cases found';
-        return;
-    }
-
-    cases.forEach(caseItem => {
-        const caseElement = document.createElement('div');
-        caseElement.className = 'case-item';
-        caseElement.innerHTML = `
-            <h3>${caseItem.title}</h3>
-            <p>${caseItem.description}</p>
-            <div class="case-meta">
-                <span>Status: ${caseItem.status}</span>
-                <span>Severity: ${caseItem.severity}</span>
-                <span>Category: ${caseItem.category}</span>
-                <span>Assignee: ${caseItem.analyst_assigned}</span>
-            </div>
-            <div class="case-actions">
-                <button class="delete-btn" onclick="event.stopPropagation(); deleteCase('${caseItem.id}')">Delete</button>
-            </div>
-        `;
-        caseElement.addEventListener('click', () => loadCaseDetails(caseItem.id));
-        casesContainer.appendChild(caseElement);
-    });
 }
 
 async function loadCaseDetails(caseId) {
@@ -92,6 +40,7 @@ async function loadCaseDetails(caseId) {
 
         const caseData = await response.json();
         updateSidebar(caseData);
+        updateMainContent(caseData);
         updateActiveTab(caseData);
     } catch (error) {
         console.error('Error:', error);
@@ -106,49 +55,88 @@ function updateSidebar(caseData) {
     document.getElementById('case-category').textContent = caseData.category;
 }
 
+function updateMainContent(caseData) {
+    const casesContainer = document.getElementById('cases-container');
+    casesContainer.innerHTML = `
+        <div class="case-details">
+            <h2>${caseData.title}</h2>
+            <p class="description">${caseData.description}</p>
+            <div class="case-info">
+                <p><strong>Created:</strong> ${new Date(caseData.created_at).toLocaleString()}</p>
+                <p><strong>Last Updated:</strong> ${new Date(caseData.updated_at).toLocaleString()}</p>
+            </div>
+        </div>
+    `;
+}
+
 function updateActiveTab(caseData) {
-    const tabContent = document.getElementById('cases-container');
+    const tabContent = document.getElementById('tab-content');
+    if (!tabContent) return;
 
     switch(activeTab) {
         case 'comments':
-            tabContent.innerHTML = '<ul>' + 
-                caseData.comments.map(comment => `<li>${comment}</li>`).join('') +
-                '</ul>';
+            tabContent.innerHTML = `
+                <div class="comments-section">
+                    <ul class="comments-list">
+                        ${caseData.comments.map(comment => `
+                            <li class="comment">${comment}</li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
             break;
         case 'observables':
-            tabContent.innerHTML = '<ul>' + 
-                caseData.observables.map(obs => 
-                    `<li>${obs.observable_type}: ${obs.value}</li>`
-                ).join('') +
-                '</ul>';
+            // Filter out alerts and logs from observables
+            const otherObservables = caseData.observables.filter(obs => 
+                obs.observable_type !== 'alert' && obs.observable_type !== 'log'
+            );
+
+            tabContent.innerHTML = `
+                <div class="observables-section">
+                    <ul class="observables-list">
+                        ${otherObservables.map(obs => `
+                            <li class="observable">
+                                <strong>${obs.observable_type}:</strong> 
+                                <pre>${obs.value}</pre>
+                            </li>
+                        `).join('')}
+                    </ul>
+                </div>
+            `;
             break;
         case 'events':
-            tabContent.innerHTML = '<p>Events tab content</p>';
+            // Filter for alerts and logs only
+            const events = caseData.observables.filter(obs => 
+                obs.observable_type === 'alert' || obs.observable_type === 'log'
+            );
+
+            tabContent.innerHTML = `
+                <div class="events-section">
+                    ${events.map(event => {
+                        const eventData = JSON.parse(event.value);
+                        if (event.observable_type === 'alert') {
+                            return `
+                                <div class="event alert-event">
+                                    <h4>Alert</h4>
+                                    <p><strong>Message:</strong> ${eventData.message}</p>
+                                    <p><strong>Severity:</strong> ${eventData.severity}</p>
+                                    <p><strong>Created:</strong> ${new Date(eventData.created_at).toLocaleString()}</p>
+                                </div>
+                            `;
+                        } else { // log
+                            return `
+                                <div class="event log-event">
+                                    <h4>Log Entry</h4>
+                                    <p><strong>Source:</strong> ${eventData.device_product || 'Unknown'}</p>
+                                    <p><strong>Severity:</strong> ${eventData.severity || 'Unknown'}</p>
+                                    <pre>${JSON.stringify(eventData, null, 2)}</pre>
+                                </div>
+                            `;
+                        }
+                    }).join('')}
+                </div>
+            `;
             break;
-    }
-}
-
-async function createNewCase() {
-    try {
-        const response = await fetch(`http://localhost:4200/backend/case/${user}`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Form-ID': formId,
-                'X-CSRF-Token': csrfToken
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to create new case');
-        }
-
-        await fetchCases();
-        showAlert('Case created successfully', 'success');
-    } catch (error) {
-        console.error('Error:', error);
-        showAlert(error.message, 'error');
     }
 }
 
@@ -159,13 +147,13 @@ function switchTab(tabName) {
     });
     document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
 
-    const selectedCase = document.querySelector('.case-item.selected');
-    if (selectedCase) {
-        loadCaseDetails(selectedCase.dataset.caseId);
+    const urlParams = new URLSearchParams(window.location.search);
+    const caseId = urlParams.get('id');
+    if (caseId) {
+        loadCaseDetails(caseId);
     }
 }
 
-// Event listeners remain the same
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAuth();
     if (!getAuthenticationStatus()) {
@@ -173,7 +161,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     await fetchCsrfToken();
-    await fetchCases();
+
+    // Get case ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const caseId = urlParams.get('id');
+    
+    if (!caseId) {
+        window.location.href = '/list-cases';
+        return;
+    }
+
+    await loadCaseDetails(caseId);
 
     document.getElementById('logout-btn').addEventListener('click', async () => {
         const result = await logout();
@@ -183,9 +181,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             showAlert(result.message, 'error');
         }
     });
-
-    document.getElementById('new-case-btn').addEventListener('click', createNewCase);
-    document.getElementById('refresh-btn').addEventListener('click', fetchCases);
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', (e) => {
@@ -200,30 +195,3 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 });
-
-window.deleteCase = async function(caseId) {
-    if (!confirm('Are you sure you want to delete this case?')) {
-        return;
-    }
-
-    try {
-        const response = await fetch(`http://localhost:4200/backend/case/${caseId}`, {
-            method: 'DELETE',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-Form-ID': formId
-            },
-            credentials: 'include'
-        });
-
-        if (!response.ok) {
-            throw new Error('Failed to delete case');
-        }
-
-        showAlert('Case deleted successfully', 'success');
-        await fetchCases();
-    } catch (error) {
-        console.error('Error:', error);
-        showAlert('Failed to delete case', 'error');
-    }
-};
