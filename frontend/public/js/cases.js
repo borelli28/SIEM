@@ -24,7 +24,7 @@ async function fetchCsrfToken() {
 
 async function fetchCases() {
     try {
-        const response = await fetch('http://localhost:4200/backend/cases', {
+        const response = await fetch(`http://localhost:4200/backend/case/all/${user}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -63,37 +63,78 @@ function displayCases(cases) {
             <div class="case-meta">
                 <span>Status: ${caseItem.status}</span>
                 <span>Severity: ${caseItem.severity}</span>
+                <span>Category: ${caseItem.category}</span>
+                <span>Assignee: ${caseItem.analyst_assigned}</span>
             </div>
         `;
+        caseElement.addEventListener('click', () => loadCaseDetails(caseItem.id));
         casesContainer.appendChild(caseElement);
     });
 }
 
-function switchTab(tabName) {
-    activeTab = tabName;
-    document.querySelectorAll('.tab-btn').forEach(btn => {
-        btn.classList.remove('active');
-    });
-    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
-    // Implement tab content switching logic here
+async function loadCaseDetails(caseId) {
+    try {
+        const response = await fetch(`http://localhost:4200/backend/case/${caseId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to load case details');
+        }
+
+        const caseData = await response.json();
+        updateSidebar(caseData);
+        updateActiveTab(caseData);
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert(error.message, 'error');
+    }
+}
+
+function updateSidebar(caseData) {
+    document.getElementById('case-assignee').textContent = caseData.analyst_assigned;
+    document.getElementById('case-status').textContent = caseData.status;
+    document.getElementById('case-severity').textContent = caseData.severity;
+    document.getElementById('case-category').textContent = caseData.category;
+}
+
+function updateActiveTab(caseData) {
+    const tabContent = document.getElementById('cases-container');
+
+    switch(activeTab) {
+        case 'comments':
+            tabContent.innerHTML = '<ul>' + 
+                caseData.comments.map(comment => `<li>${comment}</li>`).join('') +
+                '</ul>';
+            break;
+        case 'observables':
+            tabContent.innerHTML = '<ul>' + 
+                caseData.observables.map(obs => 
+                    `<li>${obs.observable_type}: ${obs.value}</li>`
+                ).join('') +
+                '</ul>';
+            break;
+        case 'events':
+            tabContent.innerHTML = '<p>Events tab content</p>';
+            break;
+    }
 }
 
 async function createNewCase() {
-    // Implement new case creation logic
     try {
-        const response = await fetch('http://localhost:4200/backend/cases', {
+        const response = await fetch(`http://localhost:4200/backend/case/${user}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-Form-ID': formId,
                 'X-CSRF-Token': csrfToken
             },
-            credentials: 'include',
-            body: JSON.stringify({
-                title: 'New Case',
-                status: 'in progress',
-                severity: 'medium'
-            })
+            credentials: 'include'
         });
 
         if (!response.ok) {
@@ -108,6 +149,20 @@ async function createNewCase() {
     }
 }
 
+function switchTab(tabName) {
+    activeTab = tabName;
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('active');
+    });
+    document.querySelector(`[data-tab="${tabName}"]`).classList.add('active');
+
+    const selectedCase = document.querySelector('.case-item.selected');
+    if (selectedCase) {
+        loadCaseDetails(selectedCase.dataset.caseId);
+    }
+}
+
+// Event listeners remain the same
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAuth();
     if (!getAuthenticationStatus()) {
@@ -117,7 +172,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     await fetchCsrfToken();
     await fetchCases();
 
-    // Event Listeners
     document.getElementById('logout-btn').addEventListener('click', async () => {
         const result = await logout();
         if (result.success) {
@@ -128,7 +182,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     document.getElementById('new-case-btn').addEventListener('click', createNewCase);
-    
     document.getElementById('refresh-btn').addEventListener('click', fetchCases);
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -137,13 +190,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 
-    // Initialize collapse/expand functionality for sidebar sections
     document.querySelectorAll('.collapse-icon').forEach(icon => {
         icon.addEventListener('click', (e) => {
-            const content = e.target.closest('.section-header')
-                .nextElementSibling;
-            content.style.display = 
-                content.style.display === 'none' ? 'block' : 'none';
+            const content = e.target.closest('.section-header').nextElementSibling;
+            content.style.display = content.style.display === 'none' ? 'block' : 'none';
         });
     });
 });
