@@ -47,11 +47,16 @@
                     <div class="section-content">
                         <div class="detail-row">
                             <span class="label">Assignee:</span>
-                            <span class="value" id="case-assignee"></span>
+                            <select id="case-assignee" class="editable-field">
+                            </select>
                         </div>
                         <div class="detail-row">
                             <span class="label">Status:</span>
-                            <span class="value" id="case-status"></span>
+                            <select id="case-status" class="editable-field">
+                                <option value="InProgress">In Progress</option>
+                                <option value="Closed">Closed</option>
+                                <option value="Hold">Hold</option>
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -64,14 +69,21 @@
                     <div class="section-content">
                         <div class="detail-row">
                             <span class="label">Severity:</span>
-                            <span class="value" id="case-severity"></span>
+                            <select id="case-severity" class="editable-field">
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                            </select>
                         </div>
                         <div class="detail-row">
                             <span class="label">Category:</span>
-                            <span class="value" id="case-category"></span>
+                            <input type="text" id="case-category" class="editable-field">
                         </div>
                     </div>
                 </div>
+                <button id="save-changes" class="primary-btn">Save Changes</button>
+            </div>
+
             </div>
         </div>
     </main>

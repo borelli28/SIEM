@@ -226,3 +226,32 @@ a:hover {
     overflow-x: auto;
     margin: 10px 0;
 }
+
+.editable-field {
+    background-color: #333440;
+    color: white;
+    border: 1px solid #444;
+    padding: 5px;
+    border-radius: 3px;
+    width: 150px;
+}
+
+.editable-field:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+#save-changes {
+    width: 100%;
+    margin-top: 20px;
+    display: none;
+}
+
+.detail-row {
+    margin-bottom: 15px;
+}
+
+.case-details-sidebar select,
+.case-details-sidebar input {
+    font-size: 14px;
+}

@@ -4,6 +4,7 @@ import { getCsrfToken } from '../../services/csrfService.js';
 let csrfToken;
 const formId = 'cases-form';
 let activeTab = 'comments';
+let currentCase = null;
 
 function showAlert(message, type = 'error') {
     const alertContainer = document.getElementById('alert-container');
@@ -20,6 +21,32 @@ async function fetchCsrfToken() {
     } catch (error) {
         console.error('Error fetching CSRF token:', error);
         showAlert('Error fetching CSRF token', 'error');
+    }
+}
+
+async function fetchUsers() {
+    try {
+        const response = await fetch(`http://localhost:4200/backend/account/all/${user}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch users');
+        }
+
+        const users = await response.json();
+        const assigneeSelect = document.getElementById('case-assignee');
+        assigneeSelect.innerHTML = users.map(user => 
+            `<option value="${user.id}">${user.name}</option>`
+        ).join('');
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('Failed to load users', 'error');
     }
 }
 
@@ -49,10 +76,12 @@ async function loadCaseDetails(caseId) {
 }
 
 function updateSidebar(caseData) {
-    document.getElementById('case-assignee').textContent = caseData.analyst_assigned;
-    document.getElementById('case-status').textContent = caseData.status;
-    document.getElementById('case-severity').textContent = caseData.severity;
-    document.getElementById('case-category').textContent = caseData.category;
+    currentCase = caseData;
+    
+    document.getElementById('case-assignee').value = caseData.analyst_assigned;
+    document.getElementById('case-status').value = caseData.status;
+    document.getElementById('case-severity').value = caseData.severity;
+    document.getElementById('case-category').value = caseData.category;
 }
 
 function updateMainContent(caseData) {
@@ -86,7 +115,6 @@ function updateActiveTab(caseData) {
             `;
             break;
         case 'observables':
-            // Filter out alerts and logs from observables
             const otherObservables = caseData.observables.filter(obs => 
                 obs.observable_type !== 'alert' && obs.observable_type !== 'log'
             );
@@ -105,7 +133,6 @@ function updateActiveTab(caseData) {
             `;
             break;
         case 'events':
-            // Filter for alerts and logs only
             const events = caseData.observables.filter(obs => 
                 obs.observable_type === 'alert' || obs.observable_type === 'log'
             );
@@ -123,7 +150,7 @@ function updateActiveTab(caseData) {
                                     <p><strong>Created:</strong> ${new Date(eventData.created_at).toLocaleString()}</p>
                                 </div>
                             `;
-                        } else { // log
+                        } else {
                             return `
                                 <div class="event log-event">
                                     <h4>Log Entry</h4>
@@ -154,6 +181,40 @@ function switchTab(tabName) {
     }
 }
 
+async function saveChanges() {
+    if (!currentCase) return;
+
+    const updatedCase = {
+        ...currentCase,
+        analyst_assigned: document.getElementById('case-assignee').value,
+        status: document.getElementById('case-status').value,
+        severity: document.getElementById('case-severity').value,
+        category: document.getElementById('case-category').value
+    };
+
+    try {
+        const response = await fetch(`http://localhost:4200/backend/case/${currentCase.id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include',
+            body: JSON.stringify(updatedCase)
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update case');
+        }
+
+        showAlert('Case updated successfully', 'success');
+        await loadCaseDetails(currentCase.id);
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('Failed to update case', 'error');
+    }
+}
+
 document.addEventListener('DOMContentLoaded', async () => {
     await checkAuth();
     if (!getAuthenticationStatus()) {
@@ -161,8 +222,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         return;
     }
     await fetchCsrfToken();
+    await fetchUsers();
 
-    // Get case ID from URL
     const urlParams = new URLSearchParams(window.location.search);
     const caseId = urlParams.get('id');
     
@@ -180,6 +241,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             showAlert(result.message, 'error');
         }
+    });
+
+    document.getElementById('save-changes').addEventListener('click', saveChanges);
+
+    ['case-assignee', 'case-status', 'case-severity', 'case-category'].forEach(id => {
+        document.getElementById(id).addEventListener('change', () => {
+            document.getElementById('save-changes').style.display = 'block';
+        });
     });
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
