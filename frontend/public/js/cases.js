@@ -75,6 +75,7 @@ async function loadCaseDetails(caseId) {
 
 function updateSidebar(caseData) {
     currentCase = caseData;
+    
     document.getElementById('case-assignee').value = caseData.analyst_assigned;
     document.getElementById('case-status').value = caseData.status;
     document.getElementById('case-severity').value = caseData.severity;
@@ -85,14 +86,58 @@ function updateMainContent(caseData) {
     const casesContainer = document.getElementById('cases-container');
     casesContainer.innerHTML = `
         <div class="case-details">
-            <h2>${caseData.title}</h2>
-            <p class="description">${caseData.description}</p>
+            <h2 class="case-title" id="case-title-display">${caseData.title}</h2>
+            <input type="text" 
+                   class="editable-field case-title hidden" 
+                   value="${caseData.title}" 
+                   id="case-title-input">
+            
+            <p class="case-description" id="case-description-display">${caseData.description}</p>
+            <textarea 
+                class="editable-field case-description hidden" 
+                id="case-description-input">${caseData.description}</textarea>
+            
             <div class="case-info">
                 <p><strong>Created:</strong> ${new Date(caseData.created_at).toLocaleString()}</p>
                 <p><strong>Last Updated:</strong> ${new Date(caseData.updated_at).toLocaleString()}</p>
             </div>
         </div>
     `;
+
+    // Add click handlers for title
+    const titleDisplay = document.getElementById('case-title-display');
+    const titleInput = document.getElementById('case-title-input');
+    titleDisplay.addEventListener('click', () => {
+        titleDisplay.classList.add('hidden');
+        titleInput.classList.remove('hidden');
+        titleInput.focus();
+    });
+    titleInput.addEventListener('blur', () => {
+        titleDisplay.textContent = titleInput.value;
+        titleInput.classList.add('hidden');
+        titleDisplay.classList.remove('hidden');
+        document.getElementById('save-changes').style.display = 'block';
+    });
+    titleInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            titleInput.blur();
+        }
+    });
+
+    // Add click handlers for description
+    const descDisplay = document.getElementById('case-description-display');
+    const descInput = document.getElementById('case-description-input');
+    descDisplay.addEventListener('click', () => {
+        descDisplay.classList.add('hidden');
+        descInput.classList.remove('hidden');
+        descInput.focus();
+    });
+    descInput.addEventListener('blur', () => {
+        descDisplay.textContent = descInput.value;
+        descInput.classList.add('hidden');
+        descDisplay.classList.remove('hidden');
+        document.getElementById('save-changes').style.display = 'block';
+    });
 }
 
 function updateActiveTab(caseData) {
@@ -183,6 +228,8 @@ async function saveChanges() {
 
     const updatedCase = {
         ...currentCase,
+        title: document.getElementById('case-title-input').value,
+        description: document.getElementById('case-description-input').value,
         analyst_assigned: document.getElementById('case-assignee').value,
         status: document.getElementById('case-status').value,
         severity: document.getElementById('case-severity').value,
@@ -223,7 +270,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const urlParams = new URLSearchParams(window.location.search);
     const caseId = urlParams.get('id');
-
+    
     if (!caseId) {
         window.location.href = '/list-cases';
         return;

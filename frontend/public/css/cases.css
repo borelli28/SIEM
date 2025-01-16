@@ -118,6 +118,38 @@ a:hover {
     overflow-y: auto;
 }
 
+.hidden {
+    display: none;
+}
+
+.case-title {
+    cursor: pointer;
+    margin-bottom: 15px;
+}
+
+.case-description {
+    cursor: pointer;
+    margin-bottom: 15px;
+    white-space: pre-wrap;
+}
+
+.case-title:hover, .case-description:hover {
+    background-color: #333440;
+}
+
+input.case-title, textarea.case-description {
+    background-color: #333440;
+    border: 1px solid #3498db;
+    color: white;
+    padding: 5px;
+    width: 100%;
+}
+
+textarea.case-description {
+    min-height: 100px;
+    resize: vertical;
+}
+
 .section-header {
     display: flex;
     justify-content: space-between;
