@@ -77,7 +77,7 @@ function displayCases(cases) {
     cases.forEach(caseItem => {
         const row = document.createElement('tr');
         row.innerHTML = `
-            <td><a href="/cases.html?id=${caseItem.id}">${caseItem.title}</a></td>
+            <td><a href="/cases?id=${caseItem.id}">${caseItem.title}</a></td>
             <td>${caseItem.status}</td>
             <td>${caseItem.severity}</td>
             <td>${caseItem.category}</td>
