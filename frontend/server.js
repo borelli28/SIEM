@@ -1,6 +1,8 @@
 const server = Bun.serve({
     async fetch(req) {
-        const path = new URL(req.url).pathname;
+        const url = new URL(req.url);
+        const path = url.pathname;
+        const searchParams = url.searchParams;
 
         // Serve HTML files
         if (path === "/") return new Response(Bun.file("public/index.html"));
@@ -9,8 +11,12 @@ const server = Bun.serve({
         if (path === "/settings") return new Response(Bun.file("public/settings.html"));
         if (path === "/search") return new Response(Bun.file("public/search.html"));
         if (path === "/alerts") return new Response(Bun.file("public/alerts.html"));
-        if (path === "/cases") return new Response(Bun.file("public/cases.html"));
-        if (path === "/list-cases") return new Response(Bun.file("public/list-cases.html"));
+        if (path === "/cases") {
+            if (searchParams.has('id')) {
+                return new Response(Bun.file("public/cases.html"));
+            }
+            return new Response(Bun.file("public/list-cases.html"));
+        }
 
         // Serve static CSS and JS files
         if (path.startsWith("/css/")) return new Response(Bun.file(`public${path}`));
