@@ -9,30 +9,34 @@ body {
     width: 100%;
 }
 
-#container {
-    width: 90%;
-    margin: auto;
-    padding: 3%;
-    position: relative;
-}
-
 nav {
     width: 100%;
-    margin-bottom: 20px;
 }
 
-nav a {
+main {
+    width: 100%;
+}
+
+h2 {
+    width: 100%;
+}
+
+a {
     color: white;
-    text-decoration: none;
-    margin: 0 10px;
 }
 
-nav a:hover {
+a:hover {
     color: #808080;
 }
 
-nav a.active {
-    color: #3498db;
+.success {
+    background-color: #2c2d36; /* Darker shade of body background */
+    color: #4CAF50;
+}
+
+.error {
+    background-color: #2c2d36; /* Darker shade of body background */
+    color: #CC0000;
 }
 
 #logout-btn {
@@ -41,6 +45,13 @@ nav a.active {
     color: white;
     border: none;
     cursor: pointer;
+}
+
+#container {
+    width: 90%;
+    margin: auto;
+    padding: 3%;
+    position: relative;
 }
 
 .case-header {
