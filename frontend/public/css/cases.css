@@ -69,15 +69,6 @@ a:hover {
     font-size: 18px;
 }
 
-#refresh-btn {
-    background-color: #2c2d36;
-    color: white;
-    border: none;
-    padding: 8px 15px;
-    cursor: pointer;
-    font-size: 18px;
-}
-
 .tabs {
     display: flex;
     gap: 10px;
