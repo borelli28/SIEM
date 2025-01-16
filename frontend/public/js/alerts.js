@@ -129,6 +129,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         ${alert.acknowledged ? 'Acknowledged' : 'Acknowledge'}
                     </button>
                     <button onclick="deleteAlert('${alert.id}')">Delete</button>
+                    <button onclick="createCaseFromAlert('${alert.id}', '${alert.rule_id}')">Create Case</button>
                 </td>
             `;
             alertsBody.appendChild(row);
@@ -171,3 +172,89 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     await fetchAlerts();
 });
+
+window.createCaseFromAlert = async function(alertId, ruleId) {
+    try {
+        // First, get the alert details
+        const alertResponse = await fetch(`http://localhost:4200/backend/alert/${alertId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include'
+        });
+        if (!alertResponse.ok) {
+            throw new Error('Failed to fetch alert details');
+        }
+        const alertData = await alertResponse.json();
+
+        // Create a new case with the alert data
+        const response = await fetch(`http://localhost:4200/backend/case/${user}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include'
+        });
+        if (!response.ok) {
+            throw new Error('Failed to create case');
+        }
+        const newCase = await response.json();
+
+        // Add alert as observable
+        await fetch(`http://localhost:4200/backend/case/${newCase.id}/observable`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                observable_type: 'alert',
+                value: JSON.stringify({
+                    alert_id: alertId,
+                    message: alertData.message,
+                    severity: alertData.severity,
+                    created_at: alertData.created_at
+                })
+            })
+        });
+
+        // Search for related log entry
+        const logResponse = await fetch(`http://localhost:4200/backend/log/filter?query=signature_id="${ruleId}"`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include'
+        });
+
+        if (logResponse.ok) {
+            const logs = await logResponse.json();
+            if (logs.length > 0) {
+                // Add log as observable
+                await fetch(`http://localhost:4200/backend/case/${newCase.id}/observable`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Form-ID': formId
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        observable_type: 'log',
+                        value: JSON.stringify(logs[0])
+                    })
+                });
+            }
+        }
+
+        showAlert('Case created successfully with alert and log data', 'success');
+        window.location.href = '/cases';
+    } catch (error) {
+        console.error('Error creating case from alert:', error);
+        showAlert('Failed to create case from alert', 'error');
+    }
+}
