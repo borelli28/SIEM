@@ -63,22 +63,21 @@
 
 1. **Authentication Flow**:
    - Client authenticates via login endpoint
-   - Session is established with security tokens
-   - CSRF protection is activated for subsequent requests
+   - Session is established with authentication cookie: `auth_session`
 
 2. **Log Ingestion**:
    - Logs are received via agent or direct upload
-   - Logs are batched (50 entries per batch)
+   - Logs are batched (50 logs per batch)
    - Batches are queued for processing
 
 3. **Log Processing**:
-   - Queued batches are processed asynchronously
-   - Each log entry is validated and normalized
+   - A batch is dequeued from the message queue
+   - Each log in the batch is validated and normalized
    - Logs are stored in the database
-   - Sigma rules are evaluated against new logs
+   - Sigma detection rules are evaluated against each new log
 
 4. **Alert Generation**:
-   - Matching rules trigger alert creation
+   - Matching detection rules trigger alert creation
 
 ## API Structure
 

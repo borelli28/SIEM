@@ -180,7 +180,7 @@ pub fn verify_login(session: &Session, name: &String, password: &String, req: &H
 
     let conn = establish_connection()?;
     let mut stmt = conn.prepare("SELECT id, name, password, role FROM accounts WHERE name = ?1")?;
-    
+
     let account = stmt.query_row(params![name], |row| {
         Ok(Account {
             id: row.get(0)?,
