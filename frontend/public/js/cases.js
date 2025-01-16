@@ -26,7 +26,7 @@ async function fetchCsrfToken() {
 
 async function fetchUsers() {
     try {
-        const response = await fetch(`http://localhost:4200/backend/account/all/${user}`, {
+        const response = await fetch(`http://localhost:4200/backend/account/${user}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -36,17 +36,15 @@ async function fetchUsers() {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to fetch users');
+            throw new Error('Failed to fetch user');
         }
 
-        const users = await response.json();
+        const userData = await response.json();
         const assigneeSelect = document.getElementById('case-assignee');
-        assigneeSelect.innerHTML = users.map(user => 
-            `<option value="${user.id}">${user.name}</option>`
-        ).join('');
+        assigneeSelect.innerHTML = `<option value="${userData.id}">${userData.name}</option>`;
     } catch (error) {
         console.error('Error:', error);
-        showAlert('Failed to load users', 'error');
+        showAlert('Failed to load user', 'error');
     }
 }
 
