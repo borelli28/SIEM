@@ -75,7 +75,6 @@ async function loadCaseDetails(caseId) {
 
 function updateSidebar(caseData) {
     currentCase = caseData;
-    
     document.getElementById('case-assignee').value = caseData.analyst_assigned;
     document.getElementById('case-status').value = caseData.status;
     document.getElementById('case-severity').value = caseData.severity;
@@ -224,7 +223,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const urlParams = new URLSearchParams(window.location.search);
     const caseId = urlParams.get('id');
-    
+
     if (!caseId) {
         window.location.href = '/list-cases';
         return;
