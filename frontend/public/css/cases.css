@@ -173,3 +173,20 @@ a:hover {
     background-color: #2c2d36;
     color: #CC0000;
 }
+
+.case-actions {
+    margin-top: 10px;
+}
+
+.delete-btn {
+    background-color: #CC0000;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    cursor: pointer;
+    border-radius: 3px;
+}
+
+.delete-btn:hover {
+    background-color: #AA0000;
+}

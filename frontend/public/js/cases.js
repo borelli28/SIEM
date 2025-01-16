@@ -66,6 +66,9 @@ function displayCases(cases) {
                 <span>Category: ${caseItem.category}</span>
                 <span>Assignee: ${caseItem.analyst_assigned}</span>
             </div>
+            <div class="case-actions">
+                <button class="delete-btn" onclick="event.stopPropagation(); deleteCase('${caseItem.id}')">Delete</button>
+            </div>
         `;
         caseElement.addEventListener('click', () => loadCaseDetails(caseItem.id));
         casesContainer.appendChild(caseElement);
@@ -197,3 +200,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 });
+
+window.deleteCase = async function(caseId) {
+    if (!confirm('Are you sure you want to delete this case?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`http://localhost:4200/backend/case/${caseId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete case');
+        }
+
+        showAlert('Case deleted successfully', 'success');
+        await fetchCases();
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('Failed to delete case', 'error');
+    }
+};
