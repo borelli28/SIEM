@@ -99,13 +99,23 @@ async function displayCases(cases) {
     const tbody = table.querySelector('tbody');
     casesContainer.appendChild(table);
 
+    // Get analyst names
     const casesWithAnalysts = await Promise.all(cases.map(async caseItem => {
         const analystName = await fetchAnalystName(caseItem.analyst_assigned);
         return { ...caseItem, analystName };
     }));
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const selectCase = urlParams.get('selectCase');
+
     casesWithAnalysts.forEach(caseItem => {
         const row = document.createElement('tr');
+        let actionsHtml = `<button class="delete-btn" onclick="deleteCase('${caseItem.id}')">Delete</button>`;
+        
+        if (selectCase === 'true') {
+            actionsHtml += `<button onclick="selectCase('${caseItem.id}')">Select</button>`;
+        }
+
         row.innerHTML = `
             <td><a href="/cases?id=${caseItem.id}">${caseItem.title}</a></td>
             <td>${caseItem.status}</td>
@@ -113,13 +123,64 @@ async function displayCases(cases) {
             <td>${caseItem.category}</td>
             <td>${caseItem.analystName}</td>
             <td>${new Date(caseItem.created_at).toLocaleString()}</td>
-            <td>
-                <button class="delete-btn" onclick="deleteCase('${caseItem.id}')">Delete</button>
-            </td>
+            <td>${actionsHtml}</td>
         `;
         tbody.appendChild(row);
     });
 }
+
+window.selectCase = async function(caseId) {
+    const alertId = sessionStorage.getItem('pendingAlertId');
+    if (!alertId) {
+        showAlert('No alert selected', 'error');
+        return;
+    }
+
+    try {
+        const alertResponse = await fetch(`http://localhost:4200/backend/alert/${alertId}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include'
+        });
+
+        if (!alertResponse.ok) {
+            throw new Error('Failed to fetch alert details');
+        }
+
+        const alertData = await alertResponse.json();
+
+        // Add alert as observable
+        await fetch(`http://localhost:4200/backend/case/${caseId}/observable`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                observable_type: 'alert',
+                value: JSON.stringify({
+                    alert_id: alertId,
+                    message: alertData.message,
+                    severity: alertData.severity,
+                    created_at: alertData.created_at
+                })
+            })
+        });
+
+        // Clear the stored alert ID
+        sessionStorage.removeItem('pendingAlertId');
+        
+        showAlert('Alert added to case successfully', 'success');
+        window.location.href = `/cases?id=${caseId}`;
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('Failed to add alert to case', 'error');
+    }
+};
 
 async function createNewCase() {
     try {
