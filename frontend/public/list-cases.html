@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/cases.css">
+    <title>Cases List</title>
+</head>
+<body>
+    <main>
+        <div id="container">
+            <h1>Cases List</h1>
+            <nav>
+                <a href="/">Dashboard</a>
+                <a href="/settings">Settings</a>
+                <a href="/alerts">All Alerts</a>
+                <a href="/search">Search</a>
+                <a href="/cases" class="active">Cases</a>
+                <button id="logout-btn">Logout</button>
+            </nav>
+
+            <div id="alert-container"></div>
+
+            <div class="case-header">
+                <button id="new-case-btn" class="primary-btn">+</button>
+                <button id="refresh-btn">⟳</button>
+            </div>
+
+            <div id="cases-list">
+            </div>
+        </div>
+    </main>
+    <script type="module" src="/js/list-cases.js"></script>
+</body>
+</html>
