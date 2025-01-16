@@ -1,7 +1,7 @@
 const server = Bun.serve({
     async fetch(req) {
         const url = new URL(req.url);
-        const searchParams = new URLSearchParams(window.location.search);
+        const searchParams = url.searchParams;
         const path = url.pathname;
 
         // Serve HTML files
