@@ -129,7 +129,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                         ${alert.acknowledged ? 'Acknowledged' : 'Acknowledge'}
                     </button>
                     <button onclick="deleteAlert('${alert.id}')">Delete</button>
-                    <button onclick="createCaseFromAlert('${alert.id}', '${alert.rule_id}')">Create Case</button>
                     <button onclick="addAlertToCase('${alert.id}')">Add to Case</button>
                 </td>
             `;
