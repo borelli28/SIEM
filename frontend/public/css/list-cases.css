@@ -60,12 +60,6 @@ h1 {
     flex-wrap: wrap;
 }
 
-.case-header {
-    display: flex;
-    gap: 10px;
-    margin: 20px 0;
-}
-
 .primary-btn {
     background-color: #3498db;
     color: white;
