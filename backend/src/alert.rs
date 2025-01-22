@@ -202,3 +202,18 @@ pub fn acknowledge_alert(alert_id: &String) -> Result<bool, AlertError> {
 
     Ok(affected_rows > 0)
 }
+
+pub fn alert_has_case(alert_id: &String) -> Result<Option<String>, AlertError> {
+    if alert_id.is_empty() {
+        return Err(AlertError::ValidationError("Alert ID cannot be empty".to_string()));
+    }
+
+    let conn = establish_connection()?;
+    let case_id: Option<String> = conn.query_row(
+        "SELECT case_id FROM alerts WHERE id = ?1",
+        params![alert_id],
+        |row| row.get(0)
+    ).optional()?;
+
+    Ok(case_id)
+}
