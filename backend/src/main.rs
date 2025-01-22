@@ -25,6 +25,7 @@ use crate::handlers::{
     get_all_alerts_handler,
     delete_alert_handler,
     acknowledge_alert_handler,
+    get_alert_case_handler,
     create_host_handler,
     get_host_handler,
     get_all_hosts_handler,
@@ -56,10 +57,10 @@ use crate::handlers::{
     add_observable_handler,
     add_comment_handler
 };
+use crate::csrf::CsrfMiddleware;
 use actix_session::{SessionMiddleware, storage::CookieSessionStore, config::PersistentSession};
 use actix_web::{web, cookie::time::Duration, cookie::Key, App, HttpServer};
 use actix_multipart::form::tempfile::TempFileConfig;
-use crate::csrf::CsrfMiddleware;
 use actix_cors::Cors;
 use dotenvy::dotenv;
 use env_logger;
@@ -133,6 +134,7 @@ async fn main() -> std::io::Result<()> {
                             .route("/all/{account_id}", web::get().to(get_all_alerts_handler))
                             .route("/{alert_id}", web::delete().to(delete_alert_handler))
                             .route("/acknowledge/{alert_id}", web::put().to(acknowledge_alert_handler))
+                            .route("/case/{alert_id}", web::get().to(get_alert_case_handler))
                     )
                     .service(
                         web::scope("/host")
