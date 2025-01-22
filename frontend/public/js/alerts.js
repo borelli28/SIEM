@@ -113,11 +113,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
+    async function checkAlertHasCase(alertId) {
+        try {
+            const response = await fetch(`http://localhost:4200/backend/alert/has_case/${alertId}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Form-ID': formId
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to check alert case status');
+            }
+
+            const data = await response.json();
+            console.log('Alert case status:', data);
+            return data.has_case;
+        } catch (error) {
+            console.error('Error checking alert case status:', error);
+            return false;
+        }
+    }
+
     function displayAlerts(alerts) {
         const alertsBody = document.getElementById('alerts-body');
         alertsBody.innerHTML = '';
 
-        alerts.forEach(alert => {
+        alerts.forEach(async (alert) => {
+            const hasCase = await checkAlertHasCase(alert.id);
             const row = document.createElement('tr');
             row.innerHTML = `
                 <td>${alert.message}</td>
@@ -125,11 +150,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 <td>${alert.severity}</td>
                 <td>${new Date(alert.created_at).toLocaleString()}</td>
                 <td>
-                    <button onclick="acknowledgeAlert('${alert.id}')" ${alert.acknowledged ? 'disabled' : ''}>
+                    <button onclick="acknowledgeAlert('${alert.id}')" 
+                        ${alert.acknowledged ? 'disabled' : ''} 
+                        class="acknowledge-btn">
                         ${alert.acknowledged ? 'Acknowledged' : 'Acknowledge'}
                     </button>
-                    <button onclick="deleteAlert('${alert.id}')">Delete</button>
-                    <button onclick="addAlertToCase('${alert.id}')">Add to Case</button>
+                    <button onclick="deleteAlert('${alert.id}')" class="delete-btn">Delete</button>
+                    <button onclick="addAlertToCase('${alert.id}')"
+                        ${hasCase ? 'disabled' : ''}
+                        class="add-case-btn">
+                        ${hasCase ? 'Added to Case' : 'Add to Case'}
+                    </button>
                 </td>
             `;
             alertsBody.appendChild(row);

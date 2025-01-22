@@ -98,3 +98,15 @@ th {
     margin: 2% 0;
     width: 100%;
 }
+
+.add-case-btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #cccccc;
+}
+
+.acknowledge-btn[disabled] {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #cccccc;
+}
