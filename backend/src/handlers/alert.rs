@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder, Error};
 use serde_json::json;
-use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert, get_alert_case};
+use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert};
 use crate::csrf::{CsrfMiddleware, csrf_validator};
 
 pub async fn get_alert_handler(alert_id: web::Path<String>) -> impl Responder {
