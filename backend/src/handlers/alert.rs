@@ -1,6 +1,6 @@
 use actix_web::{web, HttpRequest, HttpResponse, Responder, Error};
 use serde_json::json;
-use crate::alert::{get_alert, list_alerts, delete_alert, acknowledge_alert};
+use crate::alert::{AlertError, get_alert, list_alerts, delete_alert, acknowledge_alert, alert_has_case};
 use crate::csrf::{CsrfMiddleware, csrf_validator};
 
 pub async fn get_alert_handler(alert_id: web::Path<String>) -> impl Responder {
@@ -46,6 +46,34 @@ pub async fn acknowledge_alert_handler(
     csrf_validator(&req, &csrf).await?;
     match acknowledge_alert(&alert_id.to_string()) {
         Ok(ok) => Ok(HttpResponse::Ok().json(ok)),
+        Err(err) => Ok(HttpResponse::InternalServerError().json(json!({
+            "status": "error",
+            "message": err.to_string()
+        })))
+    }
+}
+
+pub async fn alert_has_case_handler(
+    req: HttpRequest,
+    alert_id: web::Path<String>,
+    csrf: web::Data<CsrfMiddleware>
+) -> Result<HttpResponse, Error> {
+    csrf_validator(&req, &csrf).await?;
+    match alert_has_case(&alert_id) {
+        Ok(Some(case_id)) => Ok(HttpResponse::Ok().json(json!({
+            "status": "success",
+            "has_case": true,
+            "case_id": case_id
+        }))),
+        Ok(None) => Ok(HttpResponse::Ok().json(json!({
+            "status": "success",
+            "has_case": false,
+            "case_id": null
+        }))),
+        Err(AlertError::ValidationError(msg)) => Ok(HttpResponse::BadRequest().json(json!({
+            "status": "error",
+            "message": msg
+        }))),
         Err(err) => Ok(HttpResponse::InternalServerError().json(json!({
             "status": "error",
             "message": err.to_string()
