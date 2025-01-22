@@ -163,6 +163,22 @@ function updateActiveTab(caseData) {
 
             tabContent.innerHTML = `
                 <div class="observables-section">
+                    <div class="add-observable-container">
+                        <button id="show-observable-form" class="primary-btn">Add Observable</button>
+                        <form id="add-observable-form" class="hidden">
+                            <select id="observable-type" required>
+                                <option value="">Select Type</option>
+                                <option value="ip">IP Address</option>
+                                <option value="domain">Domain</option>
+                                <option value="hash">File Hash</option>
+                                <option value="url">URL</option>
+                                <option value="email">Email</option>
+                            </select>
+                            <input type="text" id="observable-value" placeholder="Enter value" required>
+                            <button type="submit" class="primary-btn">Add</button>
+                            <button type="button" id="cancel-observable" class="secondary-btn">Cancel</button>
+                        </form>
+                    </div>
                     <ul class="observables-list">
                         ${otherObservables.map(obs => `
                             <li class="observable">
@@ -173,6 +189,52 @@ function updateActiveTab(caseData) {
                     </ul>
                 </div>
             `;
+
+            // Add event listeners for the new form
+            const addForm = document.getElementById('add-observable-form');
+            const showFormBtn = document.getElementById('show-observable-form');
+            const cancelBtn = document.getElementById('cancel-observable');
+
+            showFormBtn.addEventListener('click', () => {
+                addForm.classList.remove('hidden');
+                showFormBtn.classList.add('hidden');
+            });
+
+            cancelBtn.addEventListener('click', () => {
+                addForm.classList.add('hidden');
+                showFormBtn.classList.remove('hidden');
+            });
+
+            addForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const type = document.getElementById('observable-type').value;
+                const value = document.getElementById('observable-value').value;
+
+                try {
+                    const response = await fetch(`http://localhost:4200/backend/case/${currentCase.id}/observable`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Form-ID': formId
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            observable_type: type,
+                            value: value
+                        })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to add observable');
+                    }
+
+                    showAlert('Observable added successfully', 'success');
+                    await loadCaseDetails(currentCase.id);
+                } catch (error) {
+                    console.error('Error:', error);
+                    showAlert('Failed to add observable', 'error');
+                }
+            });
             break;
         case 'events':
             const events = caseData.observables.filter(obs => 

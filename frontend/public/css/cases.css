@@ -284,3 +284,45 @@ textarea.case-description {
 .case-details-sidebar input {
     font-size: 14px;
 }
+
+.add-observable-container {
+    margin-bottom: 20px;
+}
+
+#add-observable-form {
+    background-color: #2c2d36;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+#add-observable-form.hidden {
+    display: none;
+}
+
+#add-observable-form select,
+#add-observable-form input {
+    margin-right: 10px;
+    padding: 8px;
+    background-color: #22232b;
+    border: 1px solid #3498db;
+    color: white;
+    border-radius: 4px;
+}
+
+#add-observable-form button {
+    margin-right: 10px;
+}
+
+.secondary-btn {
+    background-color: #666;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.secondary-btn:hover {
+    background-color: #777;
+}
