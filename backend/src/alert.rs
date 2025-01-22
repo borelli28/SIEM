@@ -210,7 +210,7 @@ pub fn alert_has_case(alert_id: &String) -> Result<Option<String>, AlertError> {
 
     let conn = establish_connection()?;
     let case_id: Option<String> = conn.query_row(
-        "SELECT case_id FROM alerts WHERE id = ?1",
+        "SELECT case_id FROM alerts WHERE id = ?1 AND case_id IS NOT NULL",
         params![alert_id],
         |row| row.get(0)
     ).optional()?;
