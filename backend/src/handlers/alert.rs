@@ -52,25 +52,3 @@ pub async fn acknowledge_alert_handler(
         })))
     }
 }
-
-pub async fn get_alert_case_handler(
-    req: HttpRequest,
-    alert_id: web::Path<String>,
-    csrf: web::Data<CsrfMiddleware>
-) -> Result<HttpResponse, Error> {
-    csrf_validator(&req, &csrf).await?;
-    match get_alert_case(&alert_id.to_string()) {
-        Ok(Some(case_id)) => Ok(HttpResponse::Ok().json(json!({
-            "in_case": true,
-            "case_id": case_id
-        }))),
-        Ok(None) => Ok(HttpResponse::Ok().json(json!({
-            "in_case": false,
-            "case_id": null
-        }))),
-        Err(err) => Ok(HttpResponse::InternalServerError().json(json!({
-            "status": "error",
-            "message": err.to_string()
-        })))
-    }
-}

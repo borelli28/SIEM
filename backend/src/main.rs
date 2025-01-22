@@ -25,7 +25,6 @@ use crate::handlers::{
     get_all_alerts_handler,
     delete_alert_handler,
     acknowledge_alert_handler,
-    get_alert_case_handler,
     create_host_handler,
     get_host_handler,
     get_all_hosts_handler,
@@ -134,7 +133,6 @@ async fn main() -> std::io::Result<()> {
                             .route("/all/{account_id}", web::get().to(get_all_alerts_handler))
                             .route("/{alert_id}", web::delete().to(delete_alert_handler))
                             .route("/acknowledge/{alert_id}", web::put().to(acknowledge_alert_handler))
-                            .route("/case/{alert_id}", web::get().to(get_alert_case_handler))
                     )
                     .service(
                         web::scope("/host")
