@@ -1,5 +1,6 @@
 use rusqlite::{Error as SqliteError, OptionalExtension, params};
 use crate::database::establish_connection;
+use crate::alert::update_alert_case_id;
 use serde::{Deserialize, Serialize};
 use chrono::Utc;
 use serde_json;
@@ -309,6 +310,19 @@ pub fn update_case(case: &Case) -> Result<(), CaseError> {
             Utc::now().to_rfc3339(),
         ],
     )?;
+
+    // Update alert case_ids
+    for observable in &case.observables {
+        if observable.observable_type == "alert" {
+            if let Ok(alert_data) = serde_json::from_str::<serde_json::Value>(&observable.value) {
+                if let Some(alert_id) = alert_data.get("alert_id").and_then(|id| id.as_str()) {
+                    if let Err(e) = update_alert_case_id(alert_id, &case.id) {
+                        eprintln!("Failed to update alert case_id: {}", e);
+                    }
+                }
+            }
+        }
+    }
 
     Ok(())
 }
