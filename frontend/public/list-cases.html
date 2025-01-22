@@ -19,6 +19,39 @@
                 <button id="logout-btn">Logout</button>
             </nav>
 
+            <button id="show-form-btn" class="primary-btn">Create New Case</button>
+            <div class="form-container hidden">
+                <div class="form-container">
+                    <form id="create-case-form">
+                        <h2>Create New Case</h2>
+                        <div class="form-group">
+                            <label for="title">Title:</label>
+                            <input type="text" id="title" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="severity">Severity:</label>
+                            <select id="severity" name="severity" required>
+                                <option value="low">Low</option>
+                                <option value="medium">Medium</option>
+                                <option value="high">High</option>
+                                <option value="critical">Critical</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="category">Category:</label>
+                            <select id="category" name="category" required>
+                                <option value="malware">Malware</option>
+                                <option value="phishing">Phishing</option>
+                                <option value="intrusion">Intrusion</option>
+                                <option value="data_leak">Data Leak</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+                        <button type="submit">Create Case</button>
+                    </form>
+                </div>
+            </div>
+
             <div id="alert-container"></div>
 
             <div id="cases-list">

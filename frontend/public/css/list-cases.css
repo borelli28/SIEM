@@ -278,3 +278,17 @@ textarea.case-description {
 .case-details-sidebar input {
     font-size: 14px;
 }
+
+.form-container.hidden {
+    display: none;
+}
+
+#show-form-btn {
+    margin: 1% 0;
+    width: 75%;
+}
+
+.form-container {
+    width: 100%;
+    margin: 1.5% 0;
+}

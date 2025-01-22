@@ -182,7 +182,17 @@ window.selectCase = async function(caseId) {
     }
 };
 
-async function createNewCase() {
+async function createNewCase(event) {
+    event.preventDefault();
+    
+    const formData = {
+        title: document.getElementById('title').value,
+        severity: document.getElementById('severity').value,
+        category: document.getElementById('category').value,
+        analyst_assigned: user,
+        status: "open"
+    };
+
     try {
         const response = await fetch(`http://localhost:4200/backend/case/${user}`, {
             method: 'POST',
@@ -190,13 +200,17 @@ async function createNewCase() {
                 'Content-Type': 'application/json',
                 'X-Form-ID': formId
             },
-            credentials: 'include'
+            credentials: 'include',
+            body: JSON.stringify(formData)
         });
 
         if (!response.ok) {
             throw new Error('Failed to create new case');
         }
 
+        // Reset form
+        document.getElementById('create-case-form').reset();
+        
         await fetchCases();
         showAlert('Case created successfully', 'success');
     } catch (error) {
@@ -248,5 +262,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             showAlert(result.message, 'error');
         }
+    });
+
+    const showFormBtn = document.getElementById('show-form-btn');
+    const formContainer = document.querySelector('.form-container');
+    
+    showFormBtn.addEventListener('click', () => {
+        formContainer.classList.toggle('hidden');
+        showFormBtn.textContent = formContainer.classList.contains('hidden') 
+            ? 'Create New Case' 
+            : 'Hide Form';
+    });
+
+    document.getElementById('create-case-form').addEventListener('submit', async (event) => {
+        await createNewCase(event);
+        formContainer.classList.add('hidden');
+        showFormBtn.textContent = 'Create New Case';
     });
 });
