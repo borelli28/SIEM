@@ -109,8 +109,10 @@ impl Schema {
                 message TEXT NOT NULL,
                 acknowledged BOOLEAN NOT NULL DEFAULT false,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                case_id TEXT,
                 FOREIGN KEY(rule_id) REFERENCES rules(id),
-                FOREIGN KEY(account_id) REFERENCES accounts(id)
+                FOREIGN KEY(account_id) REFERENCES accounts(id),
+                FOREIGN KEY(case_id) REFERENCES cases(id)
             )",
             [],
         )?;
