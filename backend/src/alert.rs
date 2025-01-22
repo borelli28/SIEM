@@ -217,3 +217,17 @@ pub fn alert_has_case(alert_id: &String) -> Result<Option<String>, AlertError> {
 
     Ok(case_id)
 }
+
+pub fn update_alert_case_id(alert_id: &str, case_id: &str) -> Result<bool, AlertError> {
+    if alert_id.is_empty() {
+        return Err(AlertError::ValidationError("Alert ID cannot be empty".to_string()));
+    }
+
+    let conn = establish_connection()?;
+    let affected_rows = conn.execute(
+        "UPDATE alerts SET case_id = ?2 WHERE id = ?1",
+        params![alert_id, case_id],
+    )?;
+
+    Ok(affected_rows > 0)
+}
