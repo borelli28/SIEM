@@ -185,7 +185,14 @@ async function updateActiveTab(caseData) {
                     <ul class="comments-list">
                         ${comments.map(comment => `
                             <li class="comment">
-                                <div class="comment-content">${comment.comment}</div>
+                                <div class="comment-content" id="comment-display-${comment.id}" onclick="showCommentEdit('${comment.id}')">
+                                    ${comment.comment}
+                                </div>
+                                <textarea 
+                                    class="comment-edit hidden" 
+                                    id="comment-edit-${comment.id}"
+                                    onblur="saveCommentEdit('${comment.id}')"
+                                    >${comment.comment}</textarea>
                                 <div class="comment-metadata">
                                     <span class="comment-date">${new Date(comment.created_at).toLocaleString()}</span>
                                 </div>
@@ -355,6 +362,45 @@ async function updateActiveTab(caseData) {
     }
 }
 
+function showCommentEdit(commentId) {
+    const displayElement = document.getElementById(`comment-display-${commentId}`);
+    const editElement = document.getElementById(`comment-edit-${commentId}`);
+
+    displayElement.classList.add('hidden');
+    editElement.classList.remove('hidden');
+    editElement.focus();
+}
+
+async function saveCommentEdit(commentId) {
+    const displayElement = document.getElementById(`comment-display-${commentId}`);
+    const editElement = document.getElementById(`comment-edit-${commentId}`);
+    const newComment = editElement.value;
+
+    try {
+        const response = await fetch(`http://localhost:4200/backend/case/comment/${commentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include',
+            body: JSON.stringify(newComment)
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update comment');
+        }
+
+        displayElement.textContent = newComment;
+        displayElement.classList.remove('hidden');
+        editElement.classList.add('hidden');
+        showAlert('Comment updated successfully', 'success');
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('Failed to update comment', 'error');
+    }
+}
+
 function switchTab(tabName) {
     activeTab = tabName;
     document.querySelectorAll('.tab-btn').forEach(btn => {
@@ -454,3 +500,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     });
 });
+
+// Make functions globally accessible
+window.showCommentEdit = function(commentId) {
+    const displayElement = document.getElementById(`comment-display-${commentId}`);
+    const editElement = document.getElementById(`comment-edit-${commentId}`);
+    
+    displayElement.classList.add('hidden');
+    editElement.classList.remove('hidden');
+    editElement.focus();
+}
+
+window.saveCommentEdit = async function(commentId) {
+    const displayElement = document.getElementById(`comment-display-${commentId}`);
+    const editElement = document.getElementById(`comment-edit-${commentId}`);
+    const newComment = editElement.value;
+
+    try {
+        const response = await fetch(`http://localhost:4200/backend/case/comment/${commentId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include',
+            body: JSON.stringify(newComment)
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to update comment');
+        }
+
+        displayElement.textContent = newComment;
+        displayElement.classList.remove('hidden');
+        editElement.classList.add('hidden');
+        showAlert('Comment updated successfully', 'success');
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('Failed to update comment', 'error');
+    }
+}
