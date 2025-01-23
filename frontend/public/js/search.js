@@ -81,9 +81,23 @@ function displayLogs(logs) {
         return;
     }
 
-    const preElement = document.createElement('pre');
-    preElement.textContent = JSON.stringify(logs, null, 2);
-    logsContainer.appendChild(preElement);
+    logs.forEach(log => {
+        const logDiv = document.createElement('div');
+        logDiv.className = 'log-entry';
+        
+        logDiv.innerHTML = `
+            <div class="log-content">
+                <pre>${JSON.stringify(log, null, 2)}</pre>
+            </div>
+            <div class="log-actions">
+                <button class="add-event-btn" onclick="addLogAsEvent('${log.id}')">
+                    Add as Event
+                </button>
+            </div>
+        `;
+
+        logsContainer.appendChild(logDiv);
+    });
 }
 
 window.handleSearch = async function(event) {
@@ -96,4 +110,83 @@ window.handleSearch = async function(event) {
     }
 
     await fetchFilteredLogs(eqlQuery);
+}
+
+window.addLogAsEvent = async function(logId) {
+    try {
+        const response = await fetch(`http://localhost:4200/backend/case/all/${user}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch cases');
+        }
+
+        const cases = await response.json();
+
+        // Show case selection modal
+        const caseId = await showCaseSelectionModal(cases);
+        if (!caseId) return;
+
+        // Add log as event to selected case
+        const addResponse = await fetch(`http://localhost:4200/backend/case/${caseId}/observable`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                observable_type: 'log',
+                value: logId
+            })
+        });
+
+        if (!addResponse.ok) {
+            throw new Error('Failed to add log as event');
+        }
+
+        showAlert('Log added as event successfully', 'success');
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('Failed to add log as event', 'error');
+    }
+}
+
+function showCaseSelectionModal(cases) {
+    return new Promise((resolve) => {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <h3>Select Case</h3>
+                <select id="case-select">
+                    ${cases.map(c => `
+                        <option value="${c.id}">${c.title}</option>
+                    `).join('')}
+                </select>
+                <div class="modal-actions">
+                    <button onclick="submitCaseSelection()" class="primary-btn">Add</button>
+                    <button onclick="closeCaseSelectionModal()" class="secondary-btn">Cancel</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        window.submitCaseSelection = () => {
+            const selectedCase = document.getElementById('case-select').value;
+            document.body.removeChild(modal);
+            resolve(selectedCase);
+        };
+
+        window.closeCaseSelectionModal = () => {
+            document.body.removeChild(modal);
+            resolve(null);
+        };
+    });
 }
