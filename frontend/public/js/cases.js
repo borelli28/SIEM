@@ -185,8 +185,15 @@ async function updateActiveTab(caseData) {
                     <ul class="comments-list">
                         ${comments.map(comment => `
                             <li class="comment">
-                                <div class="comment-content" id="comment-display-${comment.id}" onclick="showCommentEdit('${comment.id}')">
-                                    ${comment.comment}
+                                <div class="comment-header">
+                                    <div class="comment-content" id="comment-display-${comment.id}" onclick="showCommentEdit('${comment.id}')">
+                                        ${comment.comment}
+                                    </div>
+                                    <button class="delete-comment-btn" onclick="deleteComment('${comment.id}')">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                                        </svg>
+                                    </button>
                                 </div>
                                 <textarea 
                                     class="comment-edit hidden" 
@@ -538,5 +545,32 @@ window.saveCommentEdit = async function(commentId) {
     } catch (error) {
         console.error('Error:', error);
         showAlert('Failed to update comment', 'error');
+    }
+}
+
+window.deleteComment = async function(commentId) {
+    if (!confirm('Are you sure you want to delete this comment?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`http://localhost:4200/backend/case/comment/${commentId}`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete comment');
+        }
+
+        showAlert('Comment deleted successfully', 'success');
+        await loadCaseDetails(currentCase.id);
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('Failed to delete comment', 'error');
     }
 }
