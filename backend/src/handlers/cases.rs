@@ -1,9 +1,10 @@
 use actix_web::{web, HttpResponse, HttpRequest, Error};
 use serde_json::json;
+use chrono::Utc;
 use log::error;
 use crate::cases::{Case, CaseError, Observable, create_case, get_case, get_cases_by_account,
                    update_case, delete_case, add_observable};
-use crate::case_comments::{CaseCommentError, create_comment,
+use crate::case_comments::{CaseCommentError, create_comment, get_comment,
     get_comments_by_case, update_comment, delete_comment};
 use crate::csrf::{CsrfMiddleware, csrf_validator};
 
@@ -127,7 +128,7 @@ pub async fn add_observable_handler(
     csrf: web::Data<CsrfMiddleware>
 ) -> Result<HttpResponse, Error> {
     csrf_validator(&req, &csrf).await?;
-    
+
     match add_observable(&case_id, observable.into_inner()) {
         Ok(()) => Ok(HttpResponse::Ok().json(json!({
             "status": "success",
@@ -158,16 +159,9 @@ pub async fn add_comment_handler(
     csrf_validator(&req, &csrf).await?;
 
     match create_comment(&case_id, &comment.into_inner()) {
-        Ok(new_comment) => Ok(HttpResponse::Ok().json(json!({
+        Ok(_) => Ok(HttpResponse::Ok().json(json!({
             "status": "success",
-            "message": "Comment added successfully",
-            "data": {
-                "id": new_comment.id,
-                "case_id": new_comment.case_id,
-                "comment": new_comment.comment,
-                "created_at": new_comment.created_at,
-                "updated_at": new_comment.updated_at
-            }
+            "message": "Comment added successfully"
         }))),
         Err(err) => match err {
             CaseCommentError::ValidationError(msg) => Ok(HttpResponse::BadRequest().json(json!({
@@ -200,6 +194,56 @@ pub async fn get_case_comments_handler(
     }
 }
 
+pub async fn update_comment_handler(
+    req: HttpRequest,
+    comment_id: web::Path<String>,
+    comment_text: web::Json<String>,
+    csrf: web::Data<CsrfMiddleware>
+) -> Result<HttpResponse, Error> {
+    csrf_validator(&req, &csrf).await?;
+
+    // Get the existing comment
+    match get_comment(&comment_id) {
+        Ok(Some(mut comment)) => {
+            // Update the comment text
+            comment.comment = comment_text.into_inner();
+            comment.updated_at = Utc::now().to_rfc3339();
+
+            // Save the updated comment
+            match update_comment(&comment) {
+                Ok(()) => Ok(HttpResponse::Ok().json(json!({
+                    "status": "success",
+                    "message": "Comment updated successfully"
+                }))),
+                Err(err) => match err {
+                    CaseCommentError::ValidationError(msg) => Ok(HttpResponse::BadRequest().json(json!({
+                        "status": "error",
+                        "message": msg
+                    }))),
+                    CaseCommentError::DatabaseError(e) => {
+                        error!("Database error while updating comment: {:?}", e);
+                        Ok(HttpResponse::InternalServerError().json(json!({
+                            "status": "error",
+                            "message": "An internal error occurred"
+                        })))
+                    }
+                }
+            }
+        },
+        Ok(None) => Ok(HttpResponse::NotFound().json(json!({
+            "status": "error",
+            "message": "Comment not found"
+        }))),
+        Err(err) => {
+            error!("Database error while fetching comment: {:?}", err);
+            Ok(HttpResponse::InternalServerError().json(json!({
+                "status": "error",
+                "message": "An internal error occurred"
+            })))
+        }
+    }
+}
+
 pub async fn delete_comment_handler(
     req: HttpRequest,
     comment_id: web::Path<String>,
@@ -222,42 +266,6 @@ pub async fn delete_comment_handler(
                 "status": "error",
                 "message": "An internal error occurred"
             })))
-        }
-    }
-}
-
-pub async fn update_comment_handler(
-    req: HttpRequest,
-    comment_id: web::Path<String>,
-    comment_text: web::Json<String>,
-    csrf: web::Data<CsrfMiddleware>
-) -> Result<HttpResponse, Error> {
-    csrf_validator(&req, &csrf).await?;
-
-    match update_comment(&comment_id, &comment_text.into_inner()) {
-        Ok(updated_comment) => Ok(HttpResponse::Ok().json(json!({
-            "status": "success",
-            "message": "Comment updated successfully",
-            "data": {
-                "id": updated_comment.id,
-                "case_id": updated_comment.case_id,
-                "comment": updated_comment.comment,
-                "created_at": updated_comment.created_at,
-                "updated_at": updated_comment.updated_at
-            }
-        }))),
-        Err(err) => match err {
-            CaseCommentError::ValidationError(msg) => Ok(HttpResponse::BadRequest().json(json!({
-                "status": "error",
-                "message": msg
-            }))),
-            CaseCommentError::DatabaseError(e) => {
-                error!("Database error while updating comment: {:?}", e);
-                Ok(HttpResponse::InternalServerError().json(json!({
-                    "status": "error",
-                    "message": "An internal error occurred"
-                })))
-            }
         }
     }
 }
