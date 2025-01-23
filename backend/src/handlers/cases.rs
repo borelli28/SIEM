@@ -3,7 +3,7 @@ use serde_json::json;
 use chrono::Utc;
 use log::error;
 use crate::cases::{Case, CaseError, Observable, create_case, get_case, get_cases_by_account,
-                   update_case, delete_case, add_observable};
+                   update_case, delete_case, add_observable, delete_observable};
 use crate::case_comments::{CaseCommentError, create_comment, get_comment,
     get_comments_by_case, update_comment, delete_comment};
 use crate::csrf::{CsrfMiddleware, csrf_validator};
@@ -133,6 +133,35 @@ pub async fn add_observable_handler(
         Ok(()) => Ok(HttpResponse::Ok().json(json!({
             "status": "success",
             "message": "Observable added successfully"
+        }))),
+        Err(err) => match err {
+            CaseError::ValidationError(msg) => Ok(HttpResponse::BadRequest().json(json!({
+                "status": "error",
+                "message": msg
+            }))),
+            _ => {
+                error!("Internal server error: {:?}", err);
+                Ok(HttpResponse::InternalServerError().json(json!({
+                    "status": "error",
+                    "message": "An internal error occurred"
+                })))
+            }
+        }
+    }
+}
+
+pub async fn delete_observable_handler(
+    req: HttpRequest,
+    case_id: web::Path<String>,
+    observable: web::Json<Observable>,
+    csrf: web::Data<CsrfMiddleware>
+) -> Result<HttpResponse, Error> {
+    csrf_validator(&req, &csrf).await?;
+
+    match delete_observable(&case_id, observable.into_inner()) {
+        Ok(()) => Ok(HttpResponse::Ok().json(json!({
+            "status": "success",
+            "message": "Observable deleted successfully"
         }))),
         Err(err) => match err {
             CaseError::ValidationError(msg) => Ok(HttpResponse::BadRequest().json(json!({
