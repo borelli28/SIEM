@@ -333,3 +333,18 @@ pub fn add_observable(case_id: &str, observable: Observable) -> Result<(), CaseE
 
     Ok(())
 }
+
+pub fn delete_observable(case_id: &str, observable: Observable) -> Result<(), CaseError> {
+    let mut case = get_case(case_id)?.ok_or_else(|| {
+        CaseError::ValidationError("Case not found".to_string())
+    })?;
+
+    // Find and remove the observable
+    case.observables.retain(|obs| 
+        !(obs.observable_type == observable.observable_type && obs.value == observable.value)
+    );
+
+    update_case(&case)?;
+
+    Ok(())
+}
