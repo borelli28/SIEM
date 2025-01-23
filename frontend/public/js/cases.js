@@ -350,28 +350,82 @@ async function updateActiveTab(caseData) {
                 obs.observable_type === 'alert' || obs.observable_type === 'log'
             );
 
+            // First, fetch all log data for log events
+            const logEvents = events.filter(event => event.observable_type === 'log');
+            const logData = {};
+
+            if (logEvents.length > 0) {
+                for (const event of logEvents) {
+                    try {
+                        const params = new URLSearchParams({
+                            query: `id = "${event.value}"`,
+                            account_id: user
+                        });
+
+                        const response = await fetch(`http://localhost:4200/backend/log/filter?${params}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Form-ID': formId
+                            },
+                            credentials: 'include'
+                        });
+
+                        if (response.ok) {
+                            const logs = await response.json();
+                            if (logs && logs.length > 0) {
+                                logData[event.value] = logs[0]; // Take the first log since we're querying by ID
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error fetching log data:', error);
+                    }
+                }
+            }
+
             tabContent.innerHTML = `
                 <div class="events-section">
                     ${events.map(event => {
-                        const eventData = JSON.parse(event.value);
                         if (event.observable_type === 'alert') {
-                            return `
-                                <div class="event alert-event">
-                                    <h4>Alert</h4>
-                                    <p><strong>Message:</strong> ${eventData.message}</p>
-                                    <p><strong>Severity:</strong> ${eventData.severity}</p>
-                                    <p><strong>Created:</strong> ${new Date(eventData.created_at).toLocaleString()}</p>
-                                </div>
-                            `;
-                        } else {
-                            return `
-                                <div class="event log-event">
-                                    <h4>Log Entry</h4>
-                                    <p><strong>Source:</strong> ${eventData.device_product || 'Unknown'}</p>
-                                    <p><strong>Severity:</strong> ${eventData.severity || 'Unknown'}</p>
-                                    <pre>${JSON.stringify(eventData, null, 2)}</pre>
-                                </div>
-                            `;
+                            try {
+                                const eventData = JSON.parse(event.value);
+                                return `
+                                    <div class="event alert-event">
+                                        <h4>Alert</h4>
+                                        <p><strong>Message:</strong> ${eventData.message || 'N/A'}</p>
+                                        <p><strong>Severity:</strong> ${eventData.severity || 'N/A'}</p>
+                                        <p><strong>Created:</strong> ${eventData.created_at ? new Date(eventData.created_at).toLocaleString() : 'N/A'}</p>
+                                    </div>
+                                `;
+                            } catch (error) {
+                                console.error('Error parsing alert data:', error);
+                                return `
+                                    <div class="event error-event">
+                                        <h4>Error</h4>
+                                        <p>Failed to parse alert data</p>
+                                    </div>
+                                `;
+                            }
+                        } else { // log event
+                            const log = logData[event.value];
+                            if (log) {
+                                return `
+                                    <div class="event log-event">
+                                        <h4>Log Entry</h4>
+                                        <p><strong>Source:</strong> ${log.device_product || 'Unknown'}</p>
+                                        <p><strong>Severity:</strong> ${log.severity || 'Unknown'}</p>
+                                        <pre>${JSON.stringify(log, null, 2)}</pre>
+                                    </div>
+                                `;
+                            } else {
+                                return `
+                                    <div class="event error-event">
+                                        <h4>Log Entry</h4>
+                                        <p>Failed to fetch log data</p>
+                                        <p>Log ID: ${event.value}</p>
+                                    </div>
+                                `;
+                            }
                         }
                     }).join('')}
                 </div>
