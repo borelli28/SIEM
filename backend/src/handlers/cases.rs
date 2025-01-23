@@ -2,7 +2,8 @@ use actix_web::{web, HttpResponse, HttpRequest, Error};
 use serde_json::json;
 use log::error;
 use crate::cases::{Case, CaseError, Observable, create_case, get_case, get_cases_by_account, 
-                   update_case, delete_case, add_observable, add_comment};
+                   update_case, delete_case, add_observable};
+use crate::case_comments::{CaseCommentError, create_comment};
 use crate::csrf::{CsrfMiddleware, csrf_validator};
 
 pub async fn create_case_handler(
@@ -154,19 +155,26 @@ pub async fn add_comment_handler(
     csrf: web::Data<CsrfMiddleware>
 ) -> Result<HttpResponse, Error> {
     csrf_validator(&req, &csrf).await?;
-    
-    match add_comment(&case_id, comment.into_inner()) {
-        Ok(()) => Ok(HttpResponse::Ok().json(json!({
+
+    match create_comment(&case_id, &comment.into_inner()) {
+        Ok(new_comment) => Ok(HttpResponse::Ok().json(json!({
             "status": "success",
-            "message": "Comment added successfully"
+            "message": "Comment added successfully",
+            "data": {
+                "id": new_comment.id,
+                "case_id": new_comment.case_id,
+                "comment": new_comment.comment,
+                "created_at": new_comment.created_at,
+                "updated_at": new_comment.updated_at
+            }
         }))),
         Err(err) => match err {
-            CaseError::ValidationError(msg) => Ok(HttpResponse::BadRequest().json(json!({
+            CaseCommentError::ValidationError(msg) => Ok(HttpResponse::BadRequest().json(json!({
                 "status": "error",
                 "message": msg
             }))),
-            _ => {
-                error!("Internal server error: {:?}", err);
+            CaseCommentError::DatabaseError(e) => {
+                error!("Database error while adding comment: {:?}", e);
                 Ok(HttpResponse::InternalServerError().json(json!({
                     "status": "error",
                     "message": "An internal error occurred"
