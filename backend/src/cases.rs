@@ -80,7 +80,6 @@ pub struct Case {
     pub category: String,
     pub analyst_assigned: String,
     pub observables: Vec<Observable>,
-    pub comments: Vec<String>,
     pub created_at: String,
     pub updated_at: String,
 }
@@ -97,7 +96,6 @@ impl Default for Case {
             category: "Security Investigation".to_string(),
             analyst_assigned: String::new(),
             observables: Vec::new(),
-            comments: Vec::new(),
             created_at: Utc::now().to_rfc3339(),
             updated_at: Utc::now().to_rfc3339(),
         }
@@ -154,13 +152,12 @@ pub fn create_case(account_id: &str) -> Result<Case, CaseError> {
     new_case.validate()?;
 
     let observables_json = serde_json::to_string(&new_case.observables)?;
-    let comments_json = serde_json::to_string(&new_case.comments)?;
 
     let conn = establish_connection()?;
     conn.execute(
         "INSERT INTO cases (id, account_id, title, description, severity, status, category, 
-         analyst_assigned, observables, comments, created_at, updated_at) 
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+         analyst_assigned, observable, created_at, updated_at) 
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
         params![
             new_case.id,
             new_case.account_id,
@@ -171,7 +168,6 @@ pub fn create_case(account_id: &str) -> Result<Case, CaseError> {
             new_case.category,
             new_case.analyst_assigned,
             observables_json,
-            comments_json,
             new_case.created_at,
             new_case.updated_at,
         ],
@@ -184,13 +180,12 @@ pub fn get_case(case_id: &str) -> Result<Option<Case>, CaseError> {
     let conn = establish_connection()?;
     let mut stmt = conn.prepare(
         "SELECT id, account_id, title, description, severity, status, category, 
-         analyst_assigned, observables, comments, created_at, updated_at 
+         analyst_assigned, observables, created_at, updated_at 
          FROM cases WHERE id = ?1"
     )?;
 
     let case = stmt.query_row(params![case_id], |row| {
         let observables_json: String = row.get(8)?;
-        let comments_json: String = row.get(9)?;
         Ok((
             row.get(0)?,
             row.get(1)?,
@@ -201,17 +196,15 @@ pub fn get_case(case_id: &str) -> Result<Option<Case>, CaseError> {
             row.get(6)?,
             row.get(7)?,
             observables_json,
-            comments_json,
-            row.get(10)?,
-            row.get(11)?
+            row.get(9)?,
+            row.get(10)?
         ))
     }).optional()?;
 
     match case {
         Some((id, account_id, title, description, severity, status, category, 
-              analyst_assigned, observables_json, comments_json, created_at, updated_at)) => {
+              analyst_assigned, observables_json, created_at, updated_at)) => {
             let observables = serde_json::from_str(&observables_json)?;
-            let comments = serde_json::from_str(&comments_json)?;
             Ok(Some(Case {
                 id,
                 account_id,
@@ -222,7 +215,6 @@ pub fn get_case(case_id: &str) -> Result<Option<Case>, CaseError> {
                 category,
                 analyst_assigned,
                 observables,
-                comments,
                 created_at,
                 updated_at,
             }))
@@ -235,7 +227,7 @@ pub fn get_cases_by_account(account_id: &str) -> Result<Vec<Case>, CaseError> {
     let conn = establish_connection()?;
     let mut stmt = conn.prepare(
         "SELECT id, account_id, title, description, severity, status, category, 
-         analyst_assigned, observables, comments, created_at, updated_at 
+         analyst_assigned, observables, created_at, updated_at 
          FROM cases WHERE account_id = ?1 
          ORDER BY created_at DESC"
     )?;
@@ -253,7 +245,6 @@ pub fn get_cases_by_account(account_id: &str) -> Result<Vec<Case>, CaseError> {
             row.get::<_, String>(8)?,
             row.get::<_, String>(9)?,
             row.get::<_, String>(10)?,
-            row.get::<_, String>(11)?,
         ))
     })?;
 
@@ -262,9 +253,8 @@ pub fn get_cases_by_account(account_id: &str) -> Result<Vec<Case>, CaseError> {
 
     let mut cases = Vec::new();
     for (id, account_id, title, description, severity, status, category, 
-         analyst_assigned, observables_json, comments_json, created_at, updated_at) in cases_data {
+         analyst_assigned, observables_json, created_at, updated_at) in cases_data {
         let observables: Vec<Observable> = serde_json::from_str(&observables_json)?;
-        let comments: Vec<String> = serde_json::from_str(&comments_json)?;
         
         cases.push(Case {
             id,
@@ -276,7 +266,6 @@ pub fn get_cases_by_account(account_id: &str) -> Result<Vec<Case>, CaseError> {
             category,
             analyst_assigned,
             observables,
-            comments,
             created_at,
             updated_at,
         });
@@ -288,14 +277,12 @@ pub fn get_cases_by_account(account_id: &str) -> Result<Vec<Case>, CaseError> {
 pub fn update_case(case: &Case) -> Result<(), CaseError> {
     case.validate()?;
     let observables_json = serde_json::to_string(&case.observables)?;
-    let comments_json = serde_json::to_string(&case.comments)?;
 
     let conn = establish_connection()?;
     conn.execute(
         "UPDATE cases 
          SET title = ?2, description = ?3, severity = ?4, status = ?5, 
-         category = ?6, analyst_assigned = ?7, observables = ?8, comments = ?9, 
-         updated_at = ?10 
+         category = ?6, analyst_assigned = ?7, observables = ?8, updated_at = ?9 
          WHERE id = ?1",
         params![
             case.id,
@@ -306,7 +293,6 @@ pub fn update_case(case: &Case) -> Result<(), CaseError> {
             case.category,
             case.analyst_assigned,
             observables_json,
-            comments_json,
             Utc::now().to_rfc3339(),
         ],
     )?;
@@ -343,17 +329,6 @@ pub fn add_observable(case_id: &str, observable: Observable) -> Result<(), CaseE
     })?;
 
     case.observables.push(observable);
-    update_case(&case)?;
-
-    Ok(())
-}
-
-pub fn add_comment(case_id: &str, comment: String) -> Result<(), CaseError> {
-    let mut case = get_case(case_id)?.ok_or_else(|| {
-        CaseError::ValidationError("Case not found".to_string())
-    })?;
-
-    case.comments.push(comment);
     update_case(&case)?;
 
     Ok(())
