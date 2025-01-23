@@ -326,3 +326,64 @@ textarea.case-description {
 .secondary-btn:hover {
     background-color: #777;
 }
+
+.comments-section {
+    padding: 15px;
+}
+
+.add-comment-container {
+    margin-bottom: 20px;
+}
+
+#add-comment-form {
+    background-color: #2c2d36;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+#add-comment-form.hidden {
+    display: none;
+}
+
+#comment-text {
+    width: 100%;
+    min-height: 100px;
+    margin-bottom: 10px;
+    padding: 10px;
+    background-color: #22232b;
+    border: 1px solid #3498db;
+    color: white;
+    border-radius: 4px;
+    resize: vertical;
+}
+
+.comment-form-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+}
+
+.comments-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.comment {
+    background-color: #2c2d36;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 4px;
+    text-align: left;
+}
+
+.comment-content {
+    margin-bottom: 10px;
+    white-space: pre-wrap;
+}
+
+.comment-metadata {
+    color: #808080;
+    font-size: 0.9em;
+}

@@ -148,13 +148,72 @@ function updateActiveTab(caseData) {
         case 'comments':
             tabContent.innerHTML = `
                 <div class="comments-section">
+                    <div class="add-comment-container">
+                        <button id="show-comment-form" class="primary-btn">Add Comment</button>
+                        <form id="add-comment-form" class="hidden">
+                            <textarea id="comment-text" 
+                                     placeholder="Enter your comment" 
+                                     required></textarea>
+                            <div class="comment-form-actions">
+                                <button type="submit" class="primary-btn">Submit</button>
+                                <button type="button" id="cancel-comment" class="secondary-btn">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
                     <ul class="comments-list">
                         ${caseData.comments.map(comment => `
-                            <li class="comment">${comment}</li>
+                            <li class="comment">
+                                <div class="comment-content">${comment}</div>
+                                <div class="comment-metadata">
+                                    <span class="comment-date">${new Date().toLocaleString()}</span>
+                                </div>
+                            </li>
                         `).join('')}
                     </ul>
                 </div>
             `;
+
+            // Add event listeners for the comment form
+            const commentForm = document.getElementById('add-comment-form');
+            const showCommentBtn = document.getElementById('show-comment-form');
+            const cancelCommentBtn = document.getElementById('cancel-comment');
+
+            showCommentBtn.addEventListener('click', () => {
+                commentForm.classList.remove('hidden');
+                showCommentBtn.classList.add('hidden');
+            });
+
+            cancelCommentBtn.addEventListener('click', () => {
+                commentForm.classList.add('hidden');
+                showCommentBtn.classList.remove('hidden');
+            });
+
+            commentForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const commentText = document.getElementById('comment-text').value;
+
+                try {
+                    const response = await fetch(`http://localhost:4200/backend/case/${currentCase.id}/comment`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-Form-ID': formId
+                        },
+                        credentials: 'include',
+                        body: JSON.stringify(commentText)
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('Failed to add comment');
+                    }
+
+                    showAlert('Comment added successfully', 'success');
+                    await loadCaseDetails(currentCase.id);
+                } catch (error) {
+                    console.error('Error:', error);
+                    showAlert('Failed to add comment', 'error');
+                }
+            });
             break;
         case 'observables':
             const otherObservables = caseData.observables.filter(obs => 
