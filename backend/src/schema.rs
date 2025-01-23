@@ -25,6 +25,12 @@ impl Schema {
         info!("Creating agents table");
         Self::create_agents_table(conn)?;
 
+        info!("Creating cases table");
+        Self::create_cases_table(conn)?;
+
+        info!("Creating case comments table");
+        Self::create_case_comments_table(conn)?;
+
         info!("All tables created successfully");
         Ok(())
     }
@@ -106,8 +112,10 @@ impl Schema {
                 message TEXT NOT NULL,
                 acknowledged BOOLEAN NOT NULL DEFAULT false,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                case_id TEXT,
                 FOREIGN KEY(rule_id) REFERENCES rules(id),
-                FOREIGN KEY(account_id) REFERENCES accounts(id)
+                FOREIGN KEY(account_id) REFERENCES accounts(id),
+                FOREIGN KEY(case_id) REFERENCES cases(id)
             )",
             [],
         )?;
@@ -152,6 +160,42 @@ impl Schema {
                 FOREIGN KEY(host_id) REFERENCES hosts(id),
                 FOREIGN KEY(account_id) REFERENCES accounts(id)
             );",
+            [],
+        )?;
+        Ok(())
+    }
+
+    fn create_cases_table(conn: &Connection) -> Result<()> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS cases (
+                id TEXT PRIMARY KEY,
+                account_id TEXT NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                severity TEXT NOT NULL,
+                status TEXT NOT NULL,
+                category TEXT NOT NULL,
+                analyst_assigned TEXT NOT NULL,
+                observables TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(account_id) REFERENCES accounts(id)
+            )",
+            [],
+        )?;
+        Ok(())
+    }
+
+    fn create_case_comments_table(conn: &Connection) -> Result<()> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS case_comments (
+                id TEXT PRIMARY KEY,
+                case_id TEXT NOT NULL,
+                comment TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(case_id) REFERENCES cases(id)
+            )",
             [],
         )?;
         Ok(())

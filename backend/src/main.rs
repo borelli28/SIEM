@@ -14,6 +14,8 @@ mod schema;
 mod eql;
 mod agent;
 mod handlers;
+mod cases;
+mod case_comments;
 
 use crate::collector::LogCollector;
 use crate::handlers::{
@@ -24,6 +26,7 @@ use crate::handlers::{
     get_all_alerts_handler,
     delete_alert_handler,
     acknowledge_alert_handler,
+    alert_has_case_handler,
     create_host_handler,
     get_host_handler,
     get_all_hosts_handler,
@@ -46,12 +49,23 @@ use crate::handlers::{
     csrf_validator_handler,
     register_agent_handler, 
     agent_upload_handler,
-    agent_heartbeat_handler
+    agent_heartbeat_handler,
+    create_case_handler,
+    get_case_handler,
+    get_cases_by_account_handler,
+    update_case_handler,
+    delete_case_handler,
+    add_observable_handler,
+    delete_observable_handler,
+    add_comment_handler,
+    get_case_comments_handler,
+    update_comment_handler,
+    delete_comment_handler
 };
+use crate::csrf::CsrfMiddleware;
 use actix_session::{SessionMiddleware, storage::CookieSessionStore, config::PersistentSession};
 use actix_web::{web, cookie::time::Duration, cookie::Key, App, HttpServer};
 use actix_multipart::form::tempfile::TempFileConfig;
-use crate::csrf::CsrfMiddleware;
 use actix_cors::Cors;
 use dotenvy::dotenv;
 use env_logger;
@@ -125,6 +139,7 @@ async fn main() -> std::io::Result<()> {
                             .route("/all/{account_id}", web::get().to(get_all_alerts_handler))
                             .route("/{alert_id}", web::delete().to(delete_alert_handler))
                             .route("/acknowledge/{alert_id}", web::put().to(acknowledge_alert_handler))
+                            .route("/has_case/{alert_id}", web::get().to(alert_has_case_handler))
                     )
                     .service(
                         web::scope("/host")
@@ -155,6 +170,20 @@ async fn main() -> std::io::Result<()> {
                             .route("/register", web::post().to(register_agent_handler))
                             .route("/upload", web::post().to(agent_upload_handler))
                             .route("/heartbeat", web::post().to(agent_heartbeat_handler))
+                    )
+                    .service(
+                        web::scope("/case")
+                            .route("/{account_id}", web::post().to(create_case_handler))
+                            .route("/{case_id}", web::get().to(get_case_handler))
+                            .route("/all/{account_id}", web::get().to(get_cases_by_account_handler))
+                            .route("/{case_id}", web::put().to(update_case_handler))
+                            .route("/{case_id}", web::delete().to(delete_case_handler))
+                            .route("/{case_id}/observable", web::post().to(add_observable_handler))
+                            .route("/{case_id}/observable", web::delete().to(delete_observable_handler))
+                            .route("/{case_id}/comment", web::post().to(add_comment_handler))
+                            .route("/{case_id}/comments", web::get().to(get_case_comments_handler))
+                            .route("/comment/{comment_id}", web::put().to(update_comment_handler))
+                            .route("/comment/{comment_id}", web::delete().to(delete_comment_handler))
                     )
             )
     })

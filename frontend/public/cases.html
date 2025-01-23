@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/cases.css">
+    <title>Cases</title>
+</head>
+<body>
+    <main>
+        <div id="container">
+            <h1>Cases</h1>
+            <nav>
+                <a href="/">Dashboard</a>
+                <a href="/settings">Settings</a>
+                <a href="/alerts">All Alerts</a>
+                <a href="/search">Search</a>
+                <a href="/list-cases">Cases</a>
+                <button id="logout-btn">Logout</button>
+            </nav>
+
+            <div id="alert-container"></div>
+
+            <div class="tabs">
+                <button class="tab-btn active" data-tab="comments">COMMENTS</button>
+                <button class="tab-btn" data-tab="observables">OBSERVABLES</button>
+                <button class="tab-btn" data-tab="events">EVENTS</button>
+            </div>
+
+            <div id="cases-container">
+            </div>
+
+            <div id="tab-content">
+            </div>
+
+            <div class="case-details-sidebar">
+                <div class="summary-section">
+                    <div class="section-header">
+                        <h3>Summary</h3>
+                        <span class="collapse-icon">^</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="detail-row">
+                            <span class="label">Assignee:</span>
+                            <select id="case-assignee" class="editable-field">
+                            </select>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Status:</span>
+                            <select id="case-status" class="editable-field">
+                                <option value="InProgress">In Progress</option>
+                                <option value="Closed">Closed</option>
+                                <option value="Hold">Hold</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="details-section">
+                    <div class="section-header">
+                        <h3>Details</h3>
+                        <span class="collapse-icon">^</span>
+                    </div>
+                    <div class="section-content">
+                        <div class="detail-row">
+                            <span class="label">Severity:</span>
+                            <select id="case-severity" class="editable-field">
+                                <option value="Low">Low</option>
+                                <option value="Medium">Medium</option>
+                                <option value="High">High</option>
+                            </select>
+                        </div>
+                        <div class="detail-row">
+                            <span class="label">Category:</span>
+                            <input type="text" id="case-category" class="editable-field">
+                        </div>
+                    </div>
+                </div>
+                <button id="save-changes" class="primary-btn">Save Changes</button>
+            </div>
+
+            </div>
+        </div>
+    </main>
+    <script type="module" src="/js/cases.js"></script>
+</body>
+</html>

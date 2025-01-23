@@ -29,3 +29,8 @@ package
 diesel.toml
 backend/tmp/*
 !backend/tmp/.gitkeep
+
+### Perf Stuff ###
+backend/perf.data
+backend/perf.data.*
+backend/flamegraph.svg

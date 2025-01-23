@@ -202,3 +202,32 @@ pub fn acknowledge_alert(alert_id: &String) -> Result<bool, AlertError> {
 
     Ok(affected_rows > 0)
 }
+
+pub fn alert_has_case(alert_id: &String) -> Result<Option<String>, AlertError> {
+    if alert_id.is_empty() {
+        return Err(AlertError::ValidationError("Alert ID cannot be empty".to_string()));
+    }
+
+    let conn = establish_connection()?;
+    let case_id: Option<String> = conn.query_row(
+        "SELECT case_id FROM alerts WHERE id = ?1 AND case_id IS NOT NULL",
+        params![alert_id],
+        |row| row.get(0)
+    ).optional()?;
+
+    Ok(case_id)
+}
+
+pub fn update_alert_case_id(alert_id: &str, case_id: &str) -> Result<bool, AlertError> {
+    if alert_id.is_empty() {
+        return Err(AlertError::ValidationError("Alert ID cannot be empty".to_string()));
+    }
+
+    let conn = establish_connection()?;
+    let affected_rows = conn.execute(
+        "UPDATE alerts SET case_id = ?2 WHERE id = ?1",
+        params![alert_id, case_id],
+    )?;
+
+    Ok(affected_rows > 0)
+}
