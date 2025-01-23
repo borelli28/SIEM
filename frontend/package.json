@@ -1,14 +1,11 @@
 {
   "name": "frontend",
   "module": "server.js",
-  "type": "module",
   "devDependencies": {
     "@types/bun": "latest"
   },
   "peerDependencies": {
     "typescript": "^5.0.0"
   },
-  "dependencies": {
-    "js-yaml": "^4.1.0"
-  }
+  "type": "module"
 }
