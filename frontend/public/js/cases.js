@@ -273,15 +273,26 @@ async function updateActiveTab(caseData) {
                                 <option value="email">Email</option>
                             </select>
                             <input type="text" id="observable-value" placeholder="Enter value" required>
-                            <button type="submit" class="primary-btn">Add</button>
-                            <button type="button" id="cancel-observable" class="secondary-btn">Cancel</button>
+                            <div class="observable-form-actions">
+                                <button type="submit" class="primary-btn">Submit</button>
+                                <button type="button" id="cancel-observable" class="secondary-btn">Cancel</button>
+                            </div>
                         </form>
                     </div>
                     <ul class="observables-list">
                         ${otherObservables.map(obs => `
                             <li class="observable">
-                                <strong>${obs.observable_type}:</strong> 
-                                <pre>${obs.value}</pre>
+                                <div class="observable-header">
+                                    <div class="observable-content">
+                                        <strong>${obs.observable_type}:</strong> 
+                                        <span>${obs.value}</span>
+                                    </div>
+                                    <button class="delete-observable-btn" onclick="deleteObservable('${obs.observable_type}', '${obs.value}')">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                            <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"></path>
+                                        </svg>
+                                    </button>
+                                </div>
                             </li>
                         `).join('')}
                     </ul>
@@ -572,5 +583,36 @@ window.deleteComment = async function(commentId) {
     } catch (error) {
         console.error('Error:', error);
         showAlert('Failed to delete comment', 'error');
+    }
+}
+
+window.deleteObservable = async function(type, value) {
+    if (!confirm('Are you sure you want to delete this observable?')) {
+        return;
+    }
+
+    try {
+        const response = await fetch(`http://localhost:4200/backend/case/${currentCase.id}/observable`, {
+            method: 'DELETE',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-Form-ID': formId
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                observable_type: type,
+                value: value
+            })
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete observable');
+        }
+
+        showAlert('Observable deleted successfully', 'success');
+        await loadCaseDetails(currentCase.id);
+    } catch (error) {
+        console.error('Error:', error);
+        showAlert('Failed to delete observable', 'error');
     }
 }
