@@ -140,12 +140,34 @@ function updateMainContent(caseData) {
     });
 }
 
-function updateActiveTab(caseData) {
+async function updateActiveTab(caseData) {
     const tabContent = document.getElementById('tab-content');
     if (!tabContent) return;
 
     switch(activeTab) {
         case 'comments':
+            // Fetch comments for the case
+            let comments = [];
+            try {
+                const response = await fetch(`http://localhost:4200/backend/case/${caseData.id}/comments`, {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Form-ID': formId
+                    },
+                    credentials: 'include'
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to fetch comments');
+                }
+
+                comments = await response.json();
+            } catch (error) {
+                console.error('Error fetching comments:', error);
+                showAlert('Failed to load comments', 'error');
+            }
+
             tabContent.innerHTML = `
                 <div class="comments-section">
                     <div class="add-comment-container">
@@ -161,11 +183,11 @@ function updateActiveTab(caseData) {
                         </form>
                     </div>
                     <ul class="comments-list">
-                        ${caseData.comments.map(comment => `
+                        ${comments.map(comment => `
                             <li class="comment">
-                                <div class="comment-content">${comment}</div>
+                                <div class="comment-content">${comment.comment}</div>
                                 <div class="comment-metadata">
-                                    <span class="comment-date">${new Date().toLocaleString()}</span>
+                                    <span class="comment-date">${new Date(comment.created_at).toLocaleString()}</span>
                                 </div>
                             </li>
                         `).join('')}
@@ -208,6 +230,9 @@ function updateActiveTab(caseData) {
                     }
 
                     showAlert('Comment added successfully', 'success');
+                    document.getElementById('comment-text').value = '';
+                    commentForm.classList.add('hidden');
+                    showCommentBtn.classList.remove('hidden');
                     await loadCaseDetails(currentCase.id);
                 } catch (error) {
                     console.error('Error:', error);
