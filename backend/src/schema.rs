@@ -26,7 +26,10 @@ impl Schema {
         Self::create_agents_table(conn)?;
 
         info!("Creating cases table");
-        Self::create_cases_table(conn)?;    
+        Self::create_cases_table(conn)?;
+
+        info!("Creating case comments table");
+        Self::create_case_comments_table(conn)?;
 
         info!("All tables created successfully");
         Ok(())
@@ -174,10 +177,24 @@ impl Schema {
                 category TEXT NOT NULL,
                 analyst_assigned TEXT NOT NULL,
                 observables TEXT NOT NULL,
-                comments TEXT NOT NULL,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(account_id) REFERENCES accounts(id)
+            )",
+            [],
+        )?;
+        Ok(())
+    }
+
+    fn create_case_comments_table(conn: &Connection) -> Result<()> {
+        conn.execute(
+            "CREATE TABLE IF NOT EXISTS case_comments (
+                id TEXT PRIMARY KEY,
+                case_id TEXT NOT NULL,
+                comment TEXT NOT NULL,
+                created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY(case_id) REFERENCES cases(id)
             )",
             [],
         )?;
