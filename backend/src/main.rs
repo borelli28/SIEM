@@ -15,6 +15,7 @@ mod eql;
 mod agent;
 mod handlers;
 mod cases;
+mod case_comments;
 
 use crate::collector::LogCollector;
 use crate::handlers::{
