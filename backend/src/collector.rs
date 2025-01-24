@@ -56,8 +56,8 @@ impl std::fmt::Display for ParseLogError {
         match self {
             ParseLogError::InvalidCEFFormat => write!(f, "Invalid CEF format"),
             ParseLogError::BatchDequeueError => write!(f, "Error while retriveing batch"),
-            ParseLogError::DatabaseError(_) => write!(f, "Error while inserting in database"),
-            ParseLogError::AlertEvaluationError(_) => write!(f, "Error while matching log with alert rules"),
+            ParseLogError::DatabaseError(msg) => write!(f, "Database error: {}", msg),
+            ParseLogError::AlertEvaluationError(msg) => write!(f, "Alert evaluation error: {}", msg),
         }
     }
 }

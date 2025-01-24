@@ -1,24 +1,6 @@
-use actix_web::{dev::Payload, error::ErrorUnauthorized, Error, FromRequest, HttpRequest};
-use actix_session::{Session, SessionExt};
+use actix_web::{error::ErrorUnauthorized, Error, HttpRequest};
 use std::time::{Duration, SystemTime};
-use std::future::{ready, Ready};
-
-pub struct AuthSession {
-    pub account_id: String,
-}
-
-impl FromRequest for AuthSession {
-    type Error = Error;
-    type Future = Ready<Result<Self, Self::Error>>;
-
-    fn from_request(req: &HttpRequest, _: &mut Payload) -> Self::Future {
-        let session = req.get_session();
-        match verify_session(&session, &req) {
-            Ok(account_id) => ready(Ok(AuthSession { account_id })),
-            Err(e) => ready(Err(e)),
-        }
-    }
-}
+use actix_session::Session;
 
 pub fn verify_session(session: &Session, req: &HttpRequest) -> Result<String, Error> {
     match session.get::<String>("account_id") {
