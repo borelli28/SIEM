@@ -17,14 +17,13 @@ export function parseYAML(yamlString) {
             // Array item
             const value = trimmedLine.substring(1).trim();
             const parent = findParentInStack(stack, indent);
+            const key = Object.keys(parent.object).pop();
             
-            if (!Array.isArray(parent.object)) {
-                // Convert parent to array if it's the first array item
-                const key = Object.keys(parent.object).pop();
-                parent.object[key] = [value];
-            } else {
-                parent.object.push(value);
+            if (!Array.isArray(parent.object[key])) {
+                // Initialize array if it doesn't exist
+                parent.object[key] = [];
             }
+            parent.object[key].push(value);
         } else if (trimmedLine.includes(':')) {
             // Key-value pair
             const [key, value] = trimmedLine.split(':').map(s => s.trim());
