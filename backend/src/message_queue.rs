@@ -25,9 +25,4 @@ impl MessageQueue {
         let mut queue = self.queue.lock().await;
         queue.pop_front().ok_or("Queue is empty".to_string())
     }
-
-    pub async fn is_empty(&self) -> bool {
-        let queue = self.queue.lock().await;
-        queue.is_empty()
-    }
 }
