@@ -1,45 +1,64 @@
 export function parseYAML(yamlString) {
     const lines = yamlString.split('\n');
     const result = {};
-    let currentContext = result;
-    let currentKey = '';
-    let indentLevel = 0;
-    let parentContexts = [];
+    const stack = [{ indent: -1, object: result }];
+    let lastIndent = -1;
 
     for (let line of lines) {
+        // Skip empty lines and comments
         if (!line.trim() || line.trim().startsWith('#')) continue;
 
+        // Calculate indent level (count spaces)
         const indent = line.search(/\S/);
         const trimmedLine = line.trim();
 
-        if (indent < indentLevel) {
-            while (indent < indentLevel && parentContexts.length > 0) {
-                currentContext = parentContexts.pop();
-                indentLevel -= 2;
+        // Handle arrays and key-value pairs
+        if (trimmedLine.startsWith('-')) {
+            // Array item
+            const value = trimmedLine.substring(1).trim();
+            const parent = findParentInStack(stack, indent);
+            
+            if (!Array.isArray(parent.object)) {
+                // Convert parent to array if it's the first array item
+                const key = Object.keys(parent.object).pop();
+                parent.object[key] = [value];
+            } else {
+                parent.object.push(value);
+            }
+        } else if (trimmedLine.includes(':')) {
+            // Key-value pair
+            const [key, value] = trimmedLine.split(':').map(s => s.trim());
+            
+            if (indent <= lastIndent) {
+                // Going back up in the hierarchy
+                while (stack.length > 0 && stack[stack.length - 1].indent >= indent) {
+                    stack.pop();
+                }
+            }
+
+            const parent = stack[stack.length - 1].object;
+            if (value) {
+                // Direct key-value
+                parent[key] = value.replace(/['"]/g, ''); // Remove quotes if present
+            } else {
+                // New nested object
+                parent[key] = {};
+                stack.push({ indent, object: parent[key] });
             }
         }
 
-        if (trimmedLine.includes(':')) {
-            const [key, value] = trimmedLine.split(':').map(s => s.trim());
-            
-            if (value && value !== '') {
-                currentContext[key] = value;
-            } else {
-                currentKey = key;
-                currentContext[currentKey] = {};
-                parentContexts.push(currentContext);
-                currentContext = currentContext[currentKey];
-                indentLevel = indent;
-            }
-        } else if (trimmedLine.startsWith('-')) {
-            const value = trimmedLine.substring(1).trim();
-            if (!Array.isArray(currentContext)) {
-                currentContext = [];
-                parentContexts[parentContexts.length - 1][currentKey] = currentContext;
-            }
-            currentContext.push(value);
-        }
+        lastIndent = indent;
     }
 
     return result;
+}
+
+function findParentInStack(stack, indent) {
+    // Find appropriate parent for current indent level
+    for (let i = stack.length - 1; i >= 0; i--) {
+        if (stack[i].indent < indent) {
+            return stack[i];
+        }
+    }
+    return stack[0];
 }
