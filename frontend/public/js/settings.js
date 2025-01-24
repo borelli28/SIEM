@@ -50,7 +50,6 @@ function handleYamlFileUpload(event) {
         try {
             const yamlContent = e.target.result;
             const ruleData = parseYAML(yamlContent);
-            // console.log('Parsed YAML:', ruleData);
 
             // Basic fields
             document.getElementById('title').value = ruleData.title || '';
@@ -58,11 +57,11 @@ function handleYamlFileUpload(event) {
             document.getElementById('status').value = ruleData.status || 'experimental';
             document.getElementById('author').value = ruleData.author || '';
             
-            // Convert object to array if needed for tags
+            // Tags
             const tagsArray = Object.values(ruleData.tags || {});
             document.getElementById('tags').value = tagsArray.join(', ');
             
-            // Convert object to array if needed for references
+            // References
             const referencesArray = Object.values(ruleData.references || {});
             document.getElementById('references').value = referencesArray.join(', ');
             
@@ -77,18 +76,17 @@ function handleYamlFileUpload(event) {
                     const selectionField = Object.keys(ruleData.detection.selection)[0];
                     document.getElementById('detection_selection_field').value = selectionField;
                     document.getElementById('detection_selection_value').value = ruleData.detection.selection[selectionField];
-                    // Construct full detection condition
                     const condition = `selection AND level="${ruleData.detection.selection.level}"`;
                     document.getElementById('detection_condition').value = condition;
                 }
             }
 
-            // Convert object to array if needed for fields
-            const fieldsArray = Object.values(ruleData.fields || {});
+            // Fields
+            const fieldsArray = Object.values(ruleData.fields || {}).flat();
             document.getElementById('fields').value = fieldsArray.join(', ');
             
-            // Convert object to array if needed for falsepositives
-            const falsePositivesArray = Object.values(ruleData.falsepositives || {});
+            // False positives
+            const falsePositivesArray = Object.values(ruleData.falsepositives || {}).flat();
             document.getElementById('falsepositives').value = falsePositivesArray.join(', ');
             
             document.getElementById('level').value = ruleData.level.charAt(0).toUpperCase() + ruleData.level.slice(1);
