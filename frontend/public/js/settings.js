@@ -50,7 +50,7 @@ function handleYamlFileUpload(event) {
         try {
             const yamlContent = e.target.result;
             const ruleData = parseYAML(yamlContent);
-            console.log('Parsed YAML:', ruleData);
+            // console.log('Parsed YAML:', ruleData);
 
             // Basic fields
             document.getElementById('title').value = ruleData.title || '';
@@ -72,9 +72,16 @@ function handleYamlFileUpload(event) {
             document.getElementById('logsource_service').value = ruleData.logsource.service || '';
 
             // Detection
-            document.getElementById('detection_selection_field').value = 'msg';
-            document.getElementById('detection_selection_value').value = ruleData.detection.selection.msg;
-            document.getElementById('detection_condition').value = ruleData.detection.condition;
+            if (ruleData.detection) {
+                if (ruleData.detection.selection) {
+                    const selectionField = Object.keys(ruleData.detection.selection)[0];
+                    document.getElementById('detection_selection_field').value = selectionField;
+                    document.getElementById('detection_selection_value').value = ruleData.detection.selection[selectionField];
+                    // Construct full detection condition
+                    const condition = `selection AND level="${ruleData.detection.selection.level}"`;
+                    document.getElementById('detection_condition').value = condition;
+                }
+            }
 
             // Convert object to array if needed for fields
             const fieldsArray = Object.values(ruleData.fields || {});
