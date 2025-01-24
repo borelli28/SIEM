@@ -1,5 +1,6 @@
 import { getAuthenticationStatus, logout, checkAuth, user } from '../../services/authService.js';
 import { getCsrfToken } from '../../services/csrfService.js';
+import { parseYAML } from '../../services/yamlParser.js';
 
 const formId = 'settings-form';
 
@@ -36,7 +37,69 @@ document.addEventListener('DOMContentLoaded', async () => {
             .then(() => showAlert('Account ID copied to clipboard!', 'success'))
             .catch(err => showAlert('Failed to copy', 'error'));
     });
+
+    document.getElementById('yamlFile').addEventListener('change', handleYamlFileUpload);
 });
+
+function handleYamlFileUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const yamlContent = e.target.result;
+            const ruleData = parseYAML(yamlContent);
+
+            // Basic fields
+            document.getElementById('title').value = ruleData.title || '';
+            document.getElementById('description').value = ruleData.description || '';
+            document.getElementById('status').value = ruleData.status || 'experimental';
+            document.getElementById('author').value = ruleData.author || '';
+            
+            // Tags
+            const tagsArray = Object.values(ruleData.tags || {});
+            document.getElementById('tags').value = tagsArray.join(', ');
+            
+            // References
+            const referencesArray = Object.values(ruleData.references || {});
+            document.getElementById('references').value = referencesArray.join(', ');
+            
+            // Logsource
+            document.getElementById('logsource_category').value = ruleData.logsource.category || '';
+            document.getElementById('logsource_product').value = ruleData.logsource.product || '';
+            document.getElementById('logsource_service').value = ruleData.logsource.service || '';
+
+            // Detection
+            if (ruleData.detection) {
+                if (ruleData.detection.selection) {
+                    const selectionField = Object.keys(ruleData.detection.selection)[0];
+                    document.getElementById('detection_selection_field').value = selectionField;
+                    document.getElementById('detection_selection_value').value = ruleData.detection.selection[selectionField];
+                    const condition = `selection AND level="${ruleData.detection.selection.level}"`;
+                    document.getElementById('detection_condition').value = condition;
+                }
+            }
+
+            // Fields
+            const fieldsArray = Object.values(ruleData.fields || {}).flat();
+            document.getElementById('fields').value = fieldsArray.join(', ');
+            
+            // False positives
+            const falsePositivesArray = Object.values(ruleData.falsepositives || {}).flat();
+            document.getElementById('falsepositives').value = falsePositivesArray.join(', ');
+            
+            document.getElementById('level').value = ruleData.level.charAt(0).toUpperCase() + ruleData.level.slice(1);
+            document.getElementById('enabled').checked = true;
+
+            showAlert('YAML file loaded successfully!', 'success');
+        } catch (error) {
+            console.error('Error parsing YAML:', error);
+            showAlert('Error parsing YAML file', 'error');
+        }
+    };
+    reader.readAsText(file);
+}
 
 let csrfToken;
 
