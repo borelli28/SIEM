@@ -234,17 +234,3 @@ pub fn get_all_logs(account_id: &String) -> Result<Vec<Log>, LogError> {
     let logs: Result<Vec<Log>, SqliteError> = logs_iter.collect();
     Ok(logs?)
 }
-
-// pub fn delete_log(log_id: &String) -> Result<bool, LogError> {
-//     if log_id.is_empty() {
-//         return Err(LogError::ValidationError("Log ID cannot be empty".to_string()));
-//     }
-
-//     let conn = establish_connection()?;
-//     let affected_rows = conn.execute(
-//         "DELETE FROM logs WHERE id = ?1",
-//         params![log_id],
-//     )?;
-
-//     Ok(affected_rows > 0)
-// }
