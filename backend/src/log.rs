@@ -153,14 +153,16 @@ pub fn get_query_logs(eql_query: &str, start_time: Option<String>, end_time: Opt
     let (base_query, base_params) = QueryBuilder::build_query(tokens)
         .map_err(|e| LogError::ValidationError(e.to_string()))?;
 
-    // Add timestamp conditions if provided
+    // First add base parameters
+    params.extend(base_params.into_iter().map(|p| Box::new(p) as Box<dyn ToSql>));
+
+    // Then add timestamp conditions if provided
     if let Some(start) = start_time {
-        where_conditions.push("timestamp >= ?");
-        params.push(Box::new(start));
-    }
-    if let Some(end) = end_time {
-        where_conditions.push("timestamp <= ?");
-        params.push(Box::new(end));
+        if let Some(end) = end_time {
+            where_conditions.push("timestamp BETWEEN datetime(?) AND datetime(?)");
+            params.push(Box::new(start));
+            params.push(Box::new(end));
+        }
     }
 
     // Construct final query
@@ -176,9 +178,6 @@ pub fn get_query_logs(eql_query: &str, start_time: Option<String>, end_time: Opt
 
     // Add sorting by timestamp
     final_query.push_str(" ORDER BY timestamp DESC");
-
-    // Combine all parameters
-    params.extend(base_params.into_iter().map(|p| Box::new(p) as Box<dyn ToSql>));
 
     let conn = establish_connection()?;
     let mut stmt = conn.prepare(&final_query)?;
