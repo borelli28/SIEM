@@ -43,6 +43,7 @@ pub struct Log {
     pub name: Option<String>,
     pub severity: Option<String>,
     pub extensions: Option<String>,
+    pub timestamp: Option<String>
 }
 
 impl Log {
