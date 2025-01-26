@@ -128,22 +128,55 @@ pub fn create_log(log: &Log) -> Result<Option<Log>, LogError> {
     Ok(Some(new_log))
 }
 
-pub fn get_query_logs(eql_query: &str) -> Result<Vec<Log>, LogError> {
+pub fn get_query_logs(eql_query: &str, start_time: Option<String>, end_time: Option<String>) -> Result<Vec<Log>, LogError> {
+    let mut where_conditions = Vec::new();
+    let mut params: Vec<Box<dyn ToSql>> = Vec::new();
+
+    // Parse EQL query first
     let tokens = EqlParser::parse(eql_query)
         .map_err(|e| LogError::ValidationError(e.to_string()))?;
 
-    let (query, params) = QueryBuilder::build_query(tokens)
+    let (base_query, base_params) = QueryBuilder::build_query(tokens)
         .map_err(|e| LogError::ValidationError(e.to_string()))?;
 
+    // Extract timestamp from extensions JSON field
+    if let Some(start) = start_time {
+        where_conditions.push("json_extract(extensions, '$.rt') >= ?");
+        params.push(Box::new(start));
+    }
+    if let Some(end) = end_time {
+        where_conditions.push("json_extract(extensions, '$.rt') <= ?");
+        params.push(Box::new(end));
+    }
+
+    // Construct final query
+    let mut final_query = if base_query.contains("WHERE") {
+        format!("{} AND {}", base_query, where_conditions.join(" AND "))
+    } else {
+        format!("{} WHERE {}", base_query, where_conditions.join(" AND "))
+    };
+
+    // Add sorting by timestamp
+    final_query.push_str(" ORDER BY json_extract(extensions, '$.rt') DESC");
+
+    // Combine all parameters
+    params.extend(base_params.into_iter().map(|p| Box::new(p) as Box<dyn ToSql>));
+
     let conn = establish_connection()?;
-    let mut stmt = conn.prepare(&query)?;
+    let mut stmt = conn.prepare(&final_query)?;
 
-    // Convert parameters to &dyn ToSql
-    let sql_params: Vec<&dyn ToSql> = params.iter()
-        .map(|p| p as &dyn ToSql)
-        .collect();
+    let log_iter = stmt.query_map(params_from_iter(params.iter().map(|p| &**p)), |row| {
+        let extensions: Option<String> = row.get(11)?;
+        let timestamp = if let Some(ext) = &extensions {
+            if let Ok(json) = serde_json::from_str::<serde_json::Value>(ext) {
+                json["rt"].as_str().map(|t| t.to_string())
+            } else {
+                None
+            }
+        } else {
+            None
+        };
 
-    let log_iter = stmt.query_map(params_from_iter(sql_params.iter().copied()), |row| {
         Ok(Log {
             id: row.get(0)?,
             hash: row.get(1)?,
@@ -156,7 +189,8 @@ pub fn get_query_logs(eql_query: &str) -> Result<Vec<Log>, LogError> {
             signature_id: row.get(8)?,
             name: row.get(9)?,
             severity: row.get(10)?,
-            extensions: row.get(11)?,
+            extensions,
+            timestamp,
         })
     })?;
 
