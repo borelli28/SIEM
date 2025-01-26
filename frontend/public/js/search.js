@@ -29,6 +29,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
     await fetchCsrfToken();
 
+    // Set default time range for search time range
+    const endDate = new Date();
+    const startDate = new Date();
+    startDate.setFullYear(endDate.getFullYear() - 2); // 2 years ago
+
+    // Format dates for datetime-local input
+    document.getElementById('startTime').value = startDate.toISOString().slice(0, 16);
+    document.getElementById('endTime').value = endDate.toISOString().slice(0, 16);
+
     document.getElementById('logout-btn').addEventListener('click', async () => {
         const result = await logout();
         if (result.success) {
@@ -73,8 +82,12 @@ async function fetchFilteredLogs(query, startTime, endTime) {
 window.handleSearch = async function(event) {
     event.preventDefault();
     const eqlQuery = document.getElementById('eqlQuery').value.trim();
-    const startTime = document.getElementById('startTime').value + ':00.000-05:00';
-    const endTime = document.getElementById('endTime').value + ':00.000-05:00';
+    const startTime = document.getElementById('startTime').value
+        ? document.getElementById('startTime').value + ':00.000-05:00'
+        : document.getElementById('startTime').defaultValue + ':00.000-05:00';
+    const endTime = document.getElementById('endTime').value
+        ? document.getElementById('endTime').value + ':00.000-05:00'
+        : document.getElementById('endTime').defaultValue + ':00.000-05:00';
 
     if (!eqlQuery) {
         showAlert('Please enter a search query', 'error');
