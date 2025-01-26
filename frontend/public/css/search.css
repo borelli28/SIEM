@@ -206,3 +206,40 @@ button[type="submit"]:hover {
     border: 1px solid #3498db;
     border-radius: 4px;
 }
+
+.time-range {
+    display: flex;
+    gap: 2rem;
+    margin: 2% 0;
+    width: 100%;
+    justify-content: center;
+}
+
+.time-input {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+}
+
+.time-input label {
+    font-size: 0.9rem;
+    color: white;
+    margin-bottom: 5px;
+}
+
+.time-input input[type="datetime-local"] {
+    padding: 8px 12px;
+    background-color: #2c2d36;
+    border: 1px solid #3498db;
+    border-radius: 4px;
+    color: white;
+    font-size: 14px;
+    font-family: monospace;
+    cursor: pointer;
+}
+
+.time-input input[type="datetime-local"]:focus {
+    outline: none;
+    border-color: #2980b9;
+}

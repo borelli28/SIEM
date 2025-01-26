@@ -23,6 +23,24 @@
 
             <form onsubmit="handleSearch(event)">
                 <div class="search-controls">
+                    <div class="time-range">
+                        <div class="time-input">
+                            <label for="startTime">From:</label>
+                            <input 
+                                type="datetime-local" 
+                                id="startTime" 
+                                name="startTime"
+                            >
+                        </div>
+                        <div class="time-input">
+                            <label for="endTime">To:</label>
+                            <input 
+                                type="datetime-local" 
+                                id="endTime" 
+                                name="endTime"
+                            >
+                        </div>
+                    </div>
                     <div class="eql-input-container">
                         <textarea 
                             id="eqlQuery" 

@@ -39,11 +39,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 });
 
-async function fetchFilteredLogs(query) {
+async function fetchFilteredLogs(query, startTime, endTime) {
     try {
         const params = new URLSearchParams({
             query: query,
-            account_id: user
+            account_id: user,
+            start_time: startTime || '',
+            end_time: endTime || ''
         });
 
         const response = await fetch(`http://localhost:4200/backend/log/filter?${params}`, {
@@ -66,6 +68,20 @@ async function fetchFilteredLogs(query) {
         console.error('Error:', error);
         showAlert(error.message, 'error');
     }
+}
+
+window.handleSearch = async function(event) {
+    event.preventDefault();
+    const eqlQuery = document.getElementById('eqlQuery').value.trim();
+    const startTime = document.getElementById('startTime').value;
+    const endTime = document.getElementById('endTime').value;
+
+    if (!eqlQuery) {
+        showAlert('Please enter a search query', 'error');
+        return;
+    }
+
+    await fetchFilteredLogs(eqlQuery, startTime, endTime);
 }
 
 function displayLogs(logs) {
@@ -98,18 +114,6 @@ function displayLogs(logs) {
 
         logsContainer.appendChild(logDiv);
     });
-}
-
-window.handleSearch = async function(event) {
-    event.preventDefault();
-    const eqlQuery = document.getElementById('eqlQuery').value.trim();
-
-    if (!eqlQuery) {
-        showAlert('Please enter a search query', 'error');
-        return;
-    }
-
-    await fetchFilteredLogs(eqlQuery);
 }
 
 window.addLogAsEvent = async function(logId) {
