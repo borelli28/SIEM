@@ -2,6 +2,7 @@ use rusqlite::{Error as SqliteError, ToSql, params, params_from_iter};
 use crate::eql::{EqlParser, QueryBuilder};
 use crate::database::establish_connection;
 use serde::{Serialize, Deserialize};
+use serde_json::Value;
 use sha2::{Sha256, Digest};
 use uuid::Uuid;
 use std::fmt;
@@ -43,6 +44,7 @@ pub struct Log {
     pub name: Option<String>,
     pub severity: Option<String>,
     pub extensions: Option<String>,
+    pub timestamp: Option<String>
 }
 
 impl Log {
@@ -58,7 +60,7 @@ impl Log {
 
     pub fn calculate_hash(&self) -> String {
         let mut hasher = Sha256::new();
-        let content = format!("{}{}{}{}{}{}{}{}{}{}", 
+        let content = format!("{}{}{}{}{}{}{}{}{}{}{}", 
             self.account_id,
             self.host_id,
             self.version.as_deref().unwrap_or(""),
@@ -68,7 +70,8 @@ impl Log {
             self.signature_id.as_deref().unwrap_or(""),
             self.name.as_deref().unwrap_or(""),
             self.severity.as_deref().unwrap_or(""),
-            self.extensions.as_deref().unwrap_or("")
+            self.extensions.as_deref().unwrap_or(""),
+            self.timestamp.as_deref().unwrap_or("")
         );
         hasher.update(content.as_bytes());
         format!("{:x}", hasher.finalize())
@@ -89,6 +92,16 @@ pub fn create_log(log: &Log) -> Result<Option<Log>, LogError> {
         return Ok(None);
     }
 
+    let timestamp = if let Some(ext) = &log.extensions {
+        if let Ok(json) = serde_json::from_str::<Value>(ext) {
+            json["rt"].as_str().map(|t| t.to_string())
+        } else {
+            None
+        }
+    } else {
+        None
+    };
+
     let new_log = Log {
         id: Uuid::new_v4().to_string(),
         hash: hash.clone(),
@@ -102,12 +115,13 @@ pub fn create_log(log: &Log) -> Result<Option<Log>, LogError> {
         name: log.name.clone(),
         severity: log.severity.clone(),
         extensions: log.extensions.clone(),
+        timestamp,
     };
 
     conn.execute(
         "INSERT INTO logs (id, hash, account_id, host_id, version, device_vendor, device_product, 
-         device_version, signature_id, name, severity, extensions) 
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)",
+         device_version, signature_id, name, severity, extensions, timestamp) 
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)",
         params![
             new_log.id,
             new_log.hash,
@@ -121,28 +135,54 @@ pub fn create_log(log: &Log) -> Result<Option<Log>, LogError> {
             new_log.name,
             new_log.severity,
             new_log.extensions,
+            new_log.timestamp,
         ],
     )?;
 
     Ok(Some(new_log))
 }
 
-pub fn get_query_logs(eql_query: &str) -> Result<Vec<Log>, LogError> {
+pub fn get_query_logs(eql_query: &str, start_time: Option<String>, end_time: Option<String>) -> Result<Vec<Log>, LogError> {
+    let mut where_conditions = Vec::new();
+    let mut params: Vec<Box<dyn ToSql>> = Vec::new();
+
+    // Parse EQL query first
     let tokens = EqlParser::parse(eql_query)
         .map_err(|e| LogError::ValidationError(e.to_string()))?;
 
-    let (query, params) = QueryBuilder::build_query(tokens)
+    let (base_query, base_params) = QueryBuilder::build_query(tokens)
         .map_err(|e| LogError::ValidationError(e.to_string()))?;
 
+    // First add base parameters
+    params.extend(base_params.into_iter().map(|p| Box::new(p) as Box<dyn ToSql>));
+
+    // Then add timestamp conditions if provided
+    if let Some(start) = start_time {
+        if let Some(end) = end_time {
+            where_conditions.push("timestamp BETWEEN datetime(?) AND datetime(?)");
+            params.push(Box::new(start));
+            params.push(Box::new(end));
+        }
+    }
+
+    // Construct final query
+    let mut final_query = if !where_conditions.is_empty() {
+        if base_query.contains("WHERE") {
+            format!("{} AND {}", base_query, where_conditions.join(" AND "))
+        } else {
+            format!("{} WHERE {}", base_query, where_conditions.join(" AND "))
+        }
+    } else {
+        base_query
+    };
+
+    // Add sorting by timestamp
+    final_query.push_str(" ORDER BY timestamp DESC");
+
     let conn = establish_connection()?;
-    let mut stmt = conn.prepare(&query)?;
+    let mut stmt = conn.prepare(&final_query)?;
 
-    // Convert parameters to &dyn ToSql
-    let sql_params: Vec<&dyn ToSql> = params.iter()
-        .map(|p| p as &dyn ToSql)
-        .collect();
-
-    let log_iter = stmt.query_map(params_from_iter(sql_params.iter().copied()), |row| {
+    let log_iter = stmt.query_map(params_from_iter(params.iter().map(|p| &**p)), |row| {
         Ok(Log {
             id: row.get(0)?,
             hash: row.get(1)?,
@@ -156,6 +196,7 @@ pub fn get_query_logs(eql_query: &str) -> Result<Vec<Log>, LogError> {
             name: row.get(9)?,
             severity: row.get(10)?,
             extensions: row.get(11)?,
+            timestamp: row.get(12)?,
         })
     })?;
 
@@ -175,7 +216,7 @@ pub fn get_all_logs(account_id: &String) -> Result<Vec<Log>, LogError> {
     let conn = establish_connection()?;
     let mut stmt = conn.prepare(
         "SELECT id, hash, account_id, host_id, version, device_vendor, device_product, 
-         device_version, signature_id, name, severity, extensions 
+         device_version, signature_id, name, severity, extensions, timestamp 
          FROM logs WHERE account_id = ?1"
     )?;
 
@@ -193,23 +234,10 @@ pub fn get_all_logs(account_id: &String) -> Result<Vec<Log>, LogError> {
             name: row.get(9)?,
             severity: row.get(10)?,
             extensions: row.get(11)?,
+            timestamp: row.get(12)?,
         })
     })?;
 
     let logs: Result<Vec<Log>, SqliteError> = logs_iter.collect();
     Ok(logs?)
 }
-
-// pub fn delete_log(log_id: &String) -> Result<bool, LogError> {
-//     if log_id.is_empty() {
-//         return Err(LogError::ValidationError("Log ID cannot be empty".to_string()));
-//     }
-
-//     let conn = establish_connection()?;
-//     let affected_rows = conn.execute(
-//         "DELETE FROM logs WHERE id = ?1",
-//         params![log_id],
-//     )?;
-
-//     Ok(affected_rows > 0)
-// }

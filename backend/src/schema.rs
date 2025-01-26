@@ -137,6 +137,7 @@ impl Schema {
                 name TEXT,
                 severity TEXT,
                 extensions TEXT,
+                timestamp DATETIME,
                 created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                 FOREIGN KEY(host_id) REFERENCES hosts(id),
                 FOREIGN KEY(account_id) REFERENCES accounts(id)

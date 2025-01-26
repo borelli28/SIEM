@@ -17,8 +17,10 @@ pub struct UploadForm {
 
 #[derive(Deserialize)]
 pub struct QueryParams {
-    query: String,
-    account_id: String,
+    pub query: String,
+    pub account_id: String,
+    pub start_time: Option<String>,
+    pub end_time: Option<String>,
 }
 
 pub async fn import_log_handler(
@@ -77,7 +79,7 @@ pub async fn get_query_logs_handler(
         query_params.query
     );
 
-    match get_query_logs(&query) {
+    match get_query_logs(&query, query_params.start_time.clone(), query_params.end_time.clone()) {
         Ok(logs) => Ok(HttpResponse::Ok().json(logs)),
         Err(e) => Ok(HttpResponse::InternalServerError().json(json!({
             "error": e.to_string()

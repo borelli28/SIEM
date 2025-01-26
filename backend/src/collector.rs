@@ -151,6 +151,10 @@ pub async fn process_logs(collector: &LogCollector, account_id: String, host_id:
         // Insert Log into DB
         let extensions_json = serde_json::to_string(&log_entry.extensions)
             .map_err(|e| ParseLogError::DatabaseError(format!("Failed to serialize extensions: {}", e)))?;
+
+        // Extract timestamp from extensions
+        let timestamp = log_entry.extensions.get("rt").cloned();
+
         let new_log = Log {
             id: String::new(),
             hash: String::from("Temp hash"),
@@ -164,6 +168,7 @@ pub async fn process_logs(collector: &LogCollector, account_id: String, host_id:
             name: Some(log_entry.name.clone()),
             severity: Some(log_entry.severity.clone()),
             extensions: Some(extensions_json),
+            timestamp,
         };
 
         if let Err(e) = create_log(&new_log) {
