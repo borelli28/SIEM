@@ -73,8 +73,8 @@ async function fetchFilteredLogs(query, startTime, endTime) {
 window.handleSearch = async function(event) {
     event.preventDefault();
     const eqlQuery = document.getElementById('eqlQuery').value.trim();
-    const startTime = document.getElementById('startTime').value;
-    const endTime = document.getElementById('endTime').value;
+    const startTime = document.getElementById('startTime').value + ':00.000-05:00';
+    const endTime = document.getElementById('endTime').value + ':00.000-05:00';
 
     if (!eqlQuery) {
         showAlert('Please enter a search query', 'error');
