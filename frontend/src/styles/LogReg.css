@@ -1,25 +1,35 @@
-body {
+html, body, #root {
     background-color: #22232b;
     color: white;
-    margin: 0;
-    min-height: 100vh;
+    width: 100%;
+    height: 100%;
 }
 
+/** {
+    outline: 1px dashed red;
+}*/
+
 .auth-container {
+    width: 100%;
+    height: 100%;
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    padding: 20px;
+    text-align: center;
 }
 
 .auth-box {
     background-color: #2a2b34;
-    padding: 2rem;
     border-radius: 8px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+    width: 75%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+h2, p {
     width: 100%;
-    max-width: 400px;
 }
 
 .form-inputs {
@@ -44,6 +54,16 @@ body {
     border-color: #666;
 }
 
+.form-group {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+form label {
+    width: 65%;
+}
+
 button {
     width: 50%;
     padding: 10px;
@@ -58,14 +78,6 @@ button {
 
 button:hover {
     background-color: #5a5b67;
-}
-
-#logout-btn {
-    background-color: #CC0000;
-}
-
-#logout-btn:hover {
-    background-color: #ff0000;
 }
 
 a {

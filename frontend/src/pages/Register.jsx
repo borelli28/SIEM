@@ -19,25 +19,9 @@ const Register = () => {
         });
     };
 
-    const validateForm = () => {
-        if (formData.password !== formData.confirmPassword) {
-            setError('Passwords do not match');
-            return false;
-        }
-        if (formData.password.length < 6) {
-            setError('Password must be at least 6 characters long');
-            return false;
-        }
-        return true;
-    };
-
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
-
-        if (!validateForm()) {
-            return;
-        }
 
         setIsLoading(true);
 
