@@ -5,7 +5,7 @@ import '../styles/LogReg.css';
 
 const Register = () => {
     const [formData, setFormData] = useState({
-        username: '',
+        name: '',
         password: '',
         confirmPassword: ''
     });
@@ -39,7 +39,19 @@ const Register = () => {
         e.preventDefault();
         setError('');
 
+        if (formData.password !== formData.confirmPassword) {
+            setError('Passwords do not match!');
+            return;
+        }
+
         setIsLoading(true);
+
+        const newAccount = {
+            id: '0',
+            name: formData.name,
+            password: formData.password,
+            role: 'Admin'
+        };
 
         try {
             const response = await fetch('http://localhost:4200/backend/account/', {
@@ -48,10 +60,7 @@ const Register = () => {
                     'Content-Type': 'application/json',
                     'X-Form-ID': formId
                 },
-                body: JSON.stringify({
-                    username: formData.username,
-                    password: formData.password
-                }),
+                body: JSON.stringify(newAccount),
                 credentials: 'include'
             });
 
@@ -76,12 +85,12 @@ const Register = () => {
                 {error && <div className="error-message">{error}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label htmlFor="username">Username</label>
+                        <label htmlFor="name">Username</label>
                         <input
                             type="text"
-                            id="username"
-                            name="username"
-                            value={formData.username}
+                            id="name"
+                            name="name"
+                            value={formData.name}
                             onChange={handleChange}
                             required
                         />
@@ -111,7 +120,7 @@ const Register = () => {
                     <button 
                         type="submit" 
                         className="auth-button"
-                        disabled={isLoading}
+                        disabled={isLoading || !csrfToken}
                     >
                         {isLoading ? 'Registering...' : 'Register'}
                     </button>
