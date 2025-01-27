@@ -168,7 +168,7 @@ const Dashboard = () => {
     };
 
     return (
-        <div class="container">
+        <div className="container">
             <h1>SIEM Dashboard</h1>
             <Navbar />
             <main>
