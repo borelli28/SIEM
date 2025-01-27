@@ -40,6 +40,13 @@ const Login = () => {
         setError('');
         setIsLoading(true);
 
+        const loginData = {
+            id: "0",
+            name: formData.name,
+            password: formData.password,
+            role: "no"
+        };
+
         try {
             const response = await fetch('http://localhost:4200/backend/account/login', {
                 method: 'POST',
@@ -47,10 +54,7 @@ const Login = () => {
                     'Content-Type': 'application/json',
                     'X-Form-ID': formId
                 },
-                body: JSON.stringify({
-                    name: formData.name,
-                    password: formData.password
-                }),
+                body: JSON.stringify(loginData),
                 credentials: 'include'
             });
 
