@@ -1,0 +1,37 @@
+nav {
+    width: 90%;
+    padding: 1%;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: #2a2b34;
+    border-radius: 8px;
+    margin: 0 2%;
+}
+
+/** {
+    outline: 1px dashed red;
+}*/
+
+nav a {
+    color: white;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+nav a:hover {
+    color: #aaa;
+}
+
+#logout-btn {
+    background-color: #CC0000;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+#logout-btn:hover {
+    background-color: #ff0000;
+}
