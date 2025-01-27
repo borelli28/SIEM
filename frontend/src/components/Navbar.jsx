@@ -27,7 +27,7 @@ const Navbar = () => {
             <nav>
                 <Link to="/">Dashboard</Link>
                 <Link to="/settings">Settings</Link>
-                <Link to="/alerts">All Alerts</Link>
+                <Link to="/alerts">Alerts</Link>
                 <Link to="/search">Search</Link>
                 <Link to="/list-cases">Cases</Link>
                 <Link id="logout-btn" to="/logout">Logout</Link>
