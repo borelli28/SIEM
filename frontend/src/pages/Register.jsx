@@ -12,6 +12,8 @@ const Register = () => {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
+    const formId = 'register-form'
+
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -26,15 +28,17 @@ const Register = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:4200/backend/auth/register', {
+            const response = await fetch('http://localhost:4200/backend/account/', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Form-ID': formId
                 },
                 body: JSON.stringify({
                     username: formData.username,
                     password: formData.password
-                })
+                }),
+                credentials: 'include'
             });
 
             const data = await response.json();
