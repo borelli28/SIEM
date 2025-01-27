@@ -21,7 +21,8 @@ const Dashboard = () => {
                 navigate('/login');
                 return;
             }
-            fetchData();
+            // Add small delay to ensure canvas is in DOM
+            setTimeout(fetchData, 0);
         };
 
         initAuth();
@@ -163,20 +164,20 @@ const Dashboard = () => {
         }
     };
 
+    const handleCanvasLoad = () => {
+        fetchData();
+    };
+
     return (
         <div>
             <h1>SIEM Dashboard</h1>
             <Navbar />
             <main>
                 {error && <div className="alert error">{error}</div>}
-                {isLoading ? (
-                    <div>Loading...</div>
-                ) : (
-                    <section id="graphs">
-                        <h2>Log Analysis</h2>
-                        <canvas id="logsChart"></canvas>
-                    </section>
-                )}
+                <section id="graphs">
+                    <h2>Log Analysis</h2>
+                    <canvas id="logsChart"></canvas>
+                </section>
             </main>
         </div>
     );
