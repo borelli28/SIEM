@@ -47,20 +47,50 @@ const Login = () => {
                     'Content-Type': 'application/json',
                     'X-Form-ID': formId
                 },
-                body: JSON.stringify(formData),
+                body: JSON.stringify({
+                    name: formData.name,
+                    password: formData.password
+                }),
                 credentials: 'include'
             });
 
             const data = await response.json();
 
-            if (!response.ok) {
-                throw new Error(data.message || 'Login failed');
+            if (response.status === 401) {
+                setError("Invalid username or password");
+                return;
             }
 
-            setSuccess("Success!")
-            navigate('/dashboard');
+            if (response.status === 400) {
+                if (data.status === "error") {
+                    if (data.message.includes("Missing required field")) {
+                        setError(data.message);
+                    } else if (data.message === "Invalid role provided") {
+                        setError("Invalid role provided");
+                    } else {
+                        setError(data.message);
+                    }
+                }
+                return;
+            }
+
+            if (!response.ok) {
+                if (data.status === "error") {
+                    setError(data.message);
+                } else {
+                    setError('Login failed');
+                }
+                return;
+            }
+
+            if (data.status === "success") {
+                setSuccess(data.message);
+                navigate('/dashboard');
+            }
+
         } catch (err) {
-            setError(err.message);
+            console.error('Error:', err);
+            setError('Network error occurred. Please try again.');
         } finally {
             setIsLoading(false);
         }

@@ -82,7 +82,7 @@ const Register = () => {
 
             if (!response.ok) {
                 if (data.status === "error") {
-                    setError(data.message); 
+                    setError(data.message);
                 } else {
                     setError('Registration failed');
                 }
