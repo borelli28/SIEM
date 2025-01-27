@@ -11,6 +11,8 @@ const Login = () => {
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
 
+    const formId = 'login-form';
+
     const handleChange = (e) => {
         setFormData({
             ...formData,
@@ -24,13 +26,14 @@ const Login = () => {
         setIsLoading(true);
 
         try {
-            const response = await fetch('http://localhost:4200/backend/auth/login', {
+            const response = await fetch('http://localhost:4200/backend/account/login', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-Form-ID': formId
                 },
-                credentials: 'include',
-                body: JSON.stringify(formData)
+                body: JSON.stringify(formData),
+                credentials: 'include'
             });
 
             const data = await response.json();
