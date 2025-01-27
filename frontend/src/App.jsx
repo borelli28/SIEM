@@ -5,6 +5,7 @@ const Login = lazy(() => import('./pages/Login'));
 const Register = lazy(() => import('./pages/Register'));
 const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Settings = lazy(() => import('./pages/Settings'));
+const Alerts = lazy(() => import('./pages/Alerts'));
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
 
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/alerts" element={<Alerts />} />
           
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
