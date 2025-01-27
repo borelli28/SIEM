@@ -1,17 +1,17 @@
 nav {
-    width: 90%;
-    padding: 1%;
+    width: 100%;
+    padding: 1rem;
     display: flex;
     justify-content: space-around;
     align-items: center;
     background-color: #2a2b34;
     border-radius: 8px;
-    margin: 0 2%;
+    margin: 1rem 0;
 }
 
-/** {
+* {
     outline: 1px dashed red;
-}*/
+}
 
 nav a {
     color: white;

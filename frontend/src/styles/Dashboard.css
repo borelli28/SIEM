@@ -1,23 +1,6 @@
-body {
-    background-color: #22232b;
-    color: white;
-    text-align: center;
-    display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
-    align-items: center;
-    width: 100%;
-    margin: 0;
-    padding: 0;
-}
-
-#root {
-    width: 100%;
-}
-
 main {
     width: 100%;
-    padding: 20px;
+    padding: 10px;
     box-sizing: border-box;
 }
 
