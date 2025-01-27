@@ -10,6 +10,7 @@ const Register = () => {
         confirmPassword: ''
     });
     const [error, setError] = useState('');
+    const [success, setSuccess] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
     const [csrfToken, setCsrfToken] = useState(null);
@@ -70,6 +71,7 @@ const Register = () => {
                 throw new Error(data.message || 'Registration failed');
             }
 
+            setSuccess("Success!");
             navigate('/login');
         } catch (err) {
             setError(err.message);
@@ -83,6 +85,7 @@ const Register = () => {
             <div className="auth-box">
                 <h2>Register</h2>
                 {error && <div className="error-message">{error}</div>}
+                {success && <div className="success-message">{success}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label htmlFor="name">Username</label>
