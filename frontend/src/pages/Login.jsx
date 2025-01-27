@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { getCsrfToken } from '../services/csrfService';
 import '../styles/LogReg.css';
 
 const Login = () => {
@@ -10,8 +11,21 @@ const Login = () => {
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const navigate = useNavigate();
+    const [csrfToken, setCsrfToken] = useState(null);
 
     const formId = 'login-form';
+
+    useEffect(() => {
+        const fetchCsrfToken = async () => {
+            try {
+                const token = await getCsrfToken(formId);
+                setCsrfToken(token);
+            } catch (err) {
+                setError('Failed to initialize form security');
+            }
+        };
+        fetchCsrfToken();
+    }, []);
 
     const handleChange = (e) => {
         setFormData({
