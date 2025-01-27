@@ -4,6 +4,7 @@ import { getAuthenticationStatus, checkAuth, user } from '../services/authServic
 import { getCsrfToken } from '../services/csrfService';
 import Navbar from '../components/Navbar';
 import '../styles/Settings.css';
+import { parseYAML } from '../services/yamlParser';
 
 const Settings = () => {
     const [error, setError] = useState('');
