@@ -21,8 +21,7 @@ const Dashboard = () => {
                 navigate('/login');
                 return;
             }
-            // Add small delay to ensure canvas is in DOM
-            setTimeout(fetchData, 0);
+            fetchData();
         };
 
         initAuth();
