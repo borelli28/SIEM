@@ -5,7 +5,7 @@ import '../styles/LogReg.css';
 
 const Login = () => {
     const [formData, setFormData] = useState({
-        username: '',
+        name: '',
         password: ''
     });
     const [error, setError] = useState('');
@@ -108,12 +108,12 @@ const Login = () => {
                 {success && <div className="success-message">{success}</div>}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
-                        <label htmlFor="username">Username</label>
+                        <label htmlFor="name">Username</label>
                         <input
                             type="text"
-                            id="username"
-                            name="username"
-                            value={formData.username}
+                            id="name"
+                            name="name"
+                            value={formData.name}
                             onChange={handleChange}
                             required
                         />
