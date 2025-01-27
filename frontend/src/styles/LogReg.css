@@ -97,11 +97,9 @@ a:hover {
 }
 
 .success {
-    background-color: #1a472a;
     color: #4ade80;
 }
 
-.error {
-    background-color: #470f0f;
+.error-message {
     color: #ff8080;
 }
