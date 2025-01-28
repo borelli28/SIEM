@@ -89,10 +89,64 @@
 }
 
 /* Observables Section */
+.add-observable-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 1% 0;
+}
+
+.add-observable-container form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.observables-list {
+    width: 100%;
+}
+
 .observable {
+    background-color: #22232b;
     margin-bottom: 15px;
-    padding: 15px;
+    padding: 1%;
     border-radius: 4px;
+}
+
+.observable-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.observable-content {
+    flex-grow: 1;
+    color: #ffffff;
+}
+
+.delete-observable-btn {
+    background-color: #CC0000;
+    color: white;
+    border: none;
+    padding: 1%;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.delete-observable-btn:hover {
+    background-color: #aa0000;
+}
+
+select, input[type="text"] {
+    background-color: #333440;
+    border: 1px solid #3498db;
+    color: white;
+    padding: 1%;
+    border-radius: 4px;
+    width: 100%;
 }
 
 /* Events Section */

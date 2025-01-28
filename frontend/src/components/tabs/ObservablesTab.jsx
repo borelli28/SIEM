@@ -100,12 +100,7 @@ const ObservablesTab = ({ caseId, formId, showAlert }) => {
         <div className="tab-container">
             <div className="observables-section">
                 <div className="add-observable-container">
-
-                    <form 
-                        id="add-observable-form"
-                        className={showObservableForm ? '' : 'hidden'}
-                        onSubmit={handleAddObservable}
-                    >
+                    <form onSubmit={handleAddObservable}>
                         <select name="type" required>
                             <option value="ip">IP Address</option>
                             <option value="domain">Domain</option>
@@ -118,9 +113,7 @@ const ObservablesTab = ({ caseId, formId, showAlert }) => {
                             placeholder="Observable value"
                             required 
                         />
-                        <div className="observable-form-actions">
-                            <button type="submit" className="primary-btn">Add</button>
-                        </div>
+                        <button type="submit" className="primary-btn">Add Observable</button>
                     </form>
                 </div>
 
@@ -129,13 +122,13 @@ const ObservablesTab = ({ caseId, formId, showAlert }) => {
                         <div key={observable.id} className="observable">
                             <div className="observable-header">
                                 <div className="observable-content">
-                                    <strong>{observable.type}:</strong> {observable.value}
+                                    {observable.value}
                                 </div>
                                 <button
                                     className="delete-observable-btn"
                                     onClick={() => handleDeleteObservable(observable.id)}
                                 >
-                                    ×
+                                    Delete
                                 </button>
                             </div>
                         </div>
