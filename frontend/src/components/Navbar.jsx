@@ -25,7 +25,7 @@ const Navbar = () => {
     return (
         <div className="container">
             <nav>
-                <Link to="/">Dashboard</Link>
+                <Link to="/dashboard">Dashboard</Link>
                 <Link to="/settings">Settings</Link>
                 <Link to="/alerts">Alerts</Link>
                 <Link to="/search">Search</Link>
