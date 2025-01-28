@@ -92,21 +92,14 @@ const CommentsTab = ({ caseId, formId, showAlert }) => {
         <div className="tab-container">
             <div className="comments-section">
                 <div className="add-comment-container">
-
-                    <form 
-                        id="add-comment-form" 
-                        className={showCommentForm ? '' : 'hidden'}
-                        onSubmit={handleAddComment}
-                    >
+                    <form onSubmit={handleAddComment}>
                         <textarea
                             id="comment-text"
                             name="comment"
                             placeholder="Enter your comment..."
                             required
                         ></textarea>
-                        <div className="comment-form-actions">
-                            <button type="submit" className="primary-btn">Add</button>
-                        </div>
+                        <button type="submit" className="primary-btn">Add Comment</button>
                     </form>
                 </div>
 
