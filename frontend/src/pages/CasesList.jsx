@@ -207,7 +207,7 @@ const CasesList = () => {
 
             const alertData = await alertResponse.json();
 
-            await fetch(`http://localhost:4200/backend/case/${caseId}/observables`, {
+            await fetch(`http://localhost:4200/backend/case/${caseId}/observable`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
