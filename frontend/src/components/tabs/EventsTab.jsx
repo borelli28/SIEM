@@ -43,14 +43,16 @@ const EventsTab = ({ caseId, formId, showAlert }) => {
     };
 
     return (
-        <div className="events-section">
-            {events.map(event => (
-                <div key={event.id} className={`event ${event.observable_type}-event`}>
-                    <h4>{event.observable_type === 'alert' ? 'Alert Event' : 'Log Event'}</h4>
-                    <pre>{JSON.stringify(event.value, null, 2)}</pre>
-                    <p>Added on {event.created_at ? new Date(event.created_at).toLocaleString() : 'unknown date'}</p>
-                </div>
-            ))}
+        <div className="tab-container">
+            <div className="events-section">
+                {events.map(event => (
+                    <div key={event.id} className={`event ${event.observable_type}-event`}>
+                        <h4>{event.observable_type === 'alert' ? 'Alert Event' : 'Log Event'}</h4>
+                        <pre>{JSON.stringify(event.value, null, 2)}</pre>
+                        <p>Added on {event.created_at ? new Date(event.created_at).toLocaleString() : 'unknown date'}</p>
+                    </div>
+                ))}
+            </div>
         </div>
     );
 };

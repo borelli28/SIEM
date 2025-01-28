@@ -134,9 +134,7 @@ const Cases = () => {
                 <div className="alert error">Case not found or failed to load</div>
             ) : (
                 <>
-                    <div className="case-header">
-                        <h2>{caseData.title}</h2>
-                    </div>
+                    <h2 className="case-header">{caseData.title}</h2>
 
                     <div className="tabs">
                         <button 
@@ -164,29 +162,27 @@ const Cases = () => {
                         <div className="case-description">{caseData.description || 'No description available'}</div>
                     </div>
 
-                    <div id="tab-content">
-                        {activeTab === 'comments' && 
-                            <CommentsTab 
-                                caseId={caseId} 
-                                formId={formId} 
-                                showAlert={showAlert} 
-                            />
-                        }
-                        {activeTab === 'observables' && 
-                            <ObservablesTab 
-                                caseId={caseId} 
-                                formId={formId} 
-                                showAlert={showAlert} 
-                            />
-                        }
-                        {activeTab === 'events' && 
-                            <EventsTab 
-                                caseId={caseId} 
-                                formId={formId} 
-                                showAlert={showAlert} 
-                            />
-                        }
-                    </div>
+                    {activeTab === 'comments' && 
+                        <CommentsTab 
+                            caseId={caseId} 
+                            formId={formId} 
+                            showAlert={showAlert} 
+                        />
+                    }
+                    {activeTab === 'observables' && 
+                        <ObservablesTab 
+                            caseId={caseId} 
+                            formId={formId} 
+                            showAlert={showAlert} 
+                        />
+                    }
+                    {activeTab === 'events' && 
+                        <EventsTab 
+                            caseId={caseId} 
+                            formId={formId} 
+                            showAlert={showAlert} 
+                        />
+                    }
 
                     <div className="case-details-sidebar">
                         <div className="summary-section">

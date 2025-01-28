@@ -99,54 +99,50 @@ const ObservablesTab = ({ caseId, formId, showAlert }) => {
     };
 
     return (
-        <div className="observables-section">
-            <div className="add-observable-container">
-                <button 
-                    className="primary-btn"
-                    onClick={() => setShowObservableForm(!showObservableForm)}
-                >
-                    {showObservableForm ? 'Cancel' : 'Add Observable'}
-                </button>
-                
-                <form 
-                    id="add-observable-form"
-                    className={showObservableForm ? '' : 'hidden'}
-                    onSubmit={handleAddObservable}
-                >
-                    <select name="type" required>
-                        <option value="ip">IP Address</option>
-                        <option value="domain">Domain</option>
-                        <option value="hash">File Hash</option>
-                        <option value="url">URL</option>
-                    </select>
-                    <input 
-                        type="text" 
-                        name="value" 
-                        placeholder="Observable value"
-                        required 
-                    />
-                    <div className="observable-form-actions">
-                        <button type="submit" className="primary-btn">Add</button>
-                    </div>
-                </form>
-            </div>
+        <div className="tab-container">
+            <div className="observables-section">
+                <div className="add-observable-container">
 
-            <div className="observables-list">
-                {observables.map(observable => (
-                    <div key={observable.id} className="observable">
-                        <div className="observable-header">
-                            <div className="observable-content">
-                                <strong>{observable.type}:</strong> {observable.value}
-                            </div>
-                            <button
-                                className="delete-observable-btn"
-                                onClick={() => handleDeleteObservable(observable.id)}
-                            >
-                                ×
-                            </button>
+                    <form 
+                        id="add-observable-form"
+                        className={showObservableForm ? '' : 'hidden'}
+                        onSubmit={handleAddObservable}
+                    >
+                        <select name="type" required>
+                            <option value="ip">IP Address</option>
+                            <option value="domain">Domain</option>
+                            <option value="hash">File Hash</option>
+                            <option value="url">URL</option>
+                        </select>
+                        <input 
+                            type="text" 
+                            name="value" 
+                            placeholder="Observable value"
+                            required 
+                        />
+                        <div className="observable-form-actions">
+                            <button type="submit" className="primary-btn">Add</button>
                         </div>
-                    </div>
-                ))}
+                    </form>
+                </div>
+
+                <div className="observables-list">
+                    {observables.map(observable => (
+                        <div key={observable.id} className="observable">
+                            <div className="observable-header">
+                                <div className="observable-content">
+                                    <strong>{observable.type}:</strong> {observable.value}
+                                </div>
+                                <button
+                                    className="delete-observable-btn"
+                                    onClick={() => handleDeleteObservable(observable.id)}
+                                >
+                                    ×
+                                </button>
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
         </div>
     );

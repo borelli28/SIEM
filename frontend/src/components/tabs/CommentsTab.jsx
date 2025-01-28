@@ -91,51 +91,47 @@ const CommentsTab = ({ caseId, formId, showAlert }) => {
     };
 
     return (
-        <div className="comments-section">
-            <div className="add-comment-container">
-                <button 
-                    className="primary-btn"
-                    onClick={() => setShowCommentForm(!showCommentForm)}
-                >
-                    {showCommentForm ? 'Cancel' : 'Add Comment'}
-                </button>
-                
-                <form 
-                    id="add-comment-form" 
-                    className={showCommentForm ? '' : 'hidden'}
-                    onSubmit={handleAddComment}
-                >
-                    <textarea
-                        id="comment-text"
-                        name="comment"
-                        placeholder="Enter your comment..."
-                        required
-                    ></textarea>
-                    <div className="comment-form-actions">
-                        <button type="submit" className="primary-btn">Add</button>
-                    </div>
-                </form>
-            </div>
+        <div className="tab-container">
+            <div className="comments-section">
+                <div className="add-comment-container">
 
-            <div className="comments-list">
-                {comments.map(comment => (
-                    <div key={comment.id} className="comment">
-                        <div className="comment-header">
-                            <div className="comment-content">
-                                {comment.content}
+                    <form 
+                        id="add-comment-form" 
+                        className={showCommentForm ? '' : 'hidden'}
+                        onSubmit={handleAddComment}
+                    >
+                        <textarea
+                            id="comment-text"
+                            name="comment"
+                            placeholder="Enter your comment..."
+                            required
+                        ></textarea>
+                        <div className="comment-form-actions">
+                            <button type="submit" className="primary-btn">Add</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div className="comments-list">
+                    {comments.map(comment => (
+                        <div key={comment.id} className="comment">
+                            <div className="comment-header">
+                                <div className="comment-content">
+                                    {comment.content}
+                                </div>
+                                <button
+                                    className="delete-comment-btn"
+                                    onClick={() => handleDeleteComment(comment.id)}
+                                >
+                                    ×
+                                </button>
                             </div>
-                            <button
-                                className="delete-comment-btn"
-                                onClick={() => handleDeleteComment(comment.id)}
-                            >
-                                ×
-                            </button>
+                            <div className="comment-metadata">
+                                Added by {comment.author} on {new Date(comment.created_at).toLocaleString()}
+                            </div>
                         </div>
-                        <div className="comment-metadata">
-                            Added by {comment.author} on {new Date(comment.created_at).toLocaleString()}
-                        </div>
-                    </div>
-                ))}
+                    ))}
+                </div>
             </div>
         </div>
     );

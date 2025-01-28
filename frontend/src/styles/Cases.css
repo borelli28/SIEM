@@ -1,41 +1,32 @@
 .container {
-    width: 90%;
-    margin: auto;
-    padding: 3%;
+    width: 100%;
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     flex-wrap: wrap;
+    text-align: center;
 }
 
 /* * {
     outline: 1px dashed red;
  }*/
 
+ h1, h2 {
+    width: 90%;
+}
+
 /* Case Header and Basic Layout */
 .case-header {
     width: 100%;
     display: flex;
-    gap: 10px;
-    margin: 20px 0;
-}
-
-h1 {
-    width: 90%;
+    justify-content: center;
 }
 
 /* Main Content Areas */
 #cases-container {
     background-color: #2c2d36;
-    text-align: left;
     border-radius: 4px;
     width: 20%;
     padding: 1%;
-}
-
-#tab-content {
-    width: 50%;
-    background-color: #2c2d36;
-    border-radius: 4px;
 }
 
 .case-details-sidebar {
@@ -45,12 +36,34 @@ h1 {
     padding: 1%;
 }
 
+.tabs {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    border-bottom: 1px solid #2c2d36;
+    margin: 2% 0;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: #808080;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    color: white;
+    border-bottom: 2px solid #3498db;
+}
+
 /* Case Title and Description */
 .case-title, .case-description {
     cursor: pointer;
     margin-bottom: 15px;
     white-space: pre-wrap;
-    padding: 10px;
+    padding: 1% 0;
     transition: background-color 0.2s;
 }
 
@@ -149,6 +162,19 @@ textarea {
     background-color: #aa0000;
 }
 
+#save-changes {
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    #cases-container, #tab-content, .case-details-sidebar {
+        width: 100%;
+        margin: 10px 0;
+    }
+}
+
 /* Alerts */
 .alert {
     margin: 16px 0;
@@ -166,18 +192,4 @@ textarea {
 .error {
     background-color: #470f0f;
     color: #ff8080;
-}
-
-/* Save Changes Button */
-#save-changes {
-    width: 100%;
-    margin-top: 20px;
-}
-
-/* Responsive Design */
-@media (max-width: 1200px) {
-    #cases-container, #tab-content, .case-details-sidebar {
-        width: 100%;
-        margin: 10px 0;
-    }
 }
