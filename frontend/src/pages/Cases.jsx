@@ -15,7 +15,7 @@ const Cases = () => {
     const [success, setSuccess] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [showSaveButton, setShowSaveButton] = useState(false);
-    const [currentUser, setCurrentUser] = useState();
+    const [currentUser, setCurrentUser] = useState(null);
     const navigate = useNavigate();
     const location = useLocation();
     const formId = 'case-details-form';
@@ -200,17 +200,13 @@ const Cases = () => {
                                     <select 
                                         id="case-assignee" 
                                         className="editable-field"
-                                        value={caseData.analyst_assigned || (currentUser ? currentUser.id : '')}
-                                        onChange={(e) => {
-                                            setShowSaveButton(true);
-                                            const updatedCaseData = { ...caseData, analyst_assigned: e.target.value };
-                                            setCaseData(updatedCaseData);
-                                        }}
+                                        defaultValue={caseData.analyst_assigned}
+                                        onChange={() => setShowSaveButton(true)}
                                     >
                                         <option value="">Unassigned</option>
                                         {currentUser && (
                                             <option value={currentUser.id}>
-                                                {currentUser.username || currentUser.name} (Current User)
+                                                {currentUser.name}
                                             </option>
                                         )}
                                     </select>
