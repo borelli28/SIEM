@@ -197,12 +197,12 @@ const Cases = () => {
                                     <select 
                                         id="case-assignee" 
                                         className="editable-field"
-                                        defaultValue={caseData.analyst_assigned}
+                                        value={caseData.analyst_assigned || ""}
                                         onChange={() => setShowSaveButton(true)}
                                     >
                                         <option value="">Unassigned</option>
                                         {currentUser && (
-                                            <option value={currentUser.id}>
+                                            <option value={currentUser.id} selected={caseData.analyst_assigned === currentUser.id}>
                                                 {currentUser.name}
                                             </option>
                                         )}

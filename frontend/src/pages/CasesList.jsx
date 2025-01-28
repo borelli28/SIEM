@@ -7,6 +7,7 @@ import '../styles/CasesList.css';
 
 const CasesList = () => {
     const [cases, setCases] = useState([]);
+    const [accountsMap, setAccountsMap] = useState({});
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [isFormVisible, setIsFormVisible] = useState(false);
@@ -21,11 +22,43 @@ const CasesList = () => {
                 navigate('/login');
                 return;
             }
-            fetchCases();
+            await fetchCases();
         };
 
         initCases();
     }, [navigate]);
+
+    useEffect(() => {
+        const fetchAnalysts = async () => {
+            const analysts = {};
+            for (const caseItem of cases) {
+                if (caseItem.analyst_assigned && !analysts[caseItem.analyst_assigned]) {
+                    try {
+                        const response = await fetch(`http://localhost:4200/backend/account/${caseItem.analyst_assigned}`, {
+                            method: 'GET',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-Form-ID': formId
+                            },
+                            credentials: 'include'
+                        });
+
+                        if (response.ok) {
+                            const account = await response.json();
+                            analysts[caseItem.analyst_assigned] = account.name;
+                        }
+                    } catch (err) {
+                        console.error('Error fetching analyst:', err);
+                    }
+                }
+            }
+            setAccountsMap(analysts);
+        };
+
+        if (cases.length > 0) {
+            fetchAnalysts();
+        }
+    }, [cases]);
 
     const showAlert = (message, type = 'error') => {
         if (type === 'error') setError(message);
@@ -275,7 +308,7 @@ const CasesList = () => {
                                     <td>{caseItem.status}</td>
                                     <td>{caseItem.severity}</td>
                                     <td>{caseItem.category}</td>
-                                    <td>{caseItem.analyst_assigned}</td>
+                                    <td>{accountsMap[caseItem.analyst_assigned] || 'Loading...'}</td>
                                     <td>{new Date(caseItem.created_at).toLocaleString()}</td>
                                     <td>
                                         <button
