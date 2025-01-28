@@ -32,7 +32,11 @@ const Cases = () => {
                 navigate('/list-cases');
                 return;
             }
-            await Promise.all([fetchCaseDetails(), fetchAnalysts()]);
+            try {
+                await Promise.all([fetchCaseDetails(), fetchAnalysts()]);
+            } catch (err) {
+                showAlert('Failed to initialize case: ' + err.message);
+            }
         };
 
         initCase();
@@ -64,9 +68,14 @@ const Cases = () => {
             }
 
             const data = await response.json();
+            if (!data || data.length === 0) {
+                throw new Error('No analysts available');
+            }
             setAnalysts(data);
         } catch (err) {
             console.error('Error fetching analysts:', err);
+            showAlert('Error loading analysts: ' + err.message);
+            setAnalysts([]); // Set empty array instead of null
         }
     };
 
@@ -86,15 +95,24 @@ const Cases = () => {
             }
 
             const data = await response.json();
+            if (!data) {
+                throw new Error('Case not found');
+            }
             setCaseData(data);
         } catch (err) {
-            showAlert('Failed to fetch case details');
+            showAlert('Failed to fetch case details: ' + err.message);
+            setCaseData(null);
         } finally {
             setIsLoading(false);
         }
     };
 
     const handleSaveChanges = async () => {
+        if (analysts.length === 0) {
+            showAlert('Cannot save changes: No analysts available');
+            return;
+        }
+
         try {
             const csrfToken = await getCsrfToken(formId);
             const updatedData = {
@@ -125,7 +143,7 @@ const Cases = () => {
             setShowSaveButton(false);
             await fetchCaseDetails();
         } catch (err) {
-            showAlert('Failed to update case');
+            showAlert('Failed to update case: ' + err.message);
         }
     };
 
@@ -139,7 +157,11 @@ const Cases = () => {
 
             {isLoading ? (
                 <div>Loading case details...</div>
-            ) : caseData && analysts.length > 0 ? (
+            ) : !caseData ? (
+                <div className="alert error">Case not found or failed to load</div>
+            ) : analysts.length === 0 ? (
+                <div className="alert error">No analysts available. Some features may be limited.</div>
+            ) : (
                 <>
                     <div className="case-header">
                         <h2>{caseData.title}</h2>
@@ -168,7 +190,7 @@ const Cases = () => {
 
                     <div id="cases-container">
                         <div className="case-title">{caseData.title}</div>
-                        <div className="case-description">{caseData.description}</div>
+                        <div className="case-description">{caseData.description || 'No description available'}</div>
                     </div>
 
                     <div id="tab-content">
@@ -271,14 +293,13 @@ const Cases = () => {
                                 id="save-changes" 
                                 className="primary-btn"
                                 onClick={handleSaveChanges}
+                                disabled={analysts.length === 0}
                             >
                                 Save Changes
                             </button>
                         )}
                     </div>
                 </>
-            ) : (
-                <div>Loading case details and analysts...</div>
             )}
         </div>
     );
