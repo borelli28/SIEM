@@ -25,7 +25,7 @@
 .comment {
     background-color: #22232b;
     margin-bottom: 15px;
-    padding: 15px;
+    padding: 1%;
     border-radius: 4px;
     border-left: 4px solid #3498db;
 }
@@ -34,29 +34,25 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 10px;
 }
 
 .comment-content {
     flex-grow: 1;
     color: #ffffff;
-    word-break: break-word;
 }
 
 .comment-metadata {
     color: #808080;
     font-size: 0.9em;
-    margin-top: 10px;
 }
 
 .delete-comment-btn {
     background-color: #CC0000;
     color: white;
     border: none;
-    padding: 4px 8px;
+    padding: 1%;
     border-radius: 4px;
     cursor: pointer;
-    margin-left: 10px;
     transition: background-color 0.2s;
 }
 
@@ -72,7 +68,7 @@
     background-color: #333440;
     border: 1px solid #3498db;
     color: white;
-    padding: 8px;
+    padding: 1%;
     border-radius: 4px;
     width: 100%;
     min-height: 100px;
