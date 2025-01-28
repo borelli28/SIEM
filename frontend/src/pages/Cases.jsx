@@ -88,28 +88,29 @@ const Cases = () => {
     const handleSaveChanges = async () => {
         try {
             const csrfToken = await getCsrfToken(formId);
+            const newAnalyst = document.getElementById('case-assignee').value;
+
             const updatedData = {
-                title: caseData.title,
-                description: caseData.description,
+                ...caseData,
                 severity: document.getElementById('case-severity').value,
                 status: document.getElementById('case-status').value,
                 category: document.getElementById('case-category').value,
-                analyst_assigned: document.getElementById('case-assignee').value
+                analyst_assigned: newAnalyst || caseData.analyst_assigned
             };
 
             const response = await fetch(`http://localhost:4200/backend/case/${caseId}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Form-ID': formId,
-                    'X-CSRF-Token': csrfToken
+                    'X-Form-ID': formId
                 },
                 credentials: 'include',
                 body: JSON.stringify(updatedData)
             });
 
             if (!response.ok) {
-                throw new Error('Failed to update case');
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to update case');
             }
 
             showAlert('Case updated successfully', 'success');
