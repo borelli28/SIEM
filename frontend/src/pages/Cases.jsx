@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
-import { getAuthenticationStatus, checkAuth, user } from '../services/authService';
+import { getAuthenticationStatus, checkAuth, getCurrentUser } from '../services/authService';
 import { getCsrfToken } from '../services/csrfService';
 import Navbar from '../components/Navbar';
 import CommentsTab from '../components/tabs/CommentsTab';
@@ -15,6 +15,7 @@ const Cases = () => {
     const [success, setSuccess] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [showSaveButton, setShowSaveButton] = useState(false);
+    const [currentUser, setCurrentUser] = useState();
     const navigate = useNavigate();
     const location = useLocation();
     const formId = 'case-details-form';
@@ -31,7 +32,7 @@ const Cases = () => {
                 navigate('/list-cases');
                 return;
             }
-            fetchCaseDetails();
+            await Promise.all([fetchCaseDetails(), fetchCurrentUser()]);
         };
 
         initCase();
@@ -45,6 +46,15 @@ const Cases = () => {
             setError('');
             setSuccess('');
         }, 5000);
+    };
+
+    const fetchCurrentUser = async () => {
+        const userData = await getCurrentUser();
+        if (!userData) {
+            console.log("Current user is null");
+            return;
+        }
+        setCurrentUser(userData);
     };
 
     const fetchCaseDetails = async () => {
