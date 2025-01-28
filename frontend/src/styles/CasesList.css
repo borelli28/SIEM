@@ -1,0 +1,152 @@
+.container {
+    width: 90%;
+    margin: auto;
+    padding: 3%;
+}
+
+.primary-btn {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    font-size: 18px;
+    border-radius: 4px;
+}
+
+#show-form-btn {
+    margin: 1% 0;
+    width: 75%;
+}
+
+.form-container {
+    width: 100%;
+    margin: 1.5% 0;
+    background-color: #2a2b34;
+    padding: 20px;
+    border-radius: 8px;
+}
+
+.form-container.hidden {
+    display: none;
+}
+
+.form-group {
+    margin: 15px 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.form-group label {
+    margin-bottom: 8px;
+    width: 100%;
+    text-align: left;
+    max-width: 300px;
+}
+
+.form-group input,
+.form-group select {
+    width: 100%;
+    max-width: 300px;
+    padding: 8px;
+    background-color: #333440;
+    border: 1px solid #3498db;
+    border-radius: 4px;
+    color: white;
+}
+
+.form-group select option {
+    background-color: #333440;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #2c2d36;
+    margin-top: 20px;
+}
+
+th, td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid #22232b;
+}
+
+th {
+    background-color: #3498db;
+    color: white;
+}
+
+td a {
+    color: #3498db;
+    text-decoration: none;
+}
+
+td a:hover {
+    color: #2980b9;
+}
+
+.alert {
+    margin: 16px 0;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.success {
+    background-color: #1a472a;
+    color: #4ade80;
+}
+
+.error {
+    background-color: #470f0f;
+    color: #ff8080;
+}
+
+button {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #2980b9;
+}
+
+.delete-btn {
+    background-color: #CC0000;
+    margin-right: 8px;
+}
+
+.delete-btn:hover {
+    background-color: #ff0000;
+}
+
+td button {
+    margin: 2px;
+}
+
+@media (max-width: 768px) {
+    .container {
+        width: 95%;
+        padding: 2%;
+    }
+
+    table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    th, td {
+        padding: 8px;
+    }
+
+    #show-form-btn {
+        width: 100%;
+    }
+}
