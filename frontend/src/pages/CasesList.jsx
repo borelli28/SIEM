@@ -37,29 +37,6 @@ const CasesList = () => {
         }, 5000);
     };
 
-    const fetchAnalystName = async (analystId) => {
-        try {
-            const response = await fetch(`http://localhost:4200/backend/account/${analystId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Form-ID': formId
-                },
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch analyst details');
-            }
-
-            const analyst = await response.json();
-            return analyst.name;
-        } catch (err) {
-            console.error('Error fetching analyst:', err);
-            return 'Unknown';
-        }
-    };
-
     const fetchCases = async () => {
         try {
             const csrfToken = await getCsrfToken(formId);
@@ -78,16 +55,8 @@ const CasesList = () => {
             }
 
             const casesData = await response.json();
-            
-            // Get analyst names for each case
-            const casesWithAnalysts = await Promise.all(
-                casesData.map(async caseItem => {
-                    const analystName = await fetchAnalystName(caseItem.analyst_assigned);
-                    return { ...caseItem, analystName };
-                })
-            );
-
-            setCases(casesWithAnalysts);
+            console.log(casesData);
+            setCases(casesData);
         } catch (err) {
             console.error('Error:', err);
             showAlert('Failed to fetch cases');
@@ -98,17 +67,39 @@ const CasesList = () => {
 
     const handleCreateCase = async (e) => {
         e.preventDefault();
-        const formData = {
-            title: e.target.title.value,
-            severity: e.target.severity.value,
-            category: e.target.category.value,
-            analyst_assigned: user,
-            status: "open",
-            description: "",
-            observables: "[]"
-        };
 
         try {
+            const csrfToken = await getCsrfToken(formId);
+
+            const accountResponse = await fetch(`http://localhost:4200/backend/account/${user}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Form-ID': formId
+                },
+                credentials: 'include'
+            });
+
+            if (!accountResponse.ok) {
+                throw new Error('Failed to fetch account details');
+            }
+
+            const accountData = await accountResponse.json();
+
+            const formData = {
+                title: e.target.title.value,
+                severity: e.target.severity.value,
+                category: e.target.category.value,
+                analyst_assigned: accountData.name,
+                status: "open",
+                description: "",
+                observables: "[]"
+            };
+
+            console.log(user);
+            console.log(accountData);
+            console.log(formData);
+
             const response = await fetch(`http://localhost:4200/backend/case/${user}`, {
                 method: 'POST',
                 headers: {
@@ -120,7 +111,8 @@ const CasesList = () => {
             });
 
             if (!response.ok) {
-                throw new Error('Failed to create new case');
+                const errorData = await response.json();
+                throw new Error(errorData.message || 'Failed to create new case');
             }
 
             showAlert('Case created successfully', 'success');
@@ -283,7 +275,7 @@ const CasesList = () => {
                                     <td>{caseItem.status}</td>
                                     <td>{caseItem.severity}</td>
                                     <td>{caseItem.category}</td>
-                                    <td>{caseItem.analystName}</td>
+                                    <td>{caseItem.analyst_assigned}</td>
                                     <td>{new Date(caseItem.created_at).toLocaleString()}</td>
                                     <td>
                                         <button
