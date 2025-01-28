@@ -11,7 +11,7 @@ const ObservablesTab = ({ caseId, formId, showAlert }) => {
 
     const fetchObservables = async () => {
         try {
-            const response = await fetch(`http://localhost:4200/backend/case/${caseId}/observables`, {
+            const response = await fetch(`http://localhost:4200/backend/case/${caseId}`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json',
@@ -25,7 +25,12 @@ const ObservablesTab = ({ caseId, formId, showAlert }) => {
             }
 
             const data = await response.json();
-            setObservables(data);
+            if (data && data.observables && Array.isArray(data.observables)) {
+                setObservables(data.observables);
+            } else {
+                showAlert('Server did not return valid observables data');
+                setObservables([]);
+            }
         } catch (err) {
             showAlert('Failed to fetch observables');
         }
