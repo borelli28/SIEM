@@ -31,10 +31,20 @@ export async function checkAuth() {
 
 export async function getCurrentUser() {
     try {
+        await checkAuth();
+
+        if (!isAuthenticated) {
+            console.log("User not authenticated");
+            return null;
+        }
+
         if (!user) return null;
 
         const response = await fetch(`http://localhost:4200/backend/account/${user}`, {
             method: 'GET',
+            headers: {
+                'Content-Type': 'application/json'
+            },
             credentials: 'include'
         });
 
