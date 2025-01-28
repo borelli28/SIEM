@@ -8,6 +8,7 @@ const Settings = lazy(() => import('./pages/Settings'));
 const Alerts = lazy(() => import('./pages/Alerts'));
 const Search = lazy(() => import('./pages/Search'));
 const CasesList = lazy(() => import('./pages/CasesList'));
+const Cases = lazy(() => import('./pages/Cases'));
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
           <Route path="/alerts" element={<Alerts />} />
           <Route path="/search" element={<Search />} />
           <Route path="/list-cases" element={<CasesList />} />
+          <Route path="/cases" element={<Cases />} />
           
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
