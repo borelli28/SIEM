@@ -116,17 +116,17 @@ const CommentsTab = ({ caseId, formId, showAlert }) => {
                         <div key={comment.id} className="comment">
                             <div className="comment-header">
                                 <div className="comment-content">
-                                    {comment.content}
+                                    {comment.comment}
                                 </div>
                                 <button
                                     className="delete-comment-btn"
                                     onClick={() => handleDeleteComment(comment.id)}
                                 >
-                                    ×
+                                    Delete
                                 </button>
                             </div>
                             <div className="comment-metadata">
-                                Added by {comment.author} on {new Date(comment.created_at).toLocaleString()}
+                                {new Date(comment.created_at).toLocaleString()}
                             </div>
                         </div>
                     ))}
