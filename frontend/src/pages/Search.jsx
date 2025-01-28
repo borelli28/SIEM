@@ -120,7 +120,11 @@ const Search = () => {
     };
 
     const handleCaseSelection = async (caseId) => {
+        const formId = 'add-to-case-form';
+
         try {
+            await getCsrfToken(formId);
+
             const addResponse = await fetch(`http://localhost:4200/backend/case/${caseId}/observable`, {
                 method: 'POST',
                 headers: {
@@ -135,13 +139,14 @@ const Search = () => {
             });
 
             if (!addResponse.ok) {
-                throw new Error('Failed to add log as event');
+                const errorData = await addResponse.json();
+                throw new Error(errorData.message || 'Failed to add log as event');
             }
 
             showAlert('Log added as event successfully', 'success');
             setIsModalOpen(false);
         } catch (err) {
-            showAlert('Failed to add log as event');
+            showAlert('Failed to add log as event: ' + err.message);
         }
     };
 
