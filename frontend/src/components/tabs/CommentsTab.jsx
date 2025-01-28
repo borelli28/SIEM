@@ -72,8 +72,7 @@ const CommentsTab = ({ caseId, formId, showAlert }) => {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Form-ID': formId,
-                    'X-CSRF-Token': csrfToken
+                    'X-Form-ID': formId
                 },
                 credentials: 'include'
             });
