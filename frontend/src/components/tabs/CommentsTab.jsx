@@ -42,11 +42,10 @@ const CommentsTab = ({ caseId, formId, showAlert }) => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Form-ID': formId,
-                    'X-CSRF-Token': csrfToken
+                    'X-Form-ID': formId
                 },
                 credentials: 'include',
-                body: JSON.stringify({ content: commentText })
+                body: JSON.stringify(commentText)
             });
 
             if (!response.ok) {
