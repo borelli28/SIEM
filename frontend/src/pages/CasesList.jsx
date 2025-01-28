@@ -62,6 +62,8 @@ const CasesList = () => {
 
     const fetchCases = async () => {
         try {
+            const csrfToken = await getCsrfToken(formId);
+
             const response = await fetch(`http://localhost:4200/backend/case/all/${user}`, {
                 method: 'GET',
                 headers: {
@@ -101,7 +103,9 @@ const CasesList = () => {
             severity: e.target.severity.value,
             category: e.target.category.value,
             analyst_assigned: user,
-            status: "open"
+            status: "open",
+            description: "",
+            observables: "[]"
         };
 
         try {
@@ -111,8 +115,8 @@ const CasesList = () => {
                     'Content-Type': 'application/json',
                     'X-Form-ID': formId
                 },
-                credentials: 'include',
-                body: JSON.stringify(formData)
+                body: JSON.stringify(formData),
+                credentials: 'include'
             });
 
             if (!response.ok) {
@@ -162,6 +166,7 @@ const CasesList = () => {
         }
 
         try {
+            const csrfToken = await getCsrfToken(formId);
             const alertResponse = await fetch(`http://localhost:4200/backend/alert/${alertId}`, {
                 method: 'GET',
                 headers: {
@@ -177,7 +182,7 @@ const CasesList = () => {
 
             const alertData = await alertResponse.json();
 
-            await fetch(`http://localhost:4200/backend/case/${caseId}/observable`, {
+            await fetch(`http://localhost:4200/backend/case/${caseId}/observables`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
