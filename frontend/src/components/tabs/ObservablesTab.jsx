@@ -69,20 +69,24 @@ const ObservablesTab = ({ caseId, formId, showAlert }) => {
         }
     };
 
-    const handleDeleteObservable = async (observableId) => {
+    const handleDeleteObservable = async (observable) => {
         if (!window.confirm('Are you sure you want to delete this observable?')) {
             return;
         }
 
         try {
             const csrfToken = await getCsrfToken(formId);
-            const response = await fetch(`http://localhost:4200/backend/case/observable/${observableId}`, {
+            const response = await fetch(`http://localhost:4200/backend/case/${caseId}/observable`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Form-ID': formId
                 },
-                credentials: 'include'
+                credentials: 'include',
+                body: JSON.stringify({
+                    observable_type: observable.observable_type,
+                    value: observable.value
+                })
             });
 
             if (!response.ok) {
@@ -122,11 +126,11 @@ const ObservablesTab = ({ caseId, formId, showAlert }) => {
                         <div key={observable.id} className="observable">
                             <div className="observable-header">
                                 <div className="observable-content">
-                                    {observable.value}
+                                    <strong>{observable.observable_type}:</strong> {observable.value}
                                 </div>
                                 <button
                                     className="delete-observable-btn"
-                                    onClick={() => handleDeleteObservable(observable.id)}
+                                    onClick={() => handleDeleteObservable(observable)}
                                 >
                                     Delete
                                 </button>
