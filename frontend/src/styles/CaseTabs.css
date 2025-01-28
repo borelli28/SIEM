@@ -1,0 +1,102 @@
+/* CaseTabs.css */
+.comments-section, .observables-section, .events-section {
+	display: flex;
+	justify-content: center;
+	width: 100%;
+	outline: 1px solid greenyellow; /* This seems like a debug outline */
+	padding: 15px;
+}
+
+.tabs {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    border-bottom: 1px solid #2c2d36;
+    margin: 2% 0;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: #808080;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    color: white;
+    border-bottom: 2px solid #3498db;
+}
+
+/* Comments Section */
+.comment {
+    background-color: #22232b;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 4px;
+    text-align: left;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.comment-content {
+    flex-grow: 1;
+}
+
+.comment-metadata {
+    color: #808080;
+    font-size: 0.9em;
+    margin-top: 10px;
+}
+
+/* Observables Section */
+.observable {
+    background-color: #22232b;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+/* Events Section */
+.event {
+    background-color: #22232b;
+    margin-bottom: 15px;
+    padding: 15px;
+    border-radius: 4px;
+}
+
+.alert-event {
+    border-left: 4px solid #e74c3c;
+}
+
+.log-event {
+    border-left: 4px solid #3498db;
+}
+
+/* Forms and Button inside Sections */
+#add-comment-form, #add-observable-form {
+    background-color: #22232b;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 10px;
+}
+
+.primary-btn {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.primary-btn:hover {
+    background-color: #2980b9;
+}

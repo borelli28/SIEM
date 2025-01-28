@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { getCsrfToken } from '../../services/csrfService';
+import '../../styles/CaseTabs.css';
 
 const CommentsTab = ({ caseId, formId, showAlert }) => {
     const [comments, setComments] = useState([]);

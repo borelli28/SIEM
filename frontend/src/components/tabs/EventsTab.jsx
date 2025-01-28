@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import '../../styles/CaseTabs.css';
 
 const EventsTab = ({ caseId, formId, showAlert }) => {
     const [events, setEvents] = useState([]);
