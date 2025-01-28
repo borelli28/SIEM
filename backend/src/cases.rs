@@ -156,7 +156,7 @@ pub fn create_case(account_id: &str) -> Result<Case, CaseError> {
     let conn = establish_connection()?;
     conn.execute(
         "INSERT INTO cases (id, account_id, title, description, severity, status, category, 
-         analyst_assigned, observable, created_at, updated_at) 
+         analyst_assigned, observables, created_at, updated_at) 
          VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)",
         params![
             new_case.id,
