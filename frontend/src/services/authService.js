@@ -29,6 +29,27 @@ export async function checkAuth() {
     }
 }
 
+export async function getCurrentUser() {
+    try {
+        if (!user) return null;
+
+        const response = await fetch(`http://localhost:4200/backend/account/${user}`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch user details');
+        }
+
+        const userData = await response.json();
+        return userData;
+    } catch (error) {
+        console.error('Error fetching user details:', error);
+        return null;
+    }
+}
+
 export async function logout() {
     try {
         const response = await fetch('http://localhost:4200/backend/logout', {
