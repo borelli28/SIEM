@@ -124,7 +124,7 @@ const Cases = () => {
         <div className="container">
             <h1>Case Details</h1>
             <Navbar />
-            
+
             {error && <div className="alert error">{error}</div>}
             {success && <div className="alert success">{success}</div>}
 

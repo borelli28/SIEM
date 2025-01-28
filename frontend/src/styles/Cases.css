@@ -3,9 +3,13 @@
     margin: auto;
     padding: 3%;
     display: flex;
-    flex-wrap: wrap;
     justify-content: space-between;
+    flex-wrap: wrap;
 }
+
+/* * {
+    outline: 1px dashed red;
+ }*/
 
 /* Case Header and Basic Layout */
 .case-header {
@@ -24,7 +28,7 @@ h1 {
     background-color: #2c2d36;
     text-align: left;
     border-radius: 4px;
-    width: 23%;
+    width: 20%;
     padding: 1%;
 }
 
@@ -32,7 +36,6 @@ h1 {
     width: 50%;
     background-color: #2c2d36;
     border-radius: 4px;
-    margin: 0 1%;
 }
 
 .case-details-sidebar {

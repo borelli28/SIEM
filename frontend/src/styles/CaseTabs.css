@@ -3,7 +3,6 @@
 	display: flex;
 	justify-content: center;
 	width: 100%;
-	outline: 1px solid greenyellow; /* This seems like a debug outline */
 	padding: 15px;
 }
 
