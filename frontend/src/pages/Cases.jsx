@@ -197,13 +197,23 @@ const Cases = () => {
                             <div className="section-content">
                                 <div className="detail-row">
                                     <span className="label">Assignee:</span>
-                                    <input 
-                                        type="text" 
+                                    <select 
                                         id="case-assignee" 
                                         className="editable-field"
-                                        defaultValue={caseData.analyst_assigned}
-                                        onChange={() => setShowSaveButton(true)}
-                                    />
+                                        value={caseData.analyst_assigned || (currentUser ? currentUser.id : '')}
+                                        onChange={(e) => {
+                                            setShowSaveButton(true);
+                                            const updatedCaseData = { ...caseData, analyst_assigned: e.target.value };
+                                            setCaseData(updatedCaseData);
+                                        }}
+                                    >
+                                        <option value="">Unassigned</option>
+                                        {currentUser && (
+                                            <option value={currentUser.id}>
+                                                {currentUser.username || currentUser.name} (Current User)
+                                            </option>
+                                        )}
+                                    </select>
                                 </div>
                                 <div className="detail-row">
                                     <span className="label">Status:</span>
