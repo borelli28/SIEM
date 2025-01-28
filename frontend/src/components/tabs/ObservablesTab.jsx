@@ -50,8 +50,7 @@ const ObservablesTab = ({ caseId, formId, showAlert }) => {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Form-ID': formId,
-                    'X-CSRF-Token': csrfToken
+                    'X-Form-ID': formId
                 },
                 credentials: 'include',
                 body: JSON.stringify(formData)
@@ -81,8 +80,7 @@ const ObservablesTab = ({ caseId, formId, showAlert }) => {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-Form-ID': formId,
-                    'X-CSRF-Token': csrfToken
+                    'X-Form-ID': formId
                 },
                 credentials: 'include'
             });
