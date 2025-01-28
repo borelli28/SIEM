@@ -14,7 +14,6 @@ const Cases = () => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [isLoading, setIsLoading] = useState(true);
-    const [analysts, setAnalysts] = useState([]);
     const [showSaveButton, setShowSaveButton] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
@@ -32,11 +31,7 @@ const Cases = () => {
                 navigate('/list-cases');
                 return;
             }
-            try {
-                await Promise.all([fetchCaseDetails(), fetchAnalysts()]);
-            } catch (err) {
-                showAlert('Failed to initialize case: ' + err.message);
-            }
+            fetchCaseDetails();
         };
 
         initCase();
@@ -50,33 +45,6 @@ const Cases = () => {
             setError('');
             setSuccess('');
         }, 5000);
-    };
-
-    const fetchAnalysts = async () => {
-        try {
-            const response = await fetch('http://localhost:4200/backend/account/analysts', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Form-ID': formId
-                },
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch analysts');
-            }
-
-            const data = await response.json();
-            if (!data || data.length === 0) {
-                throw new Error('No analysts available');
-            }
-            setAnalysts(data);
-        } catch (err) {
-            console.error('Error fetching analysts:', err);
-            showAlert('Error loading analysts: ' + err.message);
-            setAnalysts([]); // Set empty array instead of null
-        }
     };
 
     const fetchCaseDetails = async () => {
@@ -108,11 +76,6 @@ const Cases = () => {
     };
 
     const handleSaveChanges = async () => {
-        if (analysts.length === 0) {
-            showAlert('Cannot save changes: No analysts available');
-            return;
-        }
-
         try {
             const csrfToken = await getCsrfToken(formId);
             const updatedData = {
@@ -159,8 +122,6 @@ const Cases = () => {
                 <div>Loading case details...</div>
             ) : !caseData ? (
                 <div className="alert error">Case not found or failed to load</div>
-            ) : analysts.length === 0 ? (
-                <div className="alert error">No analysts available. Some features may be limited.</div>
             ) : (
                 <>
                     <div className="case-header">
@@ -226,18 +187,13 @@ const Cases = () => {
                             <div className="section-content">
                                 <div className="detail-row">
                                     <span className="label">Assignee:</span>
-                                    <select 
+                                    <input 
+                                        type="text" 
                                         id="case-assignee" 
                                         className="editable-field"
                                         defaultValue={caseData.analyst_assigned}
                                         onChange={() => setShowSaveButton(true)}
-                                    >
-                                        {analysts.map(analyst => (
-                                            <option key={analyst.id} value={analyst.id}>
-                                                {analyst.name}
-                                            </option>
-                                        ))}
-                                    </select>
+                                    />
                                 </div>
                                 <div className="detail-row">
                                     <span className="label">Status:</span>
@@ -293,7 +249,6 @@ const Cases = () => {
                                 id="save-changes" 
                                 className="primary-btn"
                                 onClick={handleSaveChanges}
-                                disabled={analysts.length === 0}
                             >
                                 Save Changes
                             </button>
