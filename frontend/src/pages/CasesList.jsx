@@ -241,44 +241,6 @@ const CasesList = () => {
             {error && <div className="alert error">{error}</div>}
             {success && <div className="alert success">{success}</div>}
 
-            <button 
-                id="show-form-btn" 
-                className="primary-btn"
-                onClick={() => setIsFormVisible(!isFormVisible)}
-            >
-                {isFormVisible ? 'Hide Form' : 'Create New Case'}
-            </button>
-
-            <div className={`form-container ${isFormVisible ? '' : 'hidden'}`}>
-                <form onSubmit={handleCreateCase}>
-                    <h2>Create New Case</h2>
-                    <div className="form-group">
-                        <label htmlFor="title">Title:</label>
-                        <input type="text" id="title" name="title" required />
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="severity">Severity:</label>
-                        <select id="severity" name="severity" required>
-                            <option value="low">Low</option>
-                            <option value="medium">Medium</option>
-                            <option value="high">High</option>
-                            <option value="critical">Critical</option>
-                        </select>
-                    </div>
-                    <div className="form-group">
-                        <label htmlFor="category">Category:</label>
-                        <select id="category" name="category" required>
-                            <option value="malware">Malware</option>
-                            <option value="phishing">Phishing</option>
-                            <option value="intrusion">Intrusion</option>
-                            <option value="data_leak">Data Leak</option>
-                            <option value="other">Other</option>
-                        </select>
-                    </div>
-                    <button type="submit">Create Case</button>
-                </form>
-            </div>
-
             <div id="cases-list">
                 {isLoading ? (
                     <div>Loading cases...</div>
@@ -330,6 +292,44 @@ const CasesList = () => {
                         </tbody>
                     </table>
                 )}
+            </div>
+
+            <button 
+                id="show-form-btn" 
+                className="primary-btn"
+                onClick={() => setIsFormVisible(!isFormVisible)}
+            >
+                {isFormVisible ? 'Hide Form' : 'Create New Case'}
+            </button>
+
+            <div className={`form-container ${isFormVisible ? '' : 'hidden'}`}>
+                <form onSubmit={handleCreateCase}>
+                    <h2>Create New Case</h2>
+                    <div className="form-group">
+                        <label htmlFor="title">Title:</label>
+                        <input type="text" id="title" name="title" required />
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="severity">Severity:</label>
+                        <select id="severity" name="severity" required>
+                            <option value="low">Low</option>
+                            <option value="medium">Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label htmlFor="category">Category:</label>
+                        <select id="category" name="category" required>
+                            <option value="malware">Malware</option>
+                            <option value="phishing">Phishing</option>
+                            <option value="intrusion">Intrusion</option>
+                            <option value="data_leak">Data Leak</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <button type="submit" className="primary-btn">Create Case</button>
+                </form>
             </div>
         </div>
     );
