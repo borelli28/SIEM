@@ -113,9 +113,10 @@ const Alerts = () => {
         }
     };
 
-    const addAlertToCase = (alertId) => {
+    const addAlertToCase = async (alertId) => {
         sessionStorage.setItem('pendingAlertId', alertId);
         navigate('/list-cases?selectCase=true');
+        await acknowledgeAlert(alertId);
     };
 
     const filterAlertsBySeverity = async (severity) => {
