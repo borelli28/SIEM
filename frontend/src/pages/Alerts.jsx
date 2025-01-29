@@ -35,32 +35,6 @@ const Alerts = () => {
         }, 5000);
     };
 
-    const checkAlertHasCase = async (alertId) => {
-        const formId = 'alerts-form';
-        try {
-            await getCsrfToken(formId);
-
-            const response = await fetch(`http://localhost:4200/backend/alert/has_case/${alertId}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Form-ID': formId
-                },
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to check alert case status');
-            }
-
-            const data = await response.json();
-            return data.has_case;
-        } catch (err) {
-            console.error('Error checking alert case status:', err);
-            return false;
-        }
-    };
-
     const fetchAlerts = async () => {
         const formId = 'alerts-form';
         try {
@@ -81,13 +55,7 @@ const Alerts = () => {
 
             const alertsData = await response.json();
 
-            // Check has_case status for each alert
-            const alertsWithCaseStatus = await Promise.all(alertsData.map(async (alert) => {
-                const hasCase = await checkAlertHasCase(alert.id);
-                return { ...alert, has_case: hasCase };
-            }));
-
-            setAlerts(alertsWithCaseStatus);
+            setAlerts(alertsData);
         } catch (err) {
             console.error('Error fetching alerts:', err);
             showAlert('Failed to load alerts');
@@ -235,10 +203,10 @@ const Alerts = () => {
                                 </button>
                                 <button
                                     onClick={() => addAlertToCase(alert.id)}
-                                    disabled={alert.has_case}
+                                    disabled={alert.case_id !== null}
                                     className="add-case-btn"
                                 >
-                                    {alert.has_case ? 'Added to Case' : 'Add to Case'}
+                                    {alert.case_id !== null ? 'Added to Case' : 'Add to Case'}
                                 </button>
                             </td>
                         </tr>
