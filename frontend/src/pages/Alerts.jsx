@@ -82,7 +82,10 @@ const Alerts = () => {
     };
 
     const acknowledgeAlert = async (alertId) => {
+        const formId = 'alerts-form';
         try {
+            await getCsrfToken(formId);
+
             const response = await fetch(`http://localhost:4200/backend/alert/acknowledge/${alertId}`, {
                 method: 'PUT',
                 headers: {
