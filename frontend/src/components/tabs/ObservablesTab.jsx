@@ -129,7 +129,7 @@ const ObservablesTab = ({ caseId, formId, showAlert }) => {
                                     <strong>{observable.observable_type}:</strong> {observable.value}
                                 </div>
                                 <button
-                                    className="delete-observable-btn"
+                                    className="danger-btn"
                                     onClick={() => handleDeleteObservable(observable)}
                                 >
                                     Delete

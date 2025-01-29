@@ -118,20 +118,6 @@
     color: #ffffff;
 }
 
-.delete-observable-btn {
-    background-color: #CC0000;
-    color: white;
-    border: none;
-    padding: 1%;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.delete-observable-btn:hover {
-    background-color: #aa0000;
-}
-
 select, input[type="text"] {
     background-color: #333440;
     border: 1px solid #3498db;
