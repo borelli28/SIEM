@@ -39,6 +39,7 @@ const Settings = () => {
 
     const populateHostList = async () => {
         try {
+            await getCsrfToken(formId);
             const response = await fetch(`http://localhost:4200/backend/host/all/${user}`, {
                 method: 'GET',
                 headers: {
@@ -84,6 +85,7 @@ const Settings = () => {
         formData.append('account_id', user);
 
         try {
+            await getCsrfToken(formId);
             const response = await fetch('http://localhost:4200/backend/log/import', {
                 method: 'POST',
                 headers: {
@@ -118,7 +120,8 @@ const Settings = () => {
         }
 
         try {
-            const response = await fetch('http://localhost:4200/backend/host/', {
+            await getCsrfToken(formId);
+            const response = await fetch('http://localhost:4200/backend/host/new', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -159,6 +162,7 @@ const Settings = () => {
         formData.append('account_id', user);
 
         try {
+            await getCsrfToken(formId);
             const response = await fetch('http://localhost:4200/backend/rule/import', {
                 method: 'POST',
                 headers: {
@@ -243,22 +247,29 @@ const Settings = () => {
 
                 <section>
                     <h2>Upload Logs</h2>
-                    <div id="input-spinner-container">
-                        <select id="hostSelect">
-                            <option value="">Select Host</option>
-                            {hosts.map(host => (
-                                <option key={host.id} value={host.id}>
-                                    {host.hostname}
-                                </option>
-                            ))}
-                        </select>
-                        <input 
-                            type="file" 
-                            onChange={handleFileUpload}
-                            accept=".log,.txt"
-                        />
-                        {isLoading && <div className="spinner"></div>}
-                    </div>
+                    <form onSubmit={(e) => {
+                        e.preventDefault();
+                        const fileInput = e.target.querySelector('input[type="file"]');
+                        handleFileUpload({ target: fileInput });
+                    }}>
+                        <div id="input-spinner-container">
+                            <select id="hostSelect" required>
+                                <option value="">Select Host</option>
+                                {hosts.map(host => (
+                                    <option key={host.id} value={host.id}>
+                                        {host.hostname}
+                                    </option>
+                                ))}
+                            </select>
+                            <input 
+                                type="file" 
+                                accept=".log,.txt"
+                                required
+                            />
+                            {isLoading && <div className="spinner"></div>}
+                        </div>
+                        <button type="submit" className="primary-btn">Upload Logs</button>
+                    </form>
                 </section>
 
                 <section>
@@ -288,16 +299,22 @@ const Settings = () => {
 
                 <section>
                     <h2>Add New Rule</h2>
-                    <div id="input-spinner-container">
-                        <input 
-                            type="file" 
-                            onChange={handleRuleUpload}
-                            accept=".yaml,.yml"
-                        />
-                        {isLoading && <div className="spinner"></div>}
-                    </div>
+                    <form onSubmit={(e) => {
+                        e.preventDefault();
+                        const fileInput = e.target.querySelector('input[type="file"]');
+                        handleRuleUpload({ target: fileInput });
+                    }}>
+                        <div id="input-spinner-container">
+                            <input 
+                                type="file" 
+                                accept=".yaml,.yml"
+                                required
+                            />
+                            {isLoading && <div className="spinner"></div>}
+                        </div>
+                        <button type="submit" className="primary-btn">Upload Rule</button>
+                    </form>
                 </section>
-
             </main>
         </div>
     );
