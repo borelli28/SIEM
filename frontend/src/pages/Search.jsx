@@ -94,7 +94,7 @@ const Search = () => {
         }
     };
 
-    const addLogAsEvent = async (logId) => {
+    const addLogAsEvent = async (log) => {
         try {
             const response = await fetch(`http://localhost:4200/backend/case/all/${user}`, {
                 method: 'GET',
@@ -111,7 +111,7 @@ const Search = () => {
 
             const casesData = await response.json();
             setCases(casesData);
-            setSelectedLogId(logId);
+            setSelectedLogId(log);
             setIsModalOpen(true);
         } catch (err) {
             console.error('Error:', err);
@@ -134,7 +134,7 @@ const Search = () => {
                 credentials: 'include',
                 body: JSON.stringify({
                     observable_type: 'log',
-                    value: selectedLogId
+                    value: JSON.stringify(selectedLogId)
                 })
             });
 
@@ -239,7 +239,7 @@ const Search = () => {
                             <div className="log-actions">
                                 <button 
                                     className="add-event-btn"
-                                    onClick={() => addLogAsEvent(log.id)}
+                                    onClick={() => addLogAsEvent(log)}
                                 >
                                     Add as Event
                                 </button>
