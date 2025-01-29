@@ -139,7 +139,6 @@ async fn main() -> std::io::Result<()> {
                             .route("/all/{account_id}", web::get().to(get_all_alerts_handler))
                             .route("/{alert_id}", web::delete().to(delete_alert_handler))
                             .route("/acknowledge/{alert_id}", web::put().to(acknowledge_alert_handler))
-                            .route("/has_case/{alert_id}", web::get().to(alert_has_case_handler))
                     )
                     .service(
                         web::scope("/host")
