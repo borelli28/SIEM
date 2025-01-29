@@ -129,6 +129,11 @@
     transition: border-color 0.2s;
 }
 
+input.editable-field {
+    border: 1px solid #444;
+    outline: none;
+}
+
 .editable-field:focus {
     border-color: #3498db;
     outline: none;
@@ -136,7 +141,6 @@
 
 textarea, select, input {
     background-color: #333440;
-    border: 1px solid #3498db;
     color: white;
     padding: 8px;
     border-radius: 4px;
