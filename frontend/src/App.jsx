@@ -1,35 +1,32 @@
-import React, { Suspense, lazy } from 'react';
+import React from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 
-const Login = lazy(() => import('./pages/Login'));
-const Register = lazy(() => import('./pages/Register'));
-const Dashboard = lazy(() => import('./pages/Dashboard'));
-const Settings = lazy(() => import('./pages/Settings'));
-const Alerts = lazy(() => import('./pages/Alerts'));
-const Search = lazy(() => import('./pages/Search'));
-const CasesList = lazy(() => import('./pages/CasesList'));
-const Cases = lazy(() => import('./pages/Cases'));
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import Settings from './pages/Settings';
+import Alerts from './pages/Alerts';
+import Search from './pages/Search';
+import CasesList from './pages/CasesList';
+import Cases from './pages/Cases';
 
 function App() {
   return (
     <Router>
-      <Suspense fallback={<div>Loading...</div>}>
-        <Routes>
-          <Route path="/" element={<Navigate to="/login" replace />} />
+      <Routes>
+        <Route path="/" element={<Navigate to="/login" replace />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
 
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/alerts" element={<Alerts />} />
+        <Route path="/search" element={<Search />} />
+        <Route path="/list-cases" element={<CasesList />} />
+        <Route path="/cases" element={<Cases />} />
 
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/alerts" element={<Alerts />} />
-          <Route path="/search" element={<Search />} />
-          <Route path="/list-cases" element={<CasesList />} />
-          <Route path="/cases" element={<Cases />} />
-          
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
-      </Suspense>
+        <Route path="*" element={<Navigate to="/login" replace />} />
+      </Routes>
     </Router>
   );
 }
