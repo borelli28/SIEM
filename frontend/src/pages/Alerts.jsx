@@ -35,31 +35,11 @@ const Alerts = () => {
         }, 5000);
     };
 
-    const fetchAlerts = async () => {
-        try {
-            const response = await fetch(`http://localhost:4200/backend/alert/all/${user}`, {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-Form-ID': formId
-                },
-                credentials: 'include'
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to fetch alerts');
-            }
-
-            const alertsData = await response.json();
-            setAlerts(alertsData);
-        } catch (err) {
-            console.error('Error fetching alerts:', err);
-            showAlert('Failed to load alerts');
-        }
-    };
-
     const checkAlertHasCase = async (alertId) => {
+        const formId = 'alerts-form';
         try {
+            await getCsrfToken(formId);
+
             const response = await fetch(`http://localhost:4200/backend/alert/has_case/${alertId}`, {
                 method: 'GET',
                 headers: {
@@ -78,6 +58,39 @@ const Alerts = () => {
         } catch (err) {
             console.error('Error checking alert case status:', err);
             return false;
+        }
+    };
+
+    const fetchAlerts = async () => {
+        const formId = 'alerts-form';
+        try {
+            await getCsrfToken(formId);
+
+            const response = await fetch(`http://localhost:4200/backend/alert/all/${user}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Form-ID': formId
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch alerts');
+            }
+
+            const alertsData = await response.json();
+
+            // Check has_case status for each alert
+            const alertsWithCaseStatus = await Promise.all(alertsData.map(async (alert) => {
+                const hasCase = await checkAlertHasCase(alert.id);
+                return { ...alert, has_case: hasCase };
+            }));
+
+            setAlerts(alertsWithCaseStatus);
+        } catch (err) {
+            console.error('Error fetching alerts:', err);
+            showAlert('Failed to load alerts');
         }
     };
 
