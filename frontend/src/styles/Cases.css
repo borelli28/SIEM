@@ -1,0 +1,192 @@
+.container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    text-align: center;
+}
+
+/* * {
+    outline: 1px dashed red;
+ }*/
+
+ h1, h2 {
+    width: 90%;
+}
+
+/* Case Header and Basic Layout */
+.case-header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+/* Main Content Areas */
+#cases-container {
+    background-color: #2c2d36;
+    border-radius: 4px;
+    width: 20%;
+    padding: 1%;
+}
+
+.case-details-sidebar {
+    width: 25%;
+    background-color: #2c2d36;
+    border-radius: 4px;
+    padding: 1%;
+}
+
+.tabs {
+    display: flex;
+    justify-content: center;
+    width: 100%;
+    border-bottom: 1px solid #2c2d36;
+    margin: 2% 0;
+}
+
+.tab-btn {
+    background: none;
+    border: none;
+    color: #808080;
+    cursor: pointer;
+    padding: 5px 10px;
+    transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+    color: white;
+    border-bottom: 2px solid #3498db;
+}
+
+/* Case Title and Description */
+.case-title, .case-description {
+    cursor: pointer;
+    padding: 5px;
+}
+
+.case-title:hover, .case-description:hover {
+    background-color: rgba(52, 152, 219, 0.1);
+}
+
+.case-title input, .case-description textarea {
+    width: 100%;
+    background: #333440;
+    color: white;
+    border: 1px solid #444;
+    padding: 8px;
+    border-radius: 4px;
+}
+
+.case-description textarea {
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Section Styling */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    background-color: #333440;
+    margin-bottom: 10px;
+    border-radius: 4px;
+}
+
+.section-header h3 {
+    margin: 0;
+}
+
+.collapse-icon {
+    cursor: pointer;
+}
+
+.section-content {
+    padding: 10px;
+}
+
+/* Detail Rows */
+.detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+    padding: 5px 0;
+}
+
+.label {
+    color: #808080;
+}
+
+/* Form Elements */
+.editable-field {
+    background-color: #333440;
+    color: white;
+    border: 1px solid #444;
+    padding: 8px;
+    border-radius: 4px;
+    width: 150px;
+    transition: border-color 0.2s;
+}
+
+.editable-field:focus {
+    border-color: #3498db;
+    outline: none;
+}
+
+textarea, select, input {
+    background-color: #333440;
+    border: 1px solid #3498db;
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    margin: 5px 0;
+}
+
+textarea {
+    width: 100%;
+    min-height: 100px;
+    resize: vertical;
+}
+
+/* Buttons */
+.delete-btn {
+    background-color: #CC0000;
+    color: white;
+}
+
+.delete-btn:hover {
+    background-color: #aa0000;
+}
+
+#save-changes {
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    #cases-container, #tab-content, .case-details-sidebar {
+        width: 100%;
+        margin: 10px 0;
+    }
+}
+
+/* Alerts */
+.alert {
+    margin: 16px 0;
+    padding: 10px;
+    border-radius: 4px;
+    font-weight: bold;
+    width: 100%;
+}
+
+.success {
+    background-color: #1a472a;
+    color: #4ade80;
+}
+
+.error {
+    background-color: #470f0f;
+    color: #ff8080;
+}

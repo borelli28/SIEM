@@ -72,6 +72,7 @@ pub struct Alert {
     pub message: String,
     pub acknowledged: bool,
     pub created_at: String,
+    pub case_id: Option<String>,
 }
 
 impl Alert {
@@ -99,6 +100,7 @@ pub fn create_alert(alert: &Alert) -> Result<Alert, AlertError> {
         severity: alert.severity.clone(),
         message: alert.message.clone(),
         acknowledged: false,
+        case_id: None,
         created_at: Utc::now().to_rfc3339(),
     };
     new_alert.validate(&new_alert)?;
@@ -128,7 +130,7 @@ pub fn get_alert(alert_id: &String) -> Result<Option<Alert>, AlertError> {
 
     let conn = establish_connection()?;
     let mut stmt = conn.prepare(
-        "SELECT id, rule_id, account_id, severity, message, acknowledged, created_at 
+        "SELECT id, rule_id, account_id, severity, message, acknowledged, case_id, created_at 
          FROM alerts WHERE id = ?1"
     )?;
 
@@ -140,7 +142,8 @@ pub fn get_alert(alert_id: &String) -> Result<Option<Alert>, AlertError> {
             severity: row.get(3)?,
             message: row.get(4)?,
             acknowledged: row.get(5)?,
-            created_at: row.get(6)?,
+            case_id: row.get(6)?,
+            created_at: row.get(7)?,
         })
     }).optional()?;
 
@@ -154,7 +157,7 @@ pub fn list_alerts(acct_id: &String) -> Result<Vec<Alert>, AlertError> {
 
     let conn = establish_connection()?;
     let mut stmt = conn.prepare(
-        "SELECT id, rule_id, account_id, severity, message, acknowledged, created_at 
+        "SELECT id, rule_id, account_id, severity, message, acknowledged, created_at, case_id 
          FROM alerts WHERE account_id = ?1 
          ORDER BY created_at DESC"
     )?;
@@ -168,6 +171,7 @@ pub fn list_alerts(acct_id: &String) -> Result<Vec<Alert>, AlertError> {
             message: row.get(4)?,
             acknowledged: row.get(5)?,
             created_at: row.get(6)?,
+            case_id: row.get(7)?,
         })
     })?;
 
@@ -201,21 +205,6 @@ pub fn acknowledge_alert(alert_id: &String) -> Result<bool, AlertError> {
     )?;
 
     Ok(affected_rows > 0)
-}
-
-pub fn alert_has_case(alert_id: &String) -> Result<Option<String>, AlertError> {
-    if alert_id.is_empty() {
-        return Err(AlertError::ValidationError("Alert ID cannot be empty".to_string()));
-    }
-
-    let conn = establish_connection()?;
-    let case_id: Option<String> = conn.query_row(
-        "SELECT case_id FROM alerts WHERE id = ?1 AND case_id IS NOT NULL",
-        params![alert_id],
-        |row| row.get(0)
-    ).optional()?;
-
-    Ok(case_id)
 }
 
 pub fn update_alert_case_id(alert_id: &str, case_id: &str) -> Result<bool, AlertError> {

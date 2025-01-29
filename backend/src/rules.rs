@@ -316,6 +316,7 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
                 severity: rule.level.to_string(),
                 message: format!("Alert triggered: {} - {}", rule.title, rule.description),
                 acknowledged: false,
+                case_id: None,
                 created_at: Utc::now().to_rfc3339(),
             };
             create_alert(&new_alert)

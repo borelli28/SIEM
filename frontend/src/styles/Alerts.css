@@ -1,0 +1,87 @@
+.container {
+    width: 90%;
+    margin: auto;
+    padding: 3%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.filter-container {
+    margin: 3% 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 2%;
+    width: 70%;
+}
+
+#severity-filter {
+    padding: 1%;
+    background: #2c2d36;
+    color: white;
+    border: 1px solid #3498db;
+    border-radius: 4px;
+    width: 100%;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #2c2d36;
+}
+
+th, td {
+    padding: 1%;
+    text-align: left;
+    border-bottom: 1px solid #22232b;
+}
+
+th {
+    background-color: #3498db;
+    color: white;
+}
+
+.alert {
+    margin: 2% 0;
+    padding: 2%;
+    border-radius: 4px;
+    font-weight: bold;
+}
+
+.success {
+    background-color: #1a472a;
+    color: #4ade80;
+    width: 100%;
+}
+
+.error {
+    background-color: #470f0f;
+    color: #ff8080;
+    width: 100%;
+}
+
+button {
+    background-color: #3498db;
+    margin: 2% 0;
+    width: 100%;
+    padding: 8px;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    background-color: #cccccc;
+}
+
+.delete-btn {
+    background-color: #CC0000;
+}
+
+.delete-btn:hover {
+    background-color: #ff0000;
+}

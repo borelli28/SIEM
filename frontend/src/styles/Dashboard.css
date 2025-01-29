@@ -1,0 +1,71 @@
+main {
+    width: 100%;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+h1 {
+    width: 100%;
+    margin: 20px 0;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.graph-card {
+    background-color: #2a2b34;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+canvas {
+    max-width: 100%;
+    height: auto;
+}
+
+.alert {
+    margin: 16px 0;
+    padding: 10px;
+    border-radius: 5px;
+    font-weight: bold;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.success {
+    background-color: #1a472a;
+    color: #4ade80;
+}
+
+.error {
+    background-color: #470f0f;
+    color: #ff8080;
+}
+
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: white;
+}
+
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+        margin: 10px;
+    }
+
+    .graph-card {
+        padding: 10px;
+    }
+
+    h1 {
+        font-size: 24px;
+    }
+}

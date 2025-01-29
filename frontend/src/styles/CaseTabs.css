@@ -1,0 +1,191 @@
+.tab-container {
+	display: flex;
+	justify-content: center;
+	width: 45%;
+    border-radius: 4px;
+    margin: 0 1%;
+	padding: 1%;
+    background-color: #2c2d36;
+}
+
+/** {
+    outline: 1px dashed red;
+}*/
+
+.primary-btn {
+    background-color: #3498db;
+    color: white;
+    border: none;
+    padding: 1.5%;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+}
+
+.primary-btn:hover {
+    background-color: #2980b9;
+}
+
+.danger-btn {
+    background-color: #CC0000;
+    color: white;
+    border: none;
+    padding: 1.5%;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    width: 20%;
+}
+
+.danger-btn:hover {
+    background-color: #aa0000;
+}
+
+/* Comments Section */
+.comments-section, .observables-section, .events-section {
+    width: 100%;
+    padding: 1%;
+}
+
+.add-comment-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 1% 0;
+}
+
+.add-comment-container form textarea {
+    width: 25%;
+}
+
+.comments-list {
+    width: 100%;
+}
+
+.comment {
+    background-color: #22232b;
+    margin-bottom: 15px;
+    padding: 1%;
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.comment-header {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.comment-content {
+    flex-grow: 1;
+    color: #ffffff;
+    width: 100%;
+}
+
+.comment-metadata {
+    color: #808080;
+    font-size: 0.9em;
+}
+
+#comment-text {
+    background-color: #333440;
+    border: 1px solid #3498db;
+    color: white;
+    padding: 1%;
+    border-radius: 4px;
+    width: 100%;
+    min-height: 100px;
+    resize: vertical;
+    margin-bottom: 10px;
+}
+
+.comment-form-actions {
+    display: flex;
+    justify-content: flex-end;
+}
+
+/* Observables Section */
+.add-observable-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 1% 0;
+}
+
+.add-observable-container form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.observables-list {
+    width: 100%;
+}
+
+.observable {
+    background-color: #22232b;
+    margin-bottom: 15px;
+    padding: 1%;
+    border-radius: 4px;
+}
+
+.observable-header {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.observable-content {
+    flex-grow: 1;
+    color: #ffffff;
+    width: 100%;
+}
+
+select, input[type="text"] {
+    background-color: #333440;
+    border: 1px solid #3498db;
+    color: white;
+    padding: 1%;
+    border-radius: 4px;
+    width: 100%;
+}
+
+/* Events Section */
+.event-content {
+    background: #22232b;
+    padding: 15px;
+    border-radius: 4px;
+    margin: 10px 0;
+    overflow-x: auto;
+}
+
+.event-content pre {
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+    color: white;
+}
+
+.event {
+    background: #2a2b34;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.alert-event {
+    border-left: 4px solid #e74c3c;
+}
+
+.log-event {
+    border-left: 4px solid #3498db;
+}
