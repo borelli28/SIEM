@@ -197,7 +197,7 @@ const Settings = () => {
                         <div className="copy-container">
                             <span>{user}</span>
                             <button 
-                                className="copy-btn" 
+                                className="primary-btn" 
                                 onClick={() => handleCopyId(user)}
                             >
                                 Copy
@@ -227,7 +227,7 @@ const Settings = () => {
                                             <td>{host.ip_address}</td>
                                             <td>
                                                 <button 
-                                                    className="copy-btn"
+                                                    className="primary-btn"
                                                     onClick={() => handleCopyId(host.id)}
                                                 >
                                                     Copy ID
@@ -282,7 +282,7 @@ const Settings = () => {
                                 required
                             />
                         </div>
-                        <button type="submit">Add Host</button>
+                        <button type="submit" className="primary-btn">Add Host</button>
                     </form>
                 </section>
 
