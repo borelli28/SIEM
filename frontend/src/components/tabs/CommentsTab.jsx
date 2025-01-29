@@ -111,7 +111,7 @@ const CommentsTab = ({ caseId, formId, showAlert }) => {
                                     {comment.comment}
                                 </div>
                                 <button
-                                    className="delete-comment-btn"
+                                    className="danger-btn"
                                     onClick={() => handleDeleteComment(comment.id)}
                                 >
                                     Delete

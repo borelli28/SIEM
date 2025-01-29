@@ -39,36 +39,28 @@
     margin-bottom: 15px;
     padding: 1%;
     border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    width: 100%;
 }
 
 .comment-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
+    width: 100%;
 }
 
 .comment-content {
     flex-grow: 1;
     color: #ffffff;
+    width: 100%;
 }
 
 .comment-metadata {
     color: #808080;
     font-size: 0.9em;
-}
-
-.delete-comment-btn {
-    background-color: #CC0000;
-    color: white;
-    border: none;
-    padding: 1%;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.delete-comment-btn:hover {
-    background-color: #aa0000;
 }
 
 #comment-text {
@@ -176,4 +168,19 @@ select, input[type="text"] {
 
 .primary-btn:hover {
     background-color: #2980b9;
+}
+
+.danger-btn {
+    background-color: #CC0000;
+    color: white;
+    border: none;
+    padding: 1.5%;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.2s;
+    width: 20%;
+}
+
+.danger-btn:hover {
+    background-color: #aa0000;
 }
