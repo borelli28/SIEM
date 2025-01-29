@@ -72,6 +72,7 @@ pub struct Alert {
     pub message: String,
     pub acknowledged: bool,
     pub created_at: String,
+    pub case_id: Option<String>,
 }
 
 impl Alert {
@@ -99,6 +100,7 @@ pub fn create_alert(alert: &Alert) -> Result<Alert, AlertError> {
         severity: alert.severity.clone(),
         message: alert.message.clone(),
         acknowledged: false,
+        case_id: None,
         created_at: Utc::now().to_rfc3339(),
     };
     new_alert.validate(&new_alert)?;
@@ -128,7 +130,7 @@ pub fn get_alert(alert_id: &String) -> Result<Option<Alert>, AlertError> {
 
     let conn = establish_connection()?;
     let mut stmt = conn.prepare(
-        "SELECT id, rule_id, account_id, severity, message, acknowledged, created_at 
+        "SELECT id, rule_id, account_id, severity, message, acknowledged, case_id, created_at 
          FROM alerts WHERE id = ?1"
     )?;
 
@@ -140,7 +142,8 @@ pub fn get_alert(alert_id: &String) -> Result<Option<Alert>, AlertError> {
             severity: row.get(3)?,
             message: row.get(4)?,
             acknowledged: row.get(5)?,
-            created_at: row.get(6)?,
+            case_id: row.get(6)?,
+            created_at: row.get(7)?,
         })
     }).optional()?;
 
@@ -154,7 +157,7 @@ pub fn list_alerts(acct_id: &String) -> Result<Vec<Alert>, AlertError> {
 
     let conn = establish_connection()?;
     let mut stmt = conn.prepare(
-        "SELECT id, rule_id, account_id, severity, message, acknowledged, created_at 
+        "SELECT id, rule_id, account_id, severity, message, acknowledged, created_at, case_id 
          FROM alerts WHERE account_id = ?1 
          ORDER BY created_at DESC"
     )?;
@@ -168,6 +171,7 @@ pub fn list_alerts(acct_id: &String) -> Result<Vec<Alert>, AlertError> {
             message: row.get(4)?,
             acknowledged: row.get(5)?,
             created_at: row.get(6)?,
+            case_id: row.get(7)?,
         })
     })?;
 
