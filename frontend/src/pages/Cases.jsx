@@ -198,11 +198,18 @@ const Cases = () => {
                                         id="case-assignee" 
                                         className="editable-field"
                                         value={caseData.analyst_assigned || ""}
-                                        onChange={() => setShowSaveButton(true)}
+                                        onChange={(e) => {  // Add event parameter to handle the change
+                                            setShowSaveButton(true);
+                                            const newValue = e.target.value;
+                                            setCaseData({
+                                                ...caseData,
+                                                analyst_assigned: newValue
+                                            });
+                                        }}
                                     >
                                         <option value="">Unassigned</option>
                                         {currentUser && (
-                                            <option value={currentUser.id} selected={caseData.analyst_assigned === currentUser.id}>
+                                            <option value={currentUser.id}>
                                                 {currentUser.name}
                                             </option>
                                         )}
