@@ -158,18 +158,55 @@ const Settings = () => {
         }
 
         setIsLoading(true);
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('account_id', user);
 
         try {
+            const fileContent = await file.text();
+            const parsedRule = parseYAML(fileContent);
+
+            const currentDate = new Date();
+            // Format for created_at and updated_at (RFC3339)
+            const timestamp = currentDate.toISOString();
+            // Format for rule date (YYYY-MM-DD HH:MM:SS)
+            const ruleDate = currentDate.toISOString()
+                .replace('T', ' ')
+                .replace('Z', '')
+                .split('.')[0];
+
+            const ruleData = {
+                id: '0',
+                account_id: user,
+                title: parsedRule.title,
+                status: parsedRule.status,
+                description: parsedRule.description,
+                references: parsedRule.references?.undefined || [],
+                tags: parsedRule.tags?.undefined || [],
+                author: parsedRule.author,
+                date: ruleDate,
+                logsource: {
+                    category: parsedRule.logsource.category,
+                    product: parsedRule.logsource.product,
+                    service: parsedRule.logsource.service
+                },
+                detection: {
+                    selection: parsedRule.detection.selection,
+                    condition: parsedRule.detection.condition
+                },
+                fields: parsedRule.fields?.undefined || [],
+                falsepositives: parsedRule.falsepositives?.undefined || [],
+                level: parsedRule.level.charAt(0).toUpperCase() + parsedRule.level.slice(1),
+                enabled: true,
+                created_at: timestamp,
+                updated_at: timestamp
+            };
+
             await getCsrfToken(formId);
             const response = await fetch('http://localhost:4200/backend/rule/import', {
                 method: 'POST',
                 headers: {
+                    'Content-Type': 'application/json',
                     'X-Form-ID': formId
                 },
-                body: formData,
+                body: JSON.stringify(ruleData),
                 credentials: 'include'
             });
 
