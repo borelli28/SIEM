@@ -245,7 +245,7 @@ const CasesList = () => {
                 {isLoading ? (
                     <div>Loading cases...</div>
                 ) : cases.length === 0 ? (
-                    <div>No cases found</div>
+                    <div id="no-cases-note">No cases found</div>
                 ) : (
                     <table>
                         <thead>

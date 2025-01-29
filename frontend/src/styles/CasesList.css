@@ -2,6 +2,9 @@
     width: 90%;
     margin: auto;
     padding: 3%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 .primary-btn {
@@ -12,6 +15,10 @@
     cursor: pointer;
     font-size: 18px;
     border-radius: 4px;
+}
+
+#no-cases-note {
+    width: 100%;
 }
 
 #show-form-btn {
