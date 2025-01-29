@@ -51,7 +51,6 @@ const EventsTab = ({ caseId, formId, showAlert }) => {
                         <div id="event-value">
                             <p>{JSON.stringify(event.value, null, 2)}</p>
                         </div>
-                        <p>Added on {event.created_at ? new Date(event.created_at).toLocaleString() : 'unknown date'}</p>
                     </div>
                 ))}
             </div>
