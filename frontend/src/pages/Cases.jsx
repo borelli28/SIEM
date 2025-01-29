@@ -198,7 +198,7 @@ const Cases = () => {
                                         id="case-assignee" 
                                         className="editable-field"
                                         value={caseData.analyst_assigned || ""}
-                                        onChange={(e) => {  // Add event parameter to handle the change
+                                        onChange={(e) => {
                                             setShowSaveButton(true);
                                             const newValue = e.target.value;
                                             setCaseData({
