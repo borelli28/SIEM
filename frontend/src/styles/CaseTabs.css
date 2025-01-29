@@ -137,14 +137,16 @@
 }
 
 .observable-header {
+    width: 100%;
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 .observable-content {
     flex-grow: 1;
     color: #ffffff;
+    width: 100%;
 }
 
 select, input[type="text"] {
