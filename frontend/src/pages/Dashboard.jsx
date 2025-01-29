@@ -81,6 +81,7 @@ const Dashboard = () => {
             setLogs(logsData);
             renderSeverityChart(logsData);
             renderSignatureChart(logsData);
+            renderDeviceProductChart(logsData);
         } catch (err) {
             console.log(err.message);
             setError('Failed to load logs');
@@ -107,7 +108,6 @@ const Dashboard = () => {
             setAlerts(alertsData);
             renderAlertChart(alertsData);
         } catch (err) {
-            console.log(err.message);
             setError('Failed to load alerts');
         }
     };
@@ -130,9 +130,7 @@ const Dashboard = () => {
 
             const casesData = await response.json();
             setCases(casesData);
-            renderDeviceProductChart(logs);
         } catch (err) {
-            console.log(err.message);
             setError('Failed to load cases');
         }
     };
@@ -243,7 +241,7 @@ const Dashboard = () => {
     const renderAlertChart = (alerts) => {
         const ctx = document.getElementById('alertChart')?.getContext('2d');
         if (!ctx) return;
-        
+
         alertChartRef.current = new Chart(ctx, {
             type: 'pie',
             data: {
@@ -281,7 +279,7 @@ const Dashboard = () => {
     const renderSignatureChart = (logs) => {
         const ctx = document.getElementById('signatureChart')?.getContext('2d');
         if (!ctx) return;
-        
+
         const signatureCounts = {};
         logs.forEach(log => {
             if (log.signature_id) {
@@ -316,7 +314,7 @@ const Dashboard = () => {
     const renderDeviceProductChart = (logs) => {
         const ctx = document.getElementById('deviceChart')?.getContext('2d');
         if (!ctx) return;
-        
+
         const deviceCounts = {};
         logs.forEach(log => {
             if (log.device_product) {
