@@ -301,7 +301,6 @@ const Cases = () => {
                                     <span className="label">Category:</span>
                                     <input 
                                         type="text" 
-                                        id="case-category" 
                                         className="editable-field"
                                         defaultValue={caseData.category}
                                         onChange={() => setShowSaveButton(true)}
