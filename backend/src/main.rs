@@ -26,7 +26,6 @@ use crate::handlers::{
     get_all_alerts_handler,
     delete_alert_handler,
     acknowledge_alert_handler,
-    alert_has_case_handler,
     create_host_handler,
     get_host_handler,
     get_all_hosts_handler,
