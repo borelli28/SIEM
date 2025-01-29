@@ -16,6 +16,8 @@ const Cases = () => {
     const [isLoading, setIsLoading] = useState(true);
     const [showSaveButton, setShowSaveButton] = useState(false);
     const [currentUser, setCurrentUser] = useState(null);
+    const [isEditingTitle, setIsEditingTitle] = useState(false);
+    const [isEditingDescription, setIsEditingDescription] = useState(false);
     const navigate = useNavigate();
     const location = useLocation();
     const formId = 'case-details-form';
@@ -92,6 +94,8 @@ const Cases = () => {
 
             const updatedData = {
                 ...caseData,
+                title: caseData.title,
+                description: caseData.description,
                 severity: document.getElementById('case-severity').value,
                 status: document.getElementById('case-status').value,
                 category: document.getElementById('case-category').value,
@@ -159,8 +163,49 @@ const Cases = () => {
                     </div>
 
                     <div id="cases-container">
-                        <div className="case-title">{caseData.title}</div>
-                        <div className="case-description">{caseData.description || 'No description available'}</div>
+                        <div className="case-title">
+                            {isEditingTitle ? (
+                                <input
+                                    type="text"
+                                    className="editable-field"
+                                    value={caseData.title}
+                                    onChange={(e) => {
+                                        setCaseData({
+                                            ...caseData,
+                                            title: e.target.value
+                                        });
+                                        setShowSaveButton(true);
+                                    }}
+                                    onBlur={() => setIsEditingTitle(false)}
+                                    autoFocus
+                                />
+                            ) : (
+                                <div onClick={() => setIsEditingTitle(true)}>
+                                    {caseData.title}
+                                </div>
+                            )}
+                        </div>
+                        <div className="case-description">
+                            {isEditingDescription ? (
+                                <textarea
+                                    className="editable-field"
+                                    value={caseData.description || ''}
+                                    onChange={(e) => {
+                                        setCaseData({
+                                            ...caseData,
+                                            description: e.target.value
+                                        });
+                                        setShowSaveButton(true);
+                                    }}
+                                    onBlur={() => setIsEditingDescription(false)}
+                                    autoFocus
+                                />
+                            ) : (
+                                <div onClick={() => setIsEditingDescription(true)}>
+                                    {caseData.description || 'No description available'}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     {activeTab === 'comments' && 

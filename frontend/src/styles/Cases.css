@@ -61,26 +61,23 @@
 /* Case Title and Description */
 .case-title, .case-description {
     cursor: pointer;
-    margin-bottom: 15px;
-    white-space: pre-wrap;
-    padding: 1% 0;
-    transition: background-color 0.2s;
+    padding: 5px;
 }
 
 .case-title:hover, .case-description:hover {
-    background-color: #333440;
+    background-color: rgba(52, 152, 219, 0.1);
 }
 
-input.case-title, textarea.case-description {
-    background-color: #333440;
-    border: 1px solid #3498db;
-    color: white;
-    padding: 10px;
+.case-title input, .case-description textarea {
     width: 100%;
+    background: #333440;
+    color: white;
+    border: 1px solid #444;
+    padding: 8px;
     border-radius: 4px;
 }
 
-textarea.case-description {
+.case-description textarea {
     min-height: 100px;
     resize: vertical;
 }
