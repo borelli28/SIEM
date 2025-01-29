@@ -223,7 +223,7 @@ const Search = () => {
                 </div>
             </form>
 
-            <div id="logs-count" className="logs-count">
+            <div id="logs-count">
                 {logs.length > 0 && `Found ${logs.length} log${logs.length !== 1 ? 's' : ''}`}
             </div>
             
