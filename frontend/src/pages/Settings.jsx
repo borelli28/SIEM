@@ -121,14 +121,15 @@ const Settings = () => {
 
         try {
             await getCsrfToken(formId);
-            const response = await fetch('http://localhost:4200/backend/host/new', {
+            const response = await fetch(`http://localhost:4200/backend/host/${user}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'X-Form-ID': formId
                 },
                 body: JSON.stringify({
-                    account_id: user,
+                    id: '0',
+                     account_id: user,
                     hostname: hostname,
                     ip_address: ipAddress
                 }),
