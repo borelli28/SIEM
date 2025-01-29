@@ -7,11 +7,11 @@ const Navbar = () => {
 
     const handleLogout = async () => {
         try {
-            const response = await fetch('http://localhost:4200/backend/account/logout', {
+            const response = await fetch('http://localhost:4200/backend/logout', {
                 method: 'POST',
                 credentials: 'include'
             });
-            
+
             if (response.ok) {
                 navigate('/login');
             } else {
@@ -30,7 +30,7 @@ const Navbar = () => {
                 <Link to="/alerts">Alerts</Link>
                 <Link to="/search">Search</Link>
                 <Link to="/list-cases">Cases</Link>
-                <Link id="logout-btn" to="/logout">Logout</Link>
+                <Link id="logout-btn" onClick={handleLogout}>Logout</Link>
             </nav>
         </div>
     );
