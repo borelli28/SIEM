@@ -159,14 +159,27 @@ select, input[type="text"] {
 }
 
 /* Events Section */
-.event {
-    background-color: #22232b;
-    margin-bottom: 15px;
+.event-content {
+    background: #22232b;
+    padding: 15px;
     border-radius: 4px;
+    margin: 10px 0;
+    overflow-x: auto;
 }
 
-.events-section #event-value {
-    width: 100%;
+.event-content pre {
+    font-family: monospace;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    margin: 0;
+    color: white;
+}
+
+.event {
+    background: #2a2b34;
+    padding: 20px;
+    border-radius: 8px;
+    margin-bottom: 20px;
 }
 
 .alert-event {
