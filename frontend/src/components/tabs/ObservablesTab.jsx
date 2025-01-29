@@ -122,21 +122,25 @@ const ObservablesTab = ({ caseId, formId, showAlert }) => {
                 </div>
 
                 <div className="observables-list">
-                    {observables.map(observable => (
-                        <div key={observable.id} className="observable">
-                            <div className="observable-header">
-                                <div className="observable-content">
-                                    <strong>{observable.observable_type}:</strong> {observable.value}
+                    {observables
+                        .filter(observable => 
+                            !['alert', 'log'].includes(observable.observable_type)
+                        )
+                        .map(observable => (
+                            <div key={observable.id} className="observable">
+                                <div className="observable-header">
+                                    <div className="observable-content">
+                                        {observable.value}
+                                    </div>
+                                    <button
+                                        className="danger-btn"
+                                        onClick={() => handleDeleteObservable(observable)}
+                                    >
+                                        Delete
+                                    </button>
                                 </div>
-                                <button
-                                    className="danger-btn"
-                                    onClick={() => handleDeleteObservable(observable)}
-                                >
-                                    Delete
-                                </button>
                             </div>
-                        </div>
-                    ))}
+                        ))}
                 </div>
             </div>
         </div>
