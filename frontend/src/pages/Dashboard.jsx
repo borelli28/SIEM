@@ -136,8 +136,31 @@ const Dashboard = () => {
     };
 
     const renderSeverityChart = (logs) => {
-        const ctx = document.getElementById('severityChart').getContext('2d');
+        // Add null check for canvas element
+        const canvas = document.getElementById('severityChart');
+        if (!canvas) {
+            console.log("Severity chart canvas not found");
+            return;
+        }
+
+        const ctx = canvas.getContext('2d');
+        if (!ctx) {
+            console.log("Could not get canvas context");
+            return;
+        }
+
+        // Ensure logs data exists
+        if (!Array.isArray(logs) || logs.length === 0) {
+            console.log("No logs data available for severity chart");
+            return;
+        }
+
         const data = processLogsData(logs);
+
+        // Destroy existing chart if it exists
+        if (severityChartRef.current) {
+            severityChartRef.current.destroy();
+        }
 
         severityChartRef.current = new Chart(ctx, {
             type: 'bar',
