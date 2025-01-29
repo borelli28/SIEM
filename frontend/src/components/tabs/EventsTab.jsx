@@ -9,7 +9,7 @@ const EventsTab = ({ caseId, formId, showAlert }) => {
     }, []);
 
     //
-    // Events are observables of type "Alert" & "Log"
+    // Events are observables of type "alert" & "log"
     //
 
     const fetchEvents = async () => {
@@ -48,7 +48,9 @@ const EventsTab = ({ caseId, formId, showAlert }) => {
                 {events.map(event => (
                     <div key={event.id} className={`event ${event.observable_type}-event`}>
                         <h4>{event.observable_type === 'alert' ? 'Alert Event' : 'Log Event'}</h4>
-                        <pre>{JSON.stringify(event.value, null, 2)}</pre>
+                        <div id="event-value">
+                            <p>{JSON.stringify(event.value, null, 2)}</p>
+                        </div>
                         <p>Added on {event.created_at ? new Date(event.created_at).toLocaleString() : 'unknown date'}</p>
                     </div>
                 ))}
