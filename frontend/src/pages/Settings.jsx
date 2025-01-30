@@ -336,7 +336,8 @@ const Settings = () => {
                 </section>
 
                 <section className="form-sections">
-                    <h2>Add New Rule</h2>
+                    <h2>Add New Sigma Rule</h2>
+                    <p>Only <b>YAML</b> files accepted</p>
                     <form onSubmit={(e) => {
                         e.preventDefault();
                         const fileInput = e.target.querySelector('input[type="file"]');
