@@ -69,7 +69,7 @@ const Settings = () => {
         }
     };
 
-    const handleFileUpload = async (e) => {
+    const handleLogUpload = async (e) => {
         const file = e.target.files[0];
         const hostId = document.getElementById('hostSelect').value;
 
@@ -304,7 +304,7 @@ const Settings = () => {
                     <form onSubmit={(e) => {
                         e.preventDefault();
                         const fileInput = e.target.querySelector('input[type="file"]');
-                        handleFileUpload({ target: fileInput });
+                        handleLogUpload({ target: fileInput });
                     }}>
                         <div id="input-spinner-container">
                             <select id="hostSelect" required>
