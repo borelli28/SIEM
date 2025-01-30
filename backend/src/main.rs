@@ -59,7 +59,8 @@ use crate::handlers::{
     add_comment_handler,
     get_case_comments_handler,
     update_comment_handler,
-    delete_comment_handler
+    delete_comment_handler,
+    get_logs_wt_cases_handler
 };
 use crate::csrf::CsrfMiddleware;
 use actix_session::{SessionMiddleware, storage::CookieSessionStore, config::PersistentSession};
@@ -182,6 +183,7 @@ async fn main() -> std::io::Result<()> {
                             .route("/{case_id}/comments", web::get().to(get_case_comments_handler))
                             .route("/comment/{comment_id}", web::put().to(update_comment_handler))
                             .route("/comment/{comment_id}", web::delete().to(delete_comment_handler))
+                            .route("/logs/{account_id}", web::get().to(get_logs_wt_cases_handler))
                     )
             )
     })
