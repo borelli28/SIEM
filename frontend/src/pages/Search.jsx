@@ -11,6 +11,7 @@ const Search = () => {
     const [success, setSuccess] = useState('');
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [selectedLogId, setSelectedLogId] = useState(null);
+    const [logsInCases, setLogsInCases] = useState(null);
     const [cases, setCases] = useState([]);
     const navigate = useNavigate();
     const formId = 'search-log-form';
@@ -22,6 +23,8 @@ const Search = () => {
                 navigate('/login');
                 return;
             }
+
+            await fetchLogsInCases();
 
             // Set default time range
             const endDate = new Date();
@@ -150,6 +153,29 @@ const Search = () => {
         }
     };
 
+    const fetchLogsInCases = async () => {
+        try {
+            const response = await fetch(`http://localhost:4200/backend/case/logs/${user}`, {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Form-ID': formId
+                },
+                credentials: 'include'
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch logs in cases');
+            }
+
+            const logsData = await response.json();
+            setLogsInCases(logsData);
+        } catch (err) {
+            console.error('Error:', err);
+            showAlert('Failed to fetch logs in cases');
+        }
+    };
+
     const Modal = () => (
         <div className="modal">
             <div className="modal-content">
@@ -240,8 +266,9 @@ const Search = () => {
                                 <button 
                                     className="add-event-btn"
                                     onClick={() => addLogAsEvent(log)}
+                                    disabled={logsInCases.includes(log.id)}
                                 >
-                                    Add as Event
+                                    {logsInCases.includes(log.id) ? 'Added as Event' : 'Add as Event'}
                                 </button>
                             </div>
                         </div>
