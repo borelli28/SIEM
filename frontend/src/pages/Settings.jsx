@@ -283,7 +283,7 @@ const Settings = () => {
                     </div>
                 </section>
 
-                <section>
+                <section className="form-sections">
                     <h2>Upload Logs</h2>
                     <form onSubmit={(e) => {
                         e.preventDefault();
@@ -310,7 +310,7 @@ const Settings = () => {
                     </form>
                 </section>
 
-                <section>
+                <section className="form-sections">
                     <h2>Add New Host</h2>
                     <form onSubmit={handleNewHost}>
                         <div className="form-group">
@@ -335,7 +335,7 @@ const Settings = () => {
                     </form>
                 </section>
 
-                <section>
+                <section className="form-sections">
                     <h2>Add New Rule</h2>
                     <form onSubmit={(e) => {
                         e.preventDefault();

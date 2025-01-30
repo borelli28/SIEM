@@ -119,3 +119,13 @@ input, select {
     color: white;
     width: 200px;
 }
+
+.form-sections {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.form-sections h2 {
+    width: 100%;
+}
