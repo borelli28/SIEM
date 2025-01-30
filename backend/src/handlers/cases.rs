@@ -3,7 +3,7 @@ use serde_json::json;
 use chrono::Utc;
 use log::error;
 use crate::cases::{Case, CaseError, Observable, create_case, get_case, get_cases_by_account,
-                   update_case, delete_case, add_observable, delete_observable};
+                   update_case, delete_case, add_observable, delete_observable, all_logs_with_cases};
 use crate::case_comments::{CaseCommentError, create_comment, get_comment,
     get_comments_by_case, update_comment, delete_comment};
 use crate::csrf::{CsrfMiddleware, csrf_validator};
@@ -289,6 +289,21 @@ pub async fn delete_comment_handler(
             "status": "error",
             "message": "Comment not found"
         }))),
+        Err(err) => {
+            error!("Internal server error: {:?}", err);
+            Ok(HttpResponse::InternalServerError().json(json!({
+                "status": "error",
+                "message": "An internal error occurred"
+            })))
+        }
+    }
+}
+
+pub async fn get_logs_wt_cases_handler(
+    account_id: web::Path<String>
+) -> Result<HttpResponse, Error> {
+    match all_logs_with_cases(&account_id) {
+        Ok(logs) => Ok(HttpResponse::Ok().json(logs)),
         Err(err) => {
             error!("Internal server error: {:?}", err);
             Ok(HttpResponse::InternalServerError().json(json!({
