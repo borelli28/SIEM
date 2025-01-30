@@ -69,12 +69,20 @@ const Settings = () => {
         }
     };
 
-    const handleFileUpload = async (e) => {
+    const handleLogUpload = async (e) => {
         const file = e.target.files[0];
         const hostId = document.getElementById('hostSelect').value;
 
         if (!file || !hostId) {
             showAlert('Please select a file and a host', 'error');
+            return;
+        }
+
+        // Check if the file extension is .log
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        if (fileExtension !== 'log') {
+            showAlert('Please upload only .log files', 'error');
+            e.target.value = '';
             return;
         }
 
@@ -154,6 +162,14 @@ const Settings = () => {
 
         if (!file) {
             showAlert('Please select a file', 'error');
+            return;
+        }
+
+        // Check if the file extension is .yaml or .yml
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        if (fileExtension !== 'yaml' && fileExtension !== 'yml') {
+            showAlert('Please upload only .yaml or .yml files', 'error');
+            e.target.value = '';
             return;
         }
 
@@ -283,12 +299,12 @@ const Settings = () => {
                     </div>
                 </section>
 
-                <section>
+                <section className="form-sections">
                     <h2>Upload Logs</h2>
                     <form onSubmit={(e) => {
                         e.preventDefault();
                         const fileInput = e.target.querySelector('input[type="file"]');
-                        handleFileUpload({ target: fileInput });
+                        handleLogUpload({ target: fileInput });
                     }}>
                         <div id="input-spinner-container">
                             <select id="hostSelect" required>
@@ -310,7 +326,7 @@ const Settings = () => {
                     </form>
                 </section>
 
-                <section>
+                <section className="form-sections">
                     <h2>Add New Host</h2>
                     <form onSubmit={handleNewHost}>
                         <div className="form-group">
@@ -335,8 +351,9 @@ const Settings = () => {
                     </form>
                 </section>
 
-                <section>
-                    <h2>Add New Rule</h2>
+                <section className="form-sections">
+                    <h2>Add New Sigma Rule</h2>
+                    <p>Only <b>YAML</b> files accepted</p>
                     <form onSubmit={(e) => {
                         e.preventDefault();
                         const fileInput = e.target.querySelector('input[type="file"]');
