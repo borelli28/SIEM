@@ -147,6 +147,7 @@ const Search = () => {
             }
 
             showAlert('Log added as event successfully', 'success');
+            await fetchLogsInCases();
             setIsModalOpen(false);
         } catch (err) {
             showAlert('Failed to add log as event: ' + err.message);
