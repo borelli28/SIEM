@@ -348,3 +348,32 @@ pub fn delete_observable(case_id: &str, observable: Observable) -> Result<(), Ca
 
     Ok(())
 }
+
+pub fn all_logs_with_cases(account_id: &str) -> Result<Vec<String>, CaseError> {
+    let conn = establish_connection()?;
+    let mut stmt = conn.prepare(
+        "SELECT observables FROM cases WHERE account_id = ?1"
+    )?;
+
+    let observables_iter = stmt.query_map(params![account_id], |row| {
+        row.get::<_, String>(0)
+    })?;
+
+    let mut log_ids = Vec::new();
+    for observables_json in observables_iter {
+        let observables_str = observables_json?;
+        let observables: Vec<Observable> = serde_json::from_str(&observables_str)?;
+
+        for observable in observables {
+            if observable.observable_type == "log" {
+                if let Ok(log_data) = serde_json::from_str::<serde_json::Value>(&observable.value) {
+                    if let Some(log_id) = log_data.get("id").and_then(|id| id.as_str()) {
+                        log_ids.push(log_id.to_string());
+                    }
+                }
+            }
+        }
+    }
+
+    Ok(log_ids)
+}
