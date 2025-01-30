@@ -78,6 +78,14 @@ const Settings = () => {
             return;
         }
 
+        // Check if the file extension is .log
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        if (fileExtension !== 'log') {
+            showAlert('Please upload only .log files', 'error');
+            e.target.value = '';
+            return;
+        }
+
         setIsLoading(true);
         const formData = new FormData();
         formData.append('file', file);
