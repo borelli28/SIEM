@@ -157,6 +157,14 @@ const Settings = () => {
             return;
         }
 
+        // Check if the file extension is .yaml or .yml
+        const fileExtension = file.name.split('.').pop().toLowerCase();
+        if (fileExtension !== 'yaml' && fileExtension !== 'yml') {
+            showAlert('Please upload only .yaml or .yml files', 'error');
+            e.target.value = '';
+            return;
+        }
+
         setIsLoading(true);
 
         try {
