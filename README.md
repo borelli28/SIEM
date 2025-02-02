@@ -21,7 +21,7 @@ cd backend
 Create .env in /backend
 ```bash
 echo "SESSION_SECRET_KEY=d4c9b6258fc5a4ab0c8334d95703685ec07d03e19fa1b3dd5c5cdd483c06850f" > .env && \
-echo "DATABASE_URL=logs/logs.db" > .env
+echo "DATABASE_URL=logs/logs.db" >> .env
 ```
 
 Start backend server
