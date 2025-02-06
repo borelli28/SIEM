@@ -26,6 +26,10 @@ pub async fn create_account_handler(
                 "status": "error",
                 "message": format!("Missing required field: {}", field)
             }))),
+            AccountError::ValidationError(error) => Ok(HttpResponse::BadRequest().json(json!({
+                "status": "error",
+                "message": error.to_string()
+            }))),
             _ => {
                 error!("Internal server error: {:?}", err);
                 Ok(HttpResponse::InternalServerError().json(json!({
@@ -40,10 +44,16 @@ pub async fn create_account_handler(
 pub async fn get_account_handler(account_id: web::Path<String>) -> impl Responder {
     match get_account(&account_id.to_string()) {
         Ok(host) => HttpResponse::Ok().json(host),
-        Err(err) => HttpResponse::InternalServerError().json(json!({
-            "status": "error",
-            "message": err.to_string()
-        }))
+        Err(err) => match err {
+            AccountError::ValidationError(err) => HttpResponse::BadRequest().json(json!({
+                "status": "error",
+                "message": err.to_string()
+            })),
+            _ => HttpResponse::InternalServerError().json(json!({
+                "status": "error",
+                "message": err.to_string()
+            })),
+        }
     }
 }
 
@@ -55,10 +65,27 @@ pub async fn edit_account_handler(
     csrf_validator(&req, &csrf).await?;
     match update_account(&account) {
         Ok(ok) => Ok(HttpResponse::Ok().json(ok)),
-        Err(err) => Ok(HttpResponse::InternalServerError().json(json!({
-            "status": "error",
-            "message": err.to_string()
-        })))
+        Err(err) => match err {
+            AccountError::InvalidRole => Ok(HttpResponse::BadRequest().json(json!({
+                "status": "error",
+                "message": "Invalid role provided"
+            }))),
+            AccountError::ExpectedField(field) => Ok(HttpResponse::BadRequest().json(json!({
+                "status": "error",
+                "message": format!("Missing required field: {}", field)
+            }))),
+            AccountError::ValidationError(error) => Ok(HttpResponse::BadRequest().json(json!({
+                "status": "error",
+                "message": error.to_string()
+            }))),
+            _ => {
+                error!("Internal server error: {:?}", err);
+                Ok(HttpResponse::InternalServerError().json(json!({
+                    "status": "error",
+                    "message": "An internal error occurred"
+                })))
+            }
+        }
     }
 }
 
@@ -70,10 +97,19 @@ pub async fn delete_account_handler(
     csrf_validator(&req, &csrf).await?;
     match delete_account(&account_id.to_string()) {
         Ok(ok) => Ok(HttpResponse::Ok().json(ok)),
-        Err(err) => Ok(HttpResponse::InternalServerError().json(json!({
-            "status": "error",
-            "message": err.to_string()
-        })))
+        Err(err) => match err {
+            AccountError::ValidationError(error) => Ok(HttpResponse::BadRequest().json(json!({
+                "status": "error",
+                "message": error.to_string()
+            }))),
+            _ => {
+                error!("Internal server error: {:?}", err);
+                Ok(HttpResponse::InternalServerError().json(json!({
+                    "status": "error",
+                    "message": "An internal error occurred"
+                })))
+            }
+        }
     }
 }
 
@@ -106,6 +142,10 @@ pub async fn login_account_handler(
             AccountError::ExpectedField(field) => Ok(HttpResponse::BadRequest().json(json!({
                 "status": "error",
                 "message": format!("Missing required field: {}", field)
+            }))),
+            AccountError::ValidationError(error) => Ok(HttpResponse::BadRequest().json(json!({
+                "status": "error",
+                "message": error.to_string()
             }))),
             _ => Ok(HttpResponse::InternalServerError().json(json!({
                 "status": "error",
