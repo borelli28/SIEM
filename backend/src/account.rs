@@ -125,10 +125,10 @@ pub fn get_account(id: &String) -> Result<Option<Account>, AccountError> {
     if id.is_empty() {
         return Err(AccountError::ValidationError("Account ID cannot be empty".to_string()));
     }
-    
+
     let conn = establish_connection()?;
     let mut stmt = conn.prepare("SELECT id, name, password, role FROM accounts WHERE id = ?1")?;
-    
+
     let account = stmt.query_row(params![id], |row| {
         Ok(Account {
             id: row.get(0)?,
@@ -164,7 +164,7 @@ pub fn delete_account(id: &String) -> Result<bool, AccountError> {
     if id.is_empty() {
         return Err(AccountError::ValidationError("Account ID cannot be empty".to_string()));
     }
-    
+
     let conn = establish_connection()?;
     let affected_rows = conn.execute(
         "DELETE FROM accounts WHERE id = ?1",
@@ -219,7 +219,7 @@ pub fn verify_login(session: &Session, name: &String, password: &String, req: &H
 fn account_exists(name: &String) -> Result<bool, AccountError> {
     Account::validate_name(name)?;
     let conn = establish_connection()?;
-    
+
     let mut stmt = conn.prepare("SELECT COUNT(*) FROM accounts WHERE name = ?1")?;
     let count: i64 = stmt.query_row(params![name], |row| row.get(0))?;
 

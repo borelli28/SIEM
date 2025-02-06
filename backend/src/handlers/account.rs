@@ -26,6 +26,10 @@ pub async fn create_account_handler(
                 "status": "error",
                 "message": format!("Missing required field: {}", field)
             }))),
+            AccountError::ValidationError(error) => Ok(HttpResponse::BadRequest().json(json!({
+                "status": "error",
+                "message": error.to_string()
+            }))),
             _ => {
                 error!("Internal server error: {:?}", err);
                 Ok(HttpResponse::InternalServerError().json(json!({
