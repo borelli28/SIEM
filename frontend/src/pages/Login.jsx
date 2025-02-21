@@ -131,7 +131,7 @@ const Login = () => {
                     </div>
                     <button 
                         type="submit" 
-                        className="auth-button"
+                        className="primary-btn"
                         disabled={isLoading}
                     >
                         {isLoading ? 'Logging in...' : 'Login'}

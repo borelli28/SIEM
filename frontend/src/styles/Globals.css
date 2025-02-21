@@ -1,0 +1,37 @@
+:root {
+  --color-background: #22232b;
+  --blue-btn: #4a4b57;
+  --blue-btn-hover: #5a5b67;
+}
+
+html, body, #root {
+    background-color: var(--color-background);
+    color: white;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.primary-btn {
+    width: 25%;
+    padding: 1%;
+    background-color: var(--blue-btn);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.primary-btn:hover {
+    background-color: var(--blue-btn-hover);
+}
+
+@media only screen and (max-width: 768px) {
+    .primary-btn {
+        width: 80%;
+        padding: 10px;
+    }
+}
