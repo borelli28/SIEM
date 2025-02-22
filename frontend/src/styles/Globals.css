@@ -44,6 +44,29 @@ html, body, #root {
     background-color: var(--danger-btn-hover);
 }
 
+.alert {
+    border-radius: 5px;
+    font-weight: bold;
+    text-align: center;
+    width: 100%;
+}
+
+.success {
+    background-color: #1a472a;
+    color: #4ade80;
+}
+
+.error {
+    background-color: #470f0f;
+    color: #ff8080;
+}
+
+.loading {
+    text-align: center;
+    padding: 5%;
+    color: white;
+}
+
 @media only screen and (max-width: 768px) {
     .primary-btn {
         width: 80%;
