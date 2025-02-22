@@ -25,12 +25,12 @@ const Navbar = () => {
     return (
         <div className="container">
             <nav>
-                <Link to="/dashboard">Dashboard</Link>
-                <Link to="/settings">Settings</Link>
-                <Link to="/alerts">Alerts</Link>
-                <Link to="/search">Search</Link>
-                <Link to="/list-cases">Cases</Link>
-                <Link id="logout-btn" onClick={handleLogout}>Logout</Link>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/settings">Settings</a>
+                <a href="/alerts">Alerts</a>
+                <a href="/search">Search</a>
+                <a href="/list-cases">Cases</a>
+                <a className="danger-btn" onClick={handleLogout}>Logout</a>
             </nav>
         </div>
     );

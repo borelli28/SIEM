@@ -2,6 +2,8 @@
   --color-background: #22232b;
   --blue-btn: #4a4b57;
   --blue-btn-hover: #5a5b67;
+  --danger-btn: ##CC0000;
+  --danger-btn-hover: #ff0000;
 }
 
 html, body, #root {
@@ -27,6 +29,19 @@ html, body, #root {
 
 .primary-btn:hover {
     background-color: var(--blue-btn-hover);
+}
+
+.danger-btn {
+    background-color: var(--danger-btn);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.danger-btn:hover {
+    background-color: var(--danger-btn-hover);
 }
 
 @media only screen and (max-width: 768px) {

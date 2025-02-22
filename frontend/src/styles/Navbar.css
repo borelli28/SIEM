@@ -1,3 +1,5 @@
+@import './Globals.css';
+
 nav {
     width: 100%;
     padding: 1rem;
@@ -25,18 +27,4 @@ nav a {
 
 nav a:hover {
     color: #aaa;
-}
-
-#logout-btn {
-    background-color: #CC0000;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-    padding: 0.7%;
-}
-
-#logout-btn:hover {
-    background-color: #ff0000;
 }
