@@ -244,9 +244,11 @@ const Settings = () => {
         <div className="container">
             <h1>SIEM Settings</h1>
             <Navbar />
-            
-            {error && <div className="alert error">{error}</div>}
-            {success && <div className="alert success">{success}</div>}
+
+            <div>
+                {error && <div className="alert error">{error}</div>}
+                {success && <div className="alert success">{success}</div>}
+            </div>
 
             <main>
                 <section className="agent-info">
