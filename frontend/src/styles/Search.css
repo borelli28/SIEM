@@ -1,24 +1,10 @@
-.alert {
-    margin: 16px 0;
-    padding: 10px;
-    border-radius: 4px;
-    font-weight: bold;
-}
+@import './Globals.css';
 
-.success {
-    background-color: #1a472a;
-    color: #4ade80;
-}
-
-.error {
-    background-color: #470f0f;
-    color: #ff8080;
-}
-
-.container {
-    width: 90%;
-    margin: auto;
-    padding: 3%;
+.search-container {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
 }
 
 .search-controls {
@@ -188,23 +174,16 @@
     background-color: #2980b9;
 }
 
-button {
-    padding: 8px 16px;
-    background-color: #3498db;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-button:hover {
-    background-color: #2980b9;
-}
-
 #logs-count {
-/*    margin: 20px 0;*/
     font-size: 1.1em;
     color: #3498db;
     width: 100%;
+}
+
+@media (max-width: 768px) {
+    .search-container .time-range {
+        display: flex;
+        justify-content: center;
+        flex-wrap: wrap;
+    }
 }
