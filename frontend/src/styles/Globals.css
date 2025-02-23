@@ -1,9 +1,9 @@
 :root {
   --color-background: #22232b;
-  --blue-btn: #4a4b57;
-  --blue-btn-hover: #5a5b67;
-  --danger-btn: ##CC0000;
-  --danger-btn-hover: #ff0000;
+  --blue-btn: #3498db;
+  --blue-btn-hover: #246a99;
+  --danger-btn: #CC0000;
+  --danger-btn-hover: #8e0000;
 }
 
 html, body, #root {
@@ -29,6 +29,7 @@ html, body, #root {
 
 .primary-btn:hover {
     background-color: var(--blue-btn-hover);
+    color: white;
 }
 
 .danger-btn {
@@ -42,6 +43,7 @@ html, body, #root {
 
 .danger-btn:hover {
     background-color: var(--danger-btn-hover);
+    color: white;
 }
 
 .alert {
