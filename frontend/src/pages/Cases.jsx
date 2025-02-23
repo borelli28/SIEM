@@ -126,7 +126,7 @@ const Cases = () => {
     };
 
     return (
-        <div className="container">
+        <div className="cases-container">
             <h1>Case Details</h1>
             <Navbar />
 
