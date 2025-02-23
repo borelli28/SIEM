@@ -45,7 +45,6 @@ impl LogCollector {
 #[derive(Debug)]
 pub enum ParseLogError {
     InvalidCEFFormat,
-    BatchDequeueError,
     DatabaseError(String),
     AlertEvaluationError(String)
 
@@ -55,7 +54,6 @@ impl std::fmt::Display for ParseLogError {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         match self {
             ParseLogError::InvalidCEFFormat => write!(f, "Invalid CEF format"),
-            ParseLogError::BatchDequeueError => write!(f, "Error while retriveing batch"),
             ParseLogError::DatabaseError(msg) => write!(f, "Database error: {}", msg),
             ParseLogError::AlertEvaluationError(msg) => write!(f, "Alert evaluation error: {}", msg),
         }
@@ -139,10 +137,18 @@ pub fn log_parser(cef_str: &str, account_id: &String, host_id_param: &String)
 
 pub async fn process_logs(collector: &LogCollector, account_id: String, host_id: String) -> Result<(), ParseLogError> {
     let queue = GLOBAL_MESSAGE_QUEUE.lock().await;
-    let batch = queue.dequeue().await.map_err(|e| {
-        eprintln!("Error dequeuing batch: {}", e);
-        ParseLogError::BatchDequeueError
-    })?;
+    let batch = match queue.dequeue().await {
+        Ok(batch) => batch,
+        Err(e) => {
+            eprintln!("Error dequeuing batch: {}", e);
+            return Ok(()); // Queue is empty, nothing to process
+        }
+    };
+
+    if batch.lines.is_empty() {
+        eprintln!("Batch is empty, nothing to process");
+        return Ok(());
+    }
 
     for cef_log in batch.lines {
         let log_entry = log_parser(&cef_log, &account_id, &host_id)?;
