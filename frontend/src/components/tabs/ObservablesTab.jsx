@@ -126,8 +126,8 @@ const ObservablesTab = ({ caseId, formId, showAlert }) => {
                         .filter(observable => 
                             !['alert', 'log'].includes(observable.observable_type)
                         )
-                        .map(observable => (
-                            <div key={observable.id} className="observable">
+                        .map((observable, index) => (
+                            <div key={observable.id || `observable-${index}`} className="observable">
                                 <div className="observable-header">
                                     <div className="observable-content">
                                         {observable.value}
