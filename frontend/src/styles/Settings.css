@@ -41,23 +41,6 @@
     width: 100%;
 }
 
-#hostsTable {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-}
-
-.settings-container #hostsTable th,
-.settings-container #hostsTable td {
-    padding: 10px;
-    text-align: left;
-    border: 1px solid #444;
-}
-
-.settings-container #hostsTable td button {
-    width: 100%;
-}
-
 #input-spinner-container {
     display: flex;
     justify-content: center;
