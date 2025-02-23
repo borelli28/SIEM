@@ -155,3 +155,13 @@ select, input[type="text"] {
 .log-event {
     border-left: 4px solid #3498db;
 }
+
+@media (max-width: 768px) {
+    .tab-container {
+        width: 100%;
+    }
+
+    .tab-container .add-observable-container input, button {
+        margin-bottom: 8%;
+    }
+}

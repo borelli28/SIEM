@@ -151,7 +151,7 @@
     margin-top: 20px;
 }
 
-@media (max-width: 1200px) {
+@media (max-width: 768px) {
     .cases-container #cases-container, #tab-content, .case-details-sidebar {
         width: 100%;
         margin: 10px 0;
