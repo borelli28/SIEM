@@ -62,30 +62,34 @@
     background-color: #333440;
 }
 
-table {
+.cases-list-container table {
     width: 100%;
     border-collapse: collapse;
     background: #2c2d36;
     margin-top: 20px;
 }
 
-th, td {
+.cases-list-container th, td {
     padding: 12px;
     text-align: left;
     border-bottom: 1px solid #22232b;
 }
 
-th {
+.cases-list-container td button {
+    width: 100%;
+}
+
+.cases-list-container th {
     background-color: #3498db;
     color: white;
 }
 
-td a {
+.cases-list-container td a {
     color: #3498db;
     text-decoration: none;
 }
 
-td a:hover {
+ .cases-list-container td a:hover {
     color: #2980b9;
 }
 
@@ -95,12 +99,12 @@ td a:hover {
         padding: 2%;
     }
 
-    table {
+    .cases-list-container table {
         display: block;
         overflow-x: auto;
     }
 
-    th, td {
+    .cases-list-container th, td {
         padding: 8px;
     }
 }
