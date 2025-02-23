@@ -241,7 +241,7 @@ const Settings = () => {
     };
 
     return (
-        <div className="container">
+        <div className="settings-container">
             <h1>SIEM Settings</h1>
             <Navbar />
 

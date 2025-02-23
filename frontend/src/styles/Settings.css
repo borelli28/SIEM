@@ -1,6 +1,6 @@
 @import './Globals.css';
 
-.container {
+.settings-container {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
@@ -8,11 +8,11 @@
     box-sizing: border-box;
 }
 
-main {
+.settings-container main {
     width: 100%;
 }
 
-section {
+.settings-container section {
     margin: 3% 0;
     background: #2a2b34;
     padding: 20px;
@@ -47,11 +47,15 @@ section {
     margin-top: 20px;
 }
 
-#hostsTable th,
-#hostsTable td {
+.settings-container #hostsTable th,
+.settings-container #hostsTable td {
     padding: 10px;
     text-align: left;
     border: 1px solid #444;
+}
+
+.settings-container #hostsTable td button {
+    width: 100%;
 }
 
 #input-spinner-container {
