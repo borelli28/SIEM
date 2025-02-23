@@ -46,5 +46,15 @@ pub async fn create_batches(file_path: &str) -> Result<(), io::Error> {
             current_batch.clear();
         }
     }
+
+    // Enqueue any remaining lines(not enough lines for a full batch case)
+    if !current_batch.lines.is_empty() {
+        let queue = GLOBAL_MESSAGE_QUEUE.lock().await;
+        queue.enqueue(current_batch.clone()).await.map_err(|e| {
+            eprintln!("Error enqueuing batch: {}", e);
+            io::Error::new(io::ErrorKind::Other, e)
+        })?;
+    }
+
     Ok(())
 }
