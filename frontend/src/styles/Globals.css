@@ -17,9 +17,9 @@ html, body, #root {
 }
 
 .primary-btn {
+    background-color: var(--blue-btn);
     width: 25%;
     padding: 1%;
-    background-color: var(--blue-btn);
     color: white;
     border: none;
     border-radius: 5px;
@@ -34,6 +34,8 @@ html, body, #root {
 
 .danger-btn {
     background-color: var(--danger-btn);
+    width: 25%;
+    padding: 1%;
     color: white;
     border: none;
     border-radius: 5px;
@@ -70,7 +72,7 @@ html, body, #root {
 }
 
 @media only screen and (max-width: 768px) {
-    .primary-btn {
+    .primary-btn, .danger-btn {
         width: 80%;
         padding: 10px;
     }
