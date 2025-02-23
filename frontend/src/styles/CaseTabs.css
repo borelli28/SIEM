@@ -1,3 +1,5 @@
+@import './Globals.css';
+
 .tab-container {
 	display: flex;
 	justify-content: center;
@@ -8,9 +10,9 @@
     background-color: #2c2d36;
 }
 
-* {
+/** {
     outline: 1px dashed red;
-}
+}*/
 
 /* Comments Section */
 .comments-section, .observables-section, .events-section {
