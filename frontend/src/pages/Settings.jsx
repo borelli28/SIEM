@@ -241,12 +241,14 @@ const Settings = () => {
     };
 
     return (
-        <div className="container">
+        <div className="settings-container">
             <h1>SIEM Settings</h1>
             <Navbar />
-            
-            {error && <div className="alert error">{error}</div>}
-            {success && <div className="alert success">{success}</div>}
+
+            <div>
+                {error && <div className="alert error">{error}</div>}
+                {success && <div className="alert success">{success}</div>}
+            </div>
 
             <main>
                 <section className="agent-info">
@@ -265,37 +267,25 @@ const Settings = () => {
 
                     <div className="info-group">
                         <h3>Available Hosts</h3>
-                        <table id="hostsTable">
-                            <thead>
-                                <tr>
-                                    <th>Host Name</th>
-                                    <th>Host ID</th>
-                                    <th>IP Address</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {hosts.length === 0 ? (
-                                    <tr><td colSpan="4">No hosts available</td></tr>
-                                ) : (
-                                    hosts.map(host => (
-                                        <tr key={host.id}>
-                                            <td>{host.hostname}</td>
-                                            <td>{host.id}</td>
-                                            <td>{host.ip_address}</td>
-                                            <td>
-                                                <button 
-                                                    className="primary-btn"
-                                                    onClick={() => handleCopyId(host.id)}
-                                                >
-                                                    Copy ID
-                                                </button>
-                                            </td>
-                                        </tr>
-                                    ))
-                                )}
-                            </tbody>
-                        </table>
+                        <div className="host-display">
+                            {hosts.length === 0 ? (
+                                <p>No hosts available</p>
+                            ) : (
+                                hosts.map(host => (
+                                    <div key={host.id} className="host-card">
+                                        <h4>{host.hostname}</h4>
+                                        <p><strong>ID:</strong> {host.id}</p>
+                                        <p><strong>IP Address:</strong> {host.ip_address}</p>
+                                        <button 
+                                            className="primary-btn"
+                                            onClick={() => handleCopyId(host.id)}
+                                        >
+                                            Copy ID
+                                        </button>
+                                    </div>
+                                ))
+                            )}
+                        </div>
                     </div>
                 </section>
 

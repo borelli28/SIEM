@@ -1,3 +1,5 @@
+@import './Globals.css';
+
 .tab-container {
 	display: flex;
 	justify-content: center;
@@ -11,35 +13,6 @@
 /** {
     outline: 1px dashed red;
 }*/
-
-.primary-btn {
-    background-color: #3498db;
-    color: white;
-    border: none;
-    padding: 1.5%;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-}
-
-.primary-btn:hover {
-    background-color: #2980b9;
-}
-
-.danger-btn {
-    background-color: #CC0000;
-    color: white;
-    border: none;
-    padding: 1.5%;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.2s;
-    width: 20%;
-}
-
-.danger-btn:hover {
-    background-color: #aa0000;
-}
 
 /* Comments Section */
 .comments-section, .observables-section, .events-section {
@@ -118,13 +91,6 @@
     margin: 1% 0;
 }
 
-.add-observable-container form {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
 .observables-list {
     width: 100%;
 }
@@ -188,4 +154,14 @@ select, input[type="text"] {
 
 .log-event {
     border-left: 4px solid #3498db;
+}
+
+@media (max-width: 768px) {
+    .tab-container {
+        width: 100%;
+    }
+
+    .tab-container .add-observable-container input, button {
+        margin-bottom: 8%;
+    }
 }

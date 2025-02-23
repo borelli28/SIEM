@@ -1,4 +1,6 @@
-.container {
+@import './Globals.css';
+
+.cases-container {
     width: 100%;
     display: flex;
     justify-content: center;
@@ -6,23 +8,18 @@
     text-align: center;
 }
 
-/* * {
-    outline: 1px dashed red;
- }*/
-
- h1, h2 {
+.cases-container h1, h2 {
     width: 90%;
 }
 
-/* Case Header and Basic Layout */
-.case-header {
+.cases-container .case-header {
     width: 100%;
     display: flex;
     justify-content: center;
 }
 
 /* Main Content Areas */
-#cases-container {
+.cases-container #cases-container {
     background-color: #2c2d36;
     border-radius: 4px;
     width: 20%;
@@ -36,7 +33,7 @@
     padding: 1%;
 }
 
-.tabs {
+.cases-container .tabs {
     display: flex;
     justify-content: center;
     width: 100%;
@@ -44,7 +41,7 @@
     margin: 2% 0;
 }
 
-.tab-btn {
+.cases-container .tab-btn {
     background: none;
     border: none;
     color: #808080;
@@ -53,12 +50,11 @@
     transition: all 0.3s ease;
 }
 
-.tab-btn.active {
+.cases-container .tab-btn.active {
     color: white;
     border-bottom: 2px solid #3498db;
 }
 
-/* Case Title and Description */
 .case-title, .case-description {
     cursor: pointer;
     padding: 5px;
@@ -82,8 +78,7 @@
     resize: vertical;
 }
 
-/* Section Styling */
-.section-header {
+.cases-container .section-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -93,19 +88,18 @@
     border-radius: 4px;
 }
 
-.section-header h3 {
+.cases-container .section-header h3 {
     margin: 0;
 }
 
-.collapse-icon {
+.cases-container .collapse-icon {
     cursor: pointer;
 }
 
-.section-content {
+.cases-container .section-content {
     padding: 10px;
 }
 
-/* Detail Rows */
 .detail-row {
     display: flex;
     justify-content: space-between;
@@ -114,11 +108,10 @@
     padding: 5px 0;
 }
 
-.label {
+.cases-container .label {
     color: #808080;
 }
 
-/* Form Elements */
 .editable-field {
     background-color: #333440;
     color: white;
@@ -129,17 +122,17 @@
     transition: border-color 0.2s;
 }
 
-input.editable-field {
+.cases-container input .editable-field {
     border: 1px solid #444;
     outline: none;
 }
 
-.editable-field:focus {
+.cases-container .editable-field:focus {
     border-color: #3498db;
     outline: none;
 }
 
-textarea, select, input {
+.cases-container textarea, select, input {
     background-color: #333440;
     color: white;
     padding: 8px;
@@ -147,50 +140,20 @@ textarea, select, input {
     margin: 5px 0;
 }
 
-textarea {
+.cases-container textarea {
     width: 100%;
     min-height: 100px;
     resize: vertical;
 }
 
-/* Buttons */
-.delete-btn {
-    background-color: #CC0000;
-    color: white;
-}
-
-.delete-btn:hover {
-    background-color: #aa0000;
-}
-
-#save-changes {
+.cases-container #save-changes {
     width: 100%;
     margin-top: 20px;
 }
 
-/* Responsive Design */
-@media (max-width: 1200px) {
-    #cases-container, #tab-content, .case-details-sidebar {
+@media (max-width: 768px) {
+    .cases-container #cases-container, #tab-content, .case-details-sidebar {
         width: 100%;
         margin: 10px 0;
     }
-}
-
-/* Alerts */
-.alert {
-    margin: 16px 0;
-    padding: 10px;
-    border-radius: 4px;
-    font-weight: bold;
-    width: 100%;
-}
-
-.success {
-    background-color: #1a472a;
-    color: #4ade80;
-}
-
-.error {
-    background-color: #470f0f;
-    color: #ff8080;
 }

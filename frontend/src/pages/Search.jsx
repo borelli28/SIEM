@@ -195,7 +195,7 @@ const Search = () => {
                     </button>
                     <button 
                         onClick={() => setIsModalOpen(false)}
-                        className="secondary-btn"
+                        className="danger-btn"
                     >
                         Cancel
                     </button>
@@ -205,7 +205,7 @@ const Search = () => {
     );
 
     return (
-        <div className="container">
+        <div className="search-container">
             <h1>SIEM Log Search</h1>
             <Navbar />
             
@@ -246,7 +246,7 @@ const Search = () => {
                             </ul>
                         </div>
                     </div>
-                    <button type="submit">Search</button>
+                    <button type="submit" className="primary-btn">Search</button>
                 </div>
             </form>
 

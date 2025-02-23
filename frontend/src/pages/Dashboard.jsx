@@ -382,7 +382,10 @@ const Dashboard = () => {
             <h1>SIEM Dashboard</h1>
             <Navbar />
             <main>
-                {error && <div className="alert error">{error}</div>}
+                <div>
+                    {error && <div className="alert error">{error}</div>}
+                </div>
+
                 {isLoading ? (
                     <div className="loading">Loading dashboard data...</div>
                 ) : (

@@ -1,3 +1,5 @@
+@import './Globals.css';
+
 main {
     width: 100%;
     padding: 10px;
@@ -27,32 +29,6 @@ h1 {
 canvas {
     max-width: 100%;
     height: auto;
-}
-
-.alert {
-    margin: 16px 0;
-    padding: 10px;
-    border-radius: 5px;
-    font-weight: bold;
-    max-width: 800px;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.success {
-    background-color: #1a472a;
-    color: #4ade80;
-}
-
-.error {
-    background-color: #470f0f;
-    color: #ff8080;
-}
-
-.loading {
-    text-align: center;
-    padding: 20px;
-    color: white;
 }
 
 @media (max-width: 768px) {

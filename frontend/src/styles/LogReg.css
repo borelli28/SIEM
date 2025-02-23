@@ -1,13 +1,4 @@
-html, body, #root {
-    background-color: #22232b;
-    color: white;
-    width: 100%;
-    height: 100%;
-}
-
-/** {
-    outline: 1px dashed red;
-}*/
+@import './Globals.css';
 
 .auth-container {
     width: 100%;
@@ -20,7 +11,7 @@ html, body, #root {
 
 .auth-box {
     background-color: #2a2b34;
-    border-radius: 8px;
+    border-radius: 5px;
     box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
     width: 50%;
     height: 65%;
@@ -33,24 +24,7 @@ h2, p {
     width: 100%;
 }
 
-.form-inputs {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-    width: 100%;
-}
-
-.form-inputs input {
-    width: 100%;
-    padding: 1%;
-    margin-bottom: 3%;
-    background-color: #333440;
-    border: 1px solid #444;
-    border-radius: 4px;
-    color: white;
-}
-
-.form-inputs input:focus {
+.auth-box input:focus {
     outline: none;
     border-color: #666;
 }
@@ -59,6 +33,9 @@ h2, p {
     display: flex;
     justify-content: center;
     flex-wrap: wrap;
+    width: 100%;
+    padding: 10px 0;
+    box-sizing: border-box;
 }
 
 .form-group label {
@@ -73,21 +50,6 @@ form {
 
 form label {
     width: 65%;
-}
-
-button {
-    width: 25%;
-    padding: 1%;
-    background-color: #4a4b57;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-button:hover {
-    background-color: #5a5b67;
 }
 
 a {
@@ -112,4 +74,19 @@ a:hover {
 
 .error-message {
     color: #ff8080;
+}
+
+@media only screen and (max-width: 768px) {
+    .auth-box {
+        width: 100%;
+    }
+    .auth-box .form-group {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+    }
+
+    .auth-box .form-group input {
+        height: 100%;
+    }
 }

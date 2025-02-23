@@ -88,7 +88,6 @@ const CasesList = () => {
             }
 
             const casesData = await response.json();
-            console.log(casesData);
             setCases(casesData);
         } catch (err) {
             console.error('Error:', err);
@@ -128,10 +127,6 @@ const CasesList = () => {
                 description: "",
                 observables: "[]"
             };
-
-            console.log(user);
-            console.log(accountData);
-            console.log(formData);
 
             const response = await fetch(`http://localhost:4200/backend/case/${user}`, {
                 method: 'POST',
@@ -234,18 +229,18 @@ const CasesList = () => {
     };
 
     return (
-        <div className="container">
+        <div className="cases-list-container">
             <h1>Cases List</h1>
             <Navbar />
-            
+
             {error && <div className="alert error">{error}</div>}
             {success && <div className="alert success">{success}</div>}
 
-            <div id="cases-list">
+            <div className="cases-list">
                 {isLoading ? (
                     <div>Loading cases...</div>
                 ) : cases.length === 0 ? (
-                    <div id="no-cases-note">No cases found</div>
+                    <h3 id="no-cases-note">No cases found</h3>
                 ) : (
                     <table>
                         <thead>
@@ -274,13 +269,14 @@ const CasesList = () => {
                                     <td>{new Date(caseItem.created_at).toLocaleString()}</td>
                                     <td>
                                         <button
-                                            className="delete-btn"
+                                            className="danger-btn"
                                             onClick={() => handleDeleteCase(caseItem.id)}
                                         >
                                             Delete
                                         </button>
                                         {window.location.search.includes('selectCase=true') && (
                                             <button
+                                                className="primary-btn"
                                                 onClick={() => handleSelectCase(caseItem.id)}
                                             >
                                                 Select
@@ -295,7 +291,6 @@ const CasesList = () => {
             </div>
 
             <button 
-                id="show-form-btn" 
                 className="primary-btn"
                 onClick={() => setIsFormVisible(!isFormVisible)}
             >
