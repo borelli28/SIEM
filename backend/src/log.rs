@@ -1,10 +1,8 @@
-use rusqlite::{Error as SqliteError, ToSql, params, params_from_iter, Connection};
+use rusqlite::{Error as SqliteError, ToSql, params, params_from_iter};
 use crate::eql::{EqlParser, QueryBuilder};
 use crate::database::establish_connection;
 use serde::{Serialize, Deserialize};
-use serde_json::Value;
 use sha2::{Sha256, Digest};
-use uuid::Uuid;
 use std::fmt;
 
 #[derive(Debug)]
@@ -103,7 +101,6 @@ pub fn get_query_logs(eql_query: &str, start_time: Option<String>, end_time: Opt
     // Parse EQL query first
     let tokens = EqlParser::parse(eql_query)
         .map_err(|e| LogError::ValidationError(e.to_string()))?;
-
     let (base_query, base_params) = QueryBuilder::build_query(tokens)
         .map_err(|e| LogError::ValidationError(e.to_string()))?;
 
