@@ -1,5 +1,5 @@
 use serde::{Serialize, Deserialize};
-use serde_json;
+use serde_json::{self, Value};
 use std::collections::HashMap;
 use regex::Regex;
 
@@ -192,7 +192,7 @@ fn parse_syslog(log: &str, account_id: &String, host_id: &String) -> Result<Norm
 }
 
 fn parse_json(log: &str, account_id: &String, host_id: &String) -> Result<NormalizedLog, ParseLogError> {
-    let fields: HashMap<String, String> = serde_json::from_str(log)
+    let fields: HashMap<String, Value> = serde_json::from_str(log)
         .map_err(|e| ParseLogError::InvalidFormat(format!("JSON parse error: {}", e)))?;
     let mut normalized = NormalizedLog {
         timestamp: None,
@@ -206,12 +206,21 @@ fn parse_json(log: &str, account_id: &String, host_id: &String) -> Result<Normal
     };
 
     for (key, value) in fields {
+        // Convert Value to String, handling null and non-string types
+        let value_str = match value {
+            Value::String(s) => s,
+            Value::Number(n) => n.to_string(),
+            Value::Bool(b) => b.to_string(),
+            Value::Null => "".to_string(),
+            _ => serde_json::to_string(&value).unwrap_or_default(),
+        };
+
         match key.as_str() {
-            "time" | "timestamp" => normalized.timestamp = Some(value),
-            "src_ip" | "src" => normalized.src_ip = Some(value),
-            "dst_ip" | "dst" => normalized.dst_ip = Some(value),
-            "event" | "event_type" => normalized.event_type = Some(value),
-            _ => { normalized.extensions.insert(key, value); }
+            "time" | "timestamp" => normalized.timestamp = Some(value_str),
+            "src_ip" | "source_ip" | "src" => normalized.src_ip = Some(value_str.clone()),
+            "dst_ip" | "dst" => normalized.dst_ip = Some(value_str.clone()),
+            "event" | "event_type" | "message" => normalized.event_type = Some(value_str.clone()),
+            _ => { normalized.extensions.insert(key, value_str); }
         }
     }
     Ok(normalized)
