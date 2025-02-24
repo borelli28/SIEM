@@ -70,8 +70,16 @@ pub fn create_log(log: &Log) -> Result<Option<Log>, LogError> {
         return Ok(None); // Duplicate log
     }
 
+    let mut log_uuid = Uuid::new_v4().to_string();
+    // Check if this UUID already exists
+    let mut id_check = conn.prepare("SELECT COUNT(*) FROM logs WHERE id = ?1")?;
+    let id_count: i64 = id_check.query_row(params![&log_uuid], |row| row.get(0))?;
+    if id_count > 0 {
+        log_uuid = Uuid::new_v4().to_string();
+    }
+
     let new_log = Log {
-        id: Uuid::new_v4().to_string(),
+        id: log_uuid,
         hash,
         account_id: log.account_id.clone(),
         host_id: log.host_id.clone(),
