@@ -3,6 +3,7 @@ use crate::eql::{EqlParser, QueryBuilder};
 use crate::database::establish_connection;
 use serde::{Serialize, Deserialize};
 use sha2::{Sha256, Digest};
+use uuid::Uuid;
 use std::fmt;
 
 #[derive(Debug)]
@@ -70,7 +71,7 @@ pub fn create_log(log: &Log) -> Result<Option<Log>, LogError> {
     }
 
     let new_log = Log {
-        id: log.id.clone(),
+        id: Uuid::new_v4().to_string(),
         hash,
         account_id: log.account_id.clone(),
         host_id: log.host_id.clone(),
