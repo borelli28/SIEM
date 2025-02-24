@@ -33,7 +33,7 @@ impl From<SqliteError> for LogError {
 impl From<EqlError> for LogError {
     fn from(err: EqlError) -> Self {
         match err {
-            EqlError::DatabaseError(msg) => LogError::DatabaseError(SqliteError::QueryReturnedNoRows),
+            EqlError::DatabaseError(_msg) => LogError::DatabaseError(SqliteError::QueryReturnedNoRows),
             EqlError::ParseError(msg) => LogError::ValidationError(msg),
             EqlError::QueryBuildError(msg) => LogError::ValidationError(msg),
         }
