@@ -279,7 +279,7 @@ impl QueryExecutor {
         // Stream results one row at a time. We only load one log to memory at a time
         let rows = stmt.query_map(
             params![account_id, start_time, end_time],
-            |row| row.get::<_, String>(0) // Only fetch log_data
+            |row| row.get::<_, String>(0)
         ).map_err(|e| EqlError::DatabaseError(e.to_string()))?;
 
         let mut matching_logs = Vec::new();
