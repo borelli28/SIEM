@@ -1,7 +1,7 @@
-use rusqlite::{Error as SqliteError, ToSql, params, params_from_iter};
-use crate::eql::{EqlParser, QueryBuilder};
+use rusqlite::{Error as SqliteError, params};
 use crate::database::establish_connection;
 use serde::{Serialize, Deserialize};
+use crate::eql::QueryExecutor;
 use sha2::{Sha256, Digest};
 use uuid::Uuid;
 use std::fmt;
@@ -104,57 +104,20 @@ pub fn create_log(log: &Log) -> Result<Option<Log>, LogError> {
 }
 
 pub fn get_query_logs(eql_query: &str, start_time: Option<String>, end_time: Option<String>) -> Result<Vec<Log>, LogError> {
-    let mut where_conditions = Vec::new();
-    let mut params: Vec<Box<dyn ToSql>> = Vec::new();
-
-    // Parse EQL query first
-    let tokens = EqlParser::parse(eql_query)
-        .map_err(|e| LogError::ValidationError(e.to_string()))?;
-    let (base_query, base_params) = QueryBuilder::build_query(tokens)
-        .map_err(|e| LogError::ValidationError(e.to_string()))?;
-
-    // First add base parameters
-    params.extend(base_params.into_iter().map(|p| Box::new(p) as Box<dyn ToSql>));
-
-    // Then add timestamp conditions if provided
-    if let Some(start) = start_time {
-        if let Some(end) = end_time {
-            where_conditions.push("timestamp BETWEEN datetime(?) AND datetime(?)");
-            params.push(Box::new(start));
-            params.push(Box::new(end));
-        }
-    }
-
-    // Construct final query
-    let mut final_query = if !where_conditions.is_empty() {
-        if base_query.contains("WHERE") {
-            format!("{} AND {}", base_query, where_conditions.join(" AND "))
-        } else {
-            format!("{} WHERE {}", base_query, where_conditions.join(" AND "))
-        }
-    } else {
-        base_query
-    };
-
-    // Add sorting by timestamp
-    final_query.push_str(" ORDER BY timestamp DESC");
-
-    let conn = establish_connection()?;
-    let mut stmt = conn.prepare(&final_query)?;
-
-    let log_iter = stmt.query_map(params_from_iter(params.iter().map(|p| &**p)), |row| {
-        Ok(Log {
-            id: row.get(0)?,
-            hash: row.get(1)?,
-            account_id: row.get(2)?,
-            host_id: row.get(3)?,
-            timestamp: row.get(4)?,
-            log_data: row.get(5)?,
-        })
-    })?;
-
-    let logs: Result<Vec<Log>, SqliteError> = log_iter.collect();
-    Ok(logs?)
+    let account_id = "acc123"; // Replace with actual account ID from context
+    let start_time = start_time.unwrap_or("1970-01-01".to_string());
+    let end_time = end_time.unwrap_or("9999-12-31".to_string());
+    let log_data_vec = QueryExecutor::execute_query(account_id, &start_time, &end_time, eql_query)
+        .map_err(|_| LogError::DatabaseError(rusqlite::Error::QueryReturnedNoRows))?; // Adjust error mapping
+    let logs: Vec<Log> = log_data_vec.into_iter().map(|log_data| Log {
+        id: String::new(), // Placeholder, fetch id if needed
+        hash: String::new(), // Recalculate if needed
+        account_id: account_id.to_string(),
+        host_id: String::new(), // Fetch or assume from context
+        timestamp: None, // Could extract from log_data if needed
+        log_data,
+    }).collect();
+    Ok(logs)
 }
 
 pub fn get_all_logs(account_id: &String) -> Result<Vec<Log>, LogError> {
