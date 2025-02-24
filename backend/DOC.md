@@ -25,10 +25,23 @@
   * Manages queue integration
 
 - **Collector** (`collector.rs`)
-  * Processes incoming log entries
-  * Manages log batch processing
-  * Validates CEF (Common Event Format) logs
-  * Triggers rule evaluation
+  * Dequeues log batches from the message queue
+  * Processes each log by invoking `log_parser.rs` for parsing
+  * Constructs `Log` structs and passes them to `log.rs` for storage
+  * Post-storage, evaluates each log against detection rules using `rules.rs`
+  * Manages deduplication and alert generation
+
+- **Log Parser** (`log_parser.rs`)
+  * Ingests individual log strings
+  * Cleans logs (e.g., trims whitespace, collapses multi-line entries)
+  * Detects log formats (CEF, Syslog, JSON) using heuristics
+  * Parses logs into a `NormalizedLog` structure and returns a JSON string with timestamp
+  * Supports flexible key-value pair extraction via an `extensions` map
+
+- **Log Storage** (`log.rs`)
+  * Defines the `Log` struct: `id`, `hash`, `account_id`, `host_id`, `timestamp`, `log_data` (JSON string)
+  * Provides `create_log` to insert logs into the database, hashing `log_data` for deduplication
+  * Supports querying logs by account ID or custom EQL queries
 
 - **Message Queue** (`message_queue.rs`)
   * Implements asynchronous log processing
@@ -38,8 +51,7 @@
 ### 4. Security Components
 - **Authentication** (`account.rs`, `auth_session.rs`)
   * User account management
-  * Session handling
-  * Session timeout at 20 minutes if no activity
+  * Session handling with 20-minute inactivity timeout
   * Password hashing with Argon2
   * Role-based access control
 
@@ -49,10 +61,11 @@
   * Session-based security
 
 ### 5. Rule Engine (`rules.rs`)
-- Manages detection rules
-- Implements SIGMA-like rule format
-- Handles rule evaluation against logs
-- Manages rule lifecycle (CRUD operations)
+- Manages Sigma-like detection rules
+- Evaluates rules against `NormalizedLog` structs post-storage
+- Matches rule conditions using top-level fields (`event_type`, `src_ip`, etc.) and `extensions`
+- Generates alerts for matching logs
+- Handles rule lifecycle (CRUD operations)
 
 ### 6. Agent Management (`agent.rs`)
 - Agent registration and authentication
@@ -63,21 +76,25 @@
 
 1. **Authentication Flow**:
    - Client authenticates via login endpoint
-   - Session is established with authentication cookie: `auth_session`
+   - Session established with `auth_session` cookie
 
 2. **Log Ingestion**:
-   - Logs are received via agent or direct upload
-   - Logs are batched (50 logs per batch)
-   - Batches are queued for processing
+   - Logs received via agent or direct upload
+   - `batch_maker.rs` batches logs (up to 50 per batch)
+   - Batches queued in `message_queue.rs`
 
 3. **Log Processing**:
-   - A batch is dequeued from the message queue
-   - Each log in the batch is validated and normalized
-   - Logs are stored in the database
-   - Sigma detection rules are evaluated against each new log
+   - `collector.rs` dequeues a batch from the message queue
+   - For each log in the batch:
+     - `log_parser.rs` cleans the log, detects its format, and parses it into a `NormalizedLog` JSON string
+     - `collector.rs` constructs a `Log` struct with the JSON and calls `log.rs::create_log`
+     - `log.rs` validates, hashes the `log_data`, and inserts the log into the `logs` table
+       - Duplicate logs (by hash) are skipped
+     - `collector.rs` deserializes the stored `log_data` into `NormalizedLog` and calls `rules.rs::evaluate_log_against_rules`
 
 4. **Alert Generation**:
-   - Matching detection rules trigger alert creation
+   - `rules.rs` evaluates Sigma rules against each `NormalizedLog`
+   - Matching rules trigger alert creation, stored in the database via `alert.rs`
 
 ## API Structure
 
