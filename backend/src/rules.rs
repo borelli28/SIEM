@@ -1,15 +1,14 @@
 use rusqlite::{Error as SqliteError, params};
 use crate::database::establish_connection;
 use crate::alert::{create_alert, Alert};
+use crate::log_parser::NormalizedLog;
 use serde::{Serialize, Deserialize};
 use chrono::{Utc, NaiveDateTime};
 use rusqlite::OptionalExtension;
-use crate::collector::LogEntry;
 use uuid::Uuid;
 use serde_json;
-use std::fmt;
-
 use log::info;
+use std::fmt;
 
 #[derive(Debug)]
 pub enum RuleError {
@@ -20,7 +19,7 @@ pub enum RuleError {
 }
 
 impl fmt::Display for RuleError {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> fmt::Result {
         match self {
             RuleError::DatabaseError(err) => write!(f, "Database error: {}", err),
             RuleError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
@@ -189,9 +188,7 @@ pub fn get_rule(id: &String) -> Result<Option<Rule>, RuleError> {
     }
 
     let conn = establish_connection()?;
-    let mut stmt = conn.prepare(
-        "SELECT * FROM rules WHERE id = ?1"
-    )?;
+    let mut stmt = conn.prepare("SELECT * FROM rules WHERE id = ?1")?;
 
     let rule = stmt.query_row(params![id], |row| {
         Ok(Rule {
@@ -269,9 +266,7 @@ pub fn list_rules(account_id: &String) -> Result<Vec<Rule>, RuleError> {
     }
 
     let conn = establish_connection()?;
-    let mut stmt = conn.prepare(
-        "SELECT * FROM rules WHERE account_id = ?1"
-    )?;
+    let mut stmt = conn.prepare("SELECT * FROM rules WHERE account_id = ?1")?;
 
     let rules_iter = stmt.query_map(params![account_id], |row| {
         Ok(Rule {
@@ -299,8 +294,8 @@ pub fn list_rules(account_id: &String) -> Result<Vec<Rule>, RuleError> {
     Ok(rules?)
 }
 
-pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> Result<Vec<Alert>, RuleError> {
-    let rules = list_rules(&account_id)?;
+pub async fn evaluate_log_against_rules(log: &NormalizedLog, account_id: &String) -> Result<Vec<Alert>, RuleError> {
+    let rules = list_rules(account_id)?;
     let mut triggered_alerts = Vec::new();
 
     for rule in rules {
@@ -329,26 +324,26 @@ pub async fn evaluate_log_against_rules(log: &LogEntry, account_id: &String) -> 
     Ok(triggered_alerts)
 }
 
-fn matches_detection(detection: &Detection, log: &LogEntry) -> bool {
-    info!("Detection: {:?}", detection);
+fn matches_detection(detection: &Detection, log: &NormalizedLog) -> bool {
+    info!("Evaluating detection: {:?}", detection);
     for (field, expected_value) in &detection.selection {
         let actual_value = match field.as_str() {
-            "severity" => &log.severity,
-            "name" => &log.name,
-            "device_vendor" => &log.device_vendor,
-            "device_product" => &log.device_product,
-            _ => match log.extensions.get(field) {
-                Some(value) => value,
-                None => return false
-            }
+            "event_type" => log.event_type.as_ref().map_or("", String::as_str),
+            "src_ip" => log.src_ip.as_ref().map_or("", String::as_str),
+            "dst_ip" => log.dst_ip.as_ref().map_or("", String::as_str),
+            "timestamp" => log.timestamp.as_ref().map_or("", String::as_str),
+            _ => log.extensions.get(field).map_or("", String::as_str),
         };
 
-        if actual_value != expected_value.as_str().unwrap_or("") {
-            info!("Detection values don't match");
-            info!("values don't match: {:?} != {:?}", actual_value, expected_value);
+        let expected_str = expected_value.as_str().unwrap_or("");
+        if actual_value != expected_str {
+            info!(
+                "Detection mismatch: field '{}' - actual: '{}', expected: '{}'",
+                field, actual_value, expected_str
+            );
             return false;
         }
     }
-    info!("Detection match found!!!!!!!!!!!");
-    return true
+    info!("Detection match found for log: {:?}", log.raw);
+    true
 }
