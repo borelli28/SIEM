@@ -208,7 +208,7 @@ const Search = () => {
         <div className="search-container">
             <h1>SIEM Log Search</h1>
             <Navbar />
-            
+
             {error && <div className="alert error">{error}</div>}
             {success && <div className="alert success">{success}</div>}
 
@@ -253,7 +253,7 @@ const Search = () => {
             <div id="logs-count">
                 {logs.length > 0 && `Found ${logs.length} log${logs.length !== 1 ? 's' : ''}`}
             </div>
-            
+
             <div className="logs-container">
                 {logs.length === 0 ? (
                     'No logs found'
