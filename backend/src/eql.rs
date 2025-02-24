@@ -1,7 +1,9 @@
 use crate::database::establish_connection;
+use rusqlite::{Error as SqliteError};
 use serde_json::{Value, from_str};
 use chrono::NaiveDateTime;
 use rusqlite::params;
+use crate::log::Log;
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -25,12 +27,18 @@ pub enum EqlError {
 }
 
 impl fmt::Display for EqlError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             EqlError::ParseError(msg) => write!(f, "Parse error: {}", msg),
             EqlError::QueryBuildError(msg) => write!(f, "Query build error: {}", msg),
             EqlError::DatabaseError(msg) => write!(f, "Database error: {}", msg),
         }
+    }
+}
+
+impl From<SqliteError> for EqlError {
+    fn from(err: SqliteError) -> Self {
+        EqlError::DatabaseError(err.to_string())
     }
 }
 
@@ -263,7 +271,7 @@ impl QueryExecutor {
         start_time: &str,
         end_time: &str,
         eql_query: &str,
-    ) -> Result<Vec<String>, EqlError> {
+    ) -> Result<Vec<Log>, EqlError> {
         let conn = establish_connection()
             .map_err(|e| EqlError::DatabaseError(e.to_string()))?;
 
@@ -279,19 +287,25 @@ impl QueryExecutor {
         // Stream results one row at a time. We only load one log to memory at a time
         let rows = stmt.query_map(
             params![account_id, start_time, end_time],
-            |row| row.get::<_, String>(0)
-        ).map_err(|e| EqlError::DatabaseError(e.to_string()))?;
+            |row| {
+                Ok(Log {
+                    id: row.get(0)?,
+                    hash: row.get(1)?,
+                    account_id: row.get(2)?,
+                    host_id: row.get(3)?,
+                    timestamp: row.get(4)?,
+                    log_data: row.get(5)?,
+                })
+            }
+        )?;
 
         let mut matching_logs = Vec::new();
-
-        // Process each log one at a time
         for row in rows {
-            let log_data = row.map_err(|e| EqlError::DatabaseError(e.to_string()))?;
-            if Self::matches_query(&log_data, &query)? {
-                matching_logs.push(log_data);
+            let log = row.map_err(|e| EqlError::DatabaseError(e.to_string()))?;
+            if Self::matches_query(&log.log_data, &query)? {
+                matching_logs.push(log);
             }
         }
-
         Ok(matching_logs)
     }
 }

@@ -1,3 +1,4 @@
+use crate::eql::EqlError;
 use rusqlite::{Error as SqliteError, params};
 use crate::database::establish_connection;
 use serde::{Serialize, Deserialize};
@@ -26,6 +27,16 @@ impl std::error::Error for LogError {}
 impl From<SqliteError> for LogError {
     fn from(err: SqliteError) -> Self {
         LogError::DatabaseError(err)
+    }
+}
+
+impl From<EqlError> for LogError {
+    fn from(err: EqlError) -> Self {
+        match err {
+            EqlError::DatabaseError(msg) => LogError::DatabaseError(SqliteError::QueryReturnedNoRows),
+            EqlError::ParseError(msg) => LogError::ValidationError(msg),
+            EqlError::QueryBuildError(msg) => LogError::ValidationError(msg),
+        }
     }
 }
 
@@ -103,20 +114,11 @@ pub fn create_log(log: &Log) -> Result<Option<Log>, LogError> {
     Ok(Some(new_log))
 }
 
-pub fn get_query_logs(eql_query: &str, start_time: Option<String>, end_time: Option<String>) -> Result<Vec<Log>, LogError> {
-    let account_id = "acc123"; // Replace with actual account ID from context
+pub fn get_query_logs(account_id: &str, eql_query: &str, start_time: Option<String>, end_time: Option<String>,
+) -> Result<Vec<Log>, LogError> {
     let start_time = start_time.unwrap_or("1970-01-01".to_string());
     let end_time = end_time.unwrap_or("9999-12-31".to_string());
-    let log_data_vec = QueryExecutor::execute_query(account_id, &start_time, &end_time, eql_query)
-        .map_err(|_| LogError::DatabaseError(rusqlite::Error::QueryReturnedNoRows))?; // Adjust error mapping
-    let logs: Vec<Log> = log_data_vec.into_iter().map(|log_data| Log {
-        id: String::new(), // Placeholder, fetch id if needed
-        hash: String::new(), // Recalculate if needed
-        account_id: account_id.to_string(),
-        host_id: String::new(), // Fetch or assume from context
-        timestamp: None, // Could extract from log_data if needed
-        log_data,
-    }).collect();
+    let logs = QueryExecutor::execute_query(account_id, &start_time, &end_time, eql_query)?;
     Ok(logs)
 }
 
