@@ -235,14 +235,16 @@ const Search = () => {
                     <div className="eql-input-container">
                         <textarea 
                             id="eqlQuery" 
-                            placeholder='Enter EQL query (e.g., severity = "high" AND device_vendor = "cisco")'
+                            placeholder='Enter EQL query (e.g., event_type = "failed_login" AND severity = "warning")'
                             rows="3"
                         ></textarea>
                         <div className="eql-help">
                             <h4>EQL Query Examples:</h4>
                             <ul>
-                                <li>severity = "high" AND device_vendor = "cisco"</li>
-                                <li>signature_id = "500" OR severity = "critical"</li>
+                                <li>event_type = "failed_login" AND severity = "warning"</li>
+                                <li>src_ip = "192.168.1.100" AND device_vendor = "Security"</li>
+                                <li>timestamp > "2025-02-24" AND event_type = "successful_login"</li>
+                                <li>dst_ip = "10.0.0.1" OR level = "critical"</li>
                             </ul>
                         </div>
                     </div>
