@@ -17,8 +17,8 @@ pub struct UploadForm {
 
 #[derive(Deserialize)]
 pub struct QueryParams {
-    pub query: String,
     pub account_id: String,
+    pub query: String,
     pub start_time: Option<String>,
     pub end_time: Option<String>,
 }
@@ -66,7 +66,7 @@ pub async fn get_logs_handler(account_id: web::Path<String>) -> impl Responder {
 
 pub async fn get_query_logs_handler(
     query_params: web::Query<QueryParams>,
-    _req: HttpRequest,
+    _req: actix_web::HttpRequest,
 ) -> Result<HttpResponse, Error> {
     if query_params.account_id.is_empty() {
         return Ok(HttpResponse::BadRequest().json(json!({
@@ -74,12 +74,7 @@ pub async fn get_query_logs_handler(
         })));
     }
 
-    let query = format!("account_id = \"{}\" AND ({})", 
-        query_params.account_id,
-        query_params.query
-    );
-
-    match get_query_logs(&query, query_params.start_time.clone(), query_params.end_time.clone()) {
+    match get_query_logs(&query_params.account_id, &query_params.query, query_params.start_time.clone(), query_params.end_time.clone()) {
         Ok(logs) => Ok(HttpResponse::Ok().json(logs)),
         Err(e) => Ok(HttpResponse::InternalServerError().json(json!({
             "error": e.to_string()

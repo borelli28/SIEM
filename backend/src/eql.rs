@@ -1,4 +1,9 @@
+use crate::database::establish_connection;
+use rusqlite::{Error as SqliteError};
+use serde_json::{Value, from_str};
 use chrono::NaiveDateTime;
+use rusqlite::params;
+use crate::log::Log;
 use std::fmt;
 
 #[derive(Debug, Clone, PartialEq)]
@@ -18,14 +23,22 @@ pub enum Token {
 pub enum EqlError {
     ParseError(String),
     QueryBuildError(String),
+    DatabaseError(String),
 }
 
 impl fmt::Display for EqlError {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             EqlError::ParseError(msg) => write!(f, "Parse error: {}", msg),
             EqlError::QueryBuildError(msg) => write!(f, "Query build error: {}", msg),
+            EqlError::DatabaseError(msg) => write!(f, "Database error: {}", msg),
         }
+    }
+}
+
+impl From<SqliteError> for EqlError {
+    fn from(err: SqliteError) -> Self {
+        EqlError::DatabaseError(err.to_string())
     }
 }
 
@@ -149,61 +162,147 @@ impl EqlParser {
     }
 }
 
-pub struct QueryBuilder;
+#[derive(Debug, Clone)]
+struct Condition {
+    field: String,
+    operator: String,
+    value: String,
+}
 
-impl QueryBuilder {
-    // Converts tokens into a SQL query
-    pub fn build_query(tokens: Vec<Token>) -> Result<(String, Vec<String>), EqlError> {
-        let mut query = String::from("SELECT * FROM logs WHERE ");
-        let mut params = Vec::new();
-        let mut current_condition = String::new();
+#[derive(Debug)]
+struct EqlQuery {
+    conditions: Vec<Condition>,
+}
+
+pub struct QueryExecutor;
+
+impl QueryExecutor {
+    // Parse EQL query into a structured format
+    fn parse_query(tokens: Vec<Token>) -> Result<EqlQuery, EqlError> {
+        let mut conditions = Vec::new();
+        let mut current_field = None;
+        let mut current_operator = None;
 
         for token in tokens {
             match token {
                 Token::Field(field) => {
-                    current_condition = field;
+                    if current_field.is_some() {
+                        return Err(EqlError::ParseError("Unexpected field token".to_string()));
+                    }
+                    current_field = Some(field);
                 }
                 Token::Operator(op) => {
-                    match op.as_str() {
-                        "=" => current_condition.push_str(" = ?"),
-                        "!=" => current_condition.push_str(" != ?"),
-                        ">" => current_condition.push_str(" > ?"),
-                        "<" => current_condition.push_str(" < ?"),
-                        _ => return Err(EqlError::QueryBuildError("Invalid operator".to_string())),
+                    if current_operator.is_some() || current_field.is_none() {
+                        return Err(EqlError::ParseError("Unexpected operator token".to_string()));
                     }
+                    current_operator = Some(op);
                 }
                 Token::Value(val) => {
-                    params.push(val);
-                    query.push_str(&current_condition);
-                    current_condition.clear();
+                    if let (Some(field), Some(operator)) = (current_field.take(), current_operator.take()) {
+                        conditions.push(Condition { field, operator, value: val });
+                    } else {
+                        return Err(EqlError::ParseError("Value token without field or operator".to_string()));
+                    }
                 }
-                Token::And => query.push_str(" AND "),
-                Token::Or => query.push_str(" OR "),
                 Token::TimeRange(range) => {
-                    // Handle time range parsing
-                    let (time_query, time_param) = Self::parse_time_range(&range)?;
-                    query.push_str(&time_query);
-                    params.push(time_param);
+                    let mut parts = range.split(|c| c == '>' || c == '<');
+                    let value = parts.next().ok_or_else(|| EqlError::QueryBuildError("Invalid time range".to_string()))?;
+                    if NaiveDateTime::parse_from_str(value, "%Y-%m-%d").is_err() {
+                        return Err(EqlError::QueryBuildError("Invalid datetime format".to_string()));
+                    }
                 }
-                _ => {}
+                Token::And => {},
+                Token::Or | Token::OpenParen | Token::CloseParen => {
+                    return Err(EqlError::ParseError("Complex queries with OR or parentheses not yet supported".to_string()));
+                }
+                Token::Where => {},
             }
         }
 
-        Ok((query, params))
+        Ok(EqlQuery { conditions })
     }
- 
-    // Helper function to parse time range specifications
-    fn parse_time_range(range: &str) -> Result<(String, String), EqlError> {
-        // Example format: timestamp>2023-01-01
-        let mut parts = range.split(|c| c == '>' || c == '<');
-        let field = parts.next().ok_or_else(|| EqlError::QueryBuildError("Invalid time range".to_string()))?;
-        let value = parts.next().ok_or_else(|| EqlError::QueryBuildError("Invalid time range".to_string()))?;
 
-        // Validate the datetime format
-        if NaiveDateTime::parse_from_str(value, "%Y-%m-%d").is_err() {
-            return Err(EqlError::QueryBuildError("Invalid datetime format".to_string()));
+    // Check if a log matches the EQL query
+    fn matches_query(log_data: &str, query: &EqlQuery) -> Result<bool, EqlError> {
+        let json: Value = from_str(log_data)
+            .map_err(|e| EqlError::ParseError(format!("Failed to parse log_data JSON: {}", e)))?;
+
+        // Check all conditions
+        for condition in &query.conditions {
+            let value = Self::get_json_value(&json, &condition.field);
+            let matches = match condition.operator.as_str() {
+                "=" => value == condition.value,
+                "!=" => value != condition.value,
+                ">" => value > condition.value,
+                "<" => value < condition.value,
+                _ => return Err(EqlError::QueryBuildError(format!("Unsupported operator: {}", condition.operator))),
+            };
+            if !matches {
+                return Ok(false);
+            }
         }
 
-        Ok((format!("{} > ?", field), value.to_string()))
+        Ok(true)
+    }
+
+    // Extract a value from JSON based on field path
+    fn get_json_value(json: &Value, field: &str) -> String {
+        match field {
+            "timestamp" => json.get("timestamp").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+            "src_ip" => json.get("src_ip").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+            "dst_ip" => json.get("dst_ip").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+            "event_type" => json.get("event_type").and_then(|v| v.as_str()).unwrap_or("").to_string(),
+            _ => json.get("extensions")
+                .and_then(|ext| ext.get(field))
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .to_string(),
+        }
+    }
+
+    // Execute EQL query and return matching logs one at a time
+    pub fn execute_query(
+        account_id: &str,
+        start_time: &str,
+        end_time: &str,
+        eql_query: &str,
+    ) -> Result<Vec<Log>, EqlError> {
+        let conn = establish_connection()
+            .map_err(|e| EqlError::DatabaseError(e.to_string()))?;
+
+        // Parse the EQL query into a structured format
+        let tokens = EqlParser::parse(eql_query)?;
+        let query = Self::parse_query(tokens)?;
+
+        // Prepare the base SQL query for filtering by account_id and timestamp
+        let mut stmt = conn.prepare(
+            "SELECT id, hash, account_id, host_id, timestamp, log_data 
+             FROM logs 
+             WHERE account_id = ?1 AND timestamp BETWEEN ?2 AND ?3"
+        ).map_err(|e| EqlError::DatabaseError(e.to_string()))?;
+
+        // Stream results one row at a time. We only load one log to memory at a time
+        let rows = stmt.query_map(
+            params![account_id, start_time, end_time],
+            |row| {
+                Ok(Log {
+                    id: row.get(0)?,
+                    hash: row.get(1)?,
+                    account_id: row.get(2)?,
+                    host_id: row.get(3)?,
+                    timestamp: row.get(4)?,
+                    log_data: row.get(5)?,
+                })
+            }
+        )?;
+
+        let mut matching_logs = Vec::new();
+        for row in rows {
+            let log = row.map_err(|e| EqlError::DatabaseError(e.to_string()))?;
+            if Self::matches_query(&log.log_data, &query)? {
+                matching_logs.push(log);
+            }
+        }
+        Ok(matching_logs)
     }
 }

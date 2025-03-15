@@ -302,6 +302,7 @@ const Cases = () => {
                                     <input 
                                         type="text" 
                                         className="editable-field"
+                                        id="case-category"
                                         defaultValue={caseData.category}
                                         onChange={() => setShowSaveButton(true)}
                                     />
