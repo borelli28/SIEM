@@ -243,7 +243,7 @@ const Search = () => {
                             <ul>
                                 <li>event_type = "failed_login" AND severity = "warning"</li>
                                 <li>src_ip = "192.168.1.100" AND device_vendor = "Security"</li>
-                                <li>timestamp > "2025-02-24" AND event_type = "successful_login"</li>
+                                <li>timestamp &gt; "2025-02-24" AND event_type = "successful_login"</li>
                                 <li>dst_ip = "10.0.0.1" OR level = "critical"</li>
                             </ul>
                         </div>
