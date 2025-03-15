@@ -281,7 +281,9 @@ impl QueryExecutor {
 
         // Prepare the base SQL query for filtering by account_id and timestamp
         let mut stmt = conn.prepare(
-            "SELECT log_data FROM logs WHERE account_id = ?1 AND timestamp BETWEEN ?2 AND ?3"
+            "SELECT id, hash, account_id, host_id, timestamp, log_data 
+             FROM logs 
+             WHERE account_id = ?1 AND timestamp BETWEEN ?2 AND ?3"
         ).map_err(|e| EqlError::DatabaseError(e.to_string()))?;
 
         // Stream results one row at a time. We only load one log to memory at a time
