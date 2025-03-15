@@ -172,7 +172,6 @@ struct Condition {
 #[derive(Debug)]
 struct EqlQuery {
     conditions: Vec<Condition>,
-    time_range: Option<(String, String, String)>,
 }
 
 pub struct QueryExecutor;
@@ -181,7 +180,6 @@ impl QueryExecutor {
     // Parse EQL query into a structured format
     fn parse_query(tokens: Vec<Token>) -> Result<EqlQuery, EqlError> {
         let mut conditions = Vec::new();
-        let mut time_range = None;
         let mut current_field = None;
         let mut current_operator = None;
 
@@ -208,13 +206,10 @@ impl QueryExecutor {
                 }
                 Token::TimeRange(range) => {
                     let mut parts = range.split(|c| c == '>' || c == '<');
-                    let field = parts.next().ok_or_else(|| EqlError::QueryBuildError("Invalid time range".to_string()))?;
                     let value = parts.next().ok_or_else(|| EqlError::QueryBuildError("Invalid time range".to_string()))?;
-                    let operator = if range.contains('>') { ">" } else { "<" }.to_string();
                     if NaiveDateTime::parse_from_str(value, "%Y-%m-%d").is_err() {
                         return Err(EqlError::QueryBuildError("Invalid datetime format".to_string()));
                     }
-                    time_range = Some((field.to_string(), operator, value.to_string()));
                 }
                 Token::And => {},
                 Token::Or | Token::OpenParen | Token::CloseParen => {
@@ -224,7 +219,7 @@ impl QueryExecutor {
             }
         }
 
-        Ok(EqlQuery { conditions, time_range })
+        Ok(EqlQuery { conditions })
     }
 
     // Check if a log matches the EQL query
